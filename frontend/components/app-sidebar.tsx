@@ -60,7 +60,9 @@ export function AppSidebar({
             >
               <Link href="/">
                 <AppIcon className="size-5!" />
-                <span className="text-base font-semibold">{appName}</span>
+                <span className="text-base font-semibold group-data-[collapsible=icon]:hidden">
+                  {appName}
+                </span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

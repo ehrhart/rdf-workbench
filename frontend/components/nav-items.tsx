@@ -84,12 +84,13 @@ export function NavItems({
                     className="data-[active=true]:bg-primary/10"
                     tooltip={item.title}
                     isActive={isItemActive}
-                    size="lg"
                     asChild
                   >
                     <Link href={item.url} target={item.target} rel={item.rel}>
                       {ItemIcon && <ItemIcon />}
-                      <span>{item.title}</span>
+                      <span className="group-data-[collapsible=icon]:hidden">
+                        {item.title}
+                      </span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -105,10 +106,11 @@ export function NavItems({
                         className="data-[active=true]:bg-primary/10"
                         tooltip={item.title}
                         isActive={isItemActive || hasActiveSubitem}
-                        size="lg"
                       >
                         {ItemIcon && <ItemIcon />}
-                        <span>{item.title}</span>
+                        <span className="group-data-[collapsible=icon]:hidden">
+                          {item.title}
+                        </span>
                       </SidebarMenuButton>
                     </DropdownMenuTrigger>
                   </SidebarMenuItem>
@@ -160,10 +162,11 @@ export function NavItems({
                     <SidebarMenuButton
                       tooltip={item.title}
                       className="data-[active=true]:bg-primary/10"
-                      size="lg"
                     >
                       {ItemIcon && <ItemIcon />}
-                      <span>{item.title}</span>
+                      <span className="group-data-[collapsible=icon]:hidden">
+                        {item.title}
+                      </span>
                       <ChevronRightIcon className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
                     </SidebarMenuButton>
                   </CollapsibleTrigger>

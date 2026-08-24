@@ -21,19 +21,27 @@ import type { NavUser as NavUserType } from '@/config/navigation'
 export function NavUser({ user }: { user: NavUserType }) {
   const { isMobile } = useSidebar()
 
+  const initials = user.username
+    .split(/[\s._-]+/)
+    .filter(Boolean)
+    .map((part) => part[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase()
+
   return (
     <SidebarMenu>
       <SidebarMenuItem>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <SidebarMenuButton
-              size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-            >
-              <div className="grid flex-1 text-left text-sm leading-tight">
+            <SidebarMenuButton className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground">
+              <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-sidebar-accent text-xs font-semibold">
+                {initials}
+              </div>
+              <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
                 <span className="truncate font-medium">{user.username}</span>
               </div>
-              <MoreVerticalIcon className="ml-auto size-4" />
+              <MoreVerticalIcon className="ml-auto size-4 group-data-[collapsible=icon]:hidden" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
