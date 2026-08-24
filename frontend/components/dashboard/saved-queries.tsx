@@ -32,7 +32,7 @@ export async function SavedQueriesCard() {
               No saved queries yet.
             </p>
           ) : (
-            <ScrollArea className="max-h-96 pr-2">
+            <ScrollArea className="pr-2" viewportClassName="max-h-96">
               <div className="space-y-3">
                 {savedQueries.map((saved) => (
                   <Link
