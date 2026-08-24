@@ -83,6 +83,10 @@ export interface SavedQueryRepository {
     owner: Principal | null
   ): Promise<SavedQuery>
   delete(id: string, owner: Principal | null): Promise<void>
+  reorder(
+    order: Array<{ id: string; position: number }>,
+    owner: Principal | null
+  ): Promise<void>
 }
 
 export interface LoginCredentials {

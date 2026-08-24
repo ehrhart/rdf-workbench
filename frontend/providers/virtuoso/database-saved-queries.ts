@@ -14,6 +14,7 @@ interface SavedQueryRow {
   OWNER_USERNAME?: string
   CREATED_AT?: string | Date
   UPDATED_AT?: string | Date
+  SORT_ORDER?: number | string
 }
 
 const TABLE_NAME = 'DB.DBA.VRM_SAVED_QUERIES'
@@ -47,6 +48,7 @@ const mapRowToSavedQuery = (
     ownerUsername,
     createdAt: normalizeDate(row.CREATED_AT),
     updatedAt: normalizeDate(row.UPDATED_AT),
+    position: Number(row.SORT_ORDER ?? 0),
     isOwner: Boolean(currentUserId && ownerId === currentUserId)
   }
 }
@@ -69,7 +71,8 @@ async function ensureTableExists(): Promise<void> {
       OWNER_ID VARCHAR(128) NOT NULL,
       OWNER_USERNAME VARCHAR(256) NOT NULL,
       CREATED_AT DATETIME NOT NULL,
-      UPDATED_AT DATETIME NOT NULL
+      UPDATED_AT DATETIME NOT NULL,
+      SORT_ORDER INTEGER NOT NULL DEFAULT 0
     );`,
     { useServiceCredentials: true }
   )
@@ -90,15 +93,32 @@ async function ensureTableExists(): Promise<void> {
   )
 }
 
+async function ensureSortOrderColumnExists(): Promise<void> {
+  const columns = await executeIsqlCommand<Array<{ COLUMN_EXISTS: number }>>(
+    `SELECT 1 AS COLUMN_EXISTS FROM DB.INFORMATION_SCHEMA.COLUMNS
+     WHERE TABLE_NAME = 'VRM_SAVED_QUERIES' AND COLUMN_NAME = 'SORT_ORDER';`,
+    { useServiceCredentials: true }
+  )
+
+  const alreadyExists = Array.isArray(columns) && columns.length > 0
+  if (alreadyExists) return
+
+  await executeIsqlCommand(
+    `ALTER TABLE ${TABLE_NAME} ADD COLUMN SORT_ORDER INTEGER NOT NULL DEFAULT 0;`,
+    { useServiceCredentials: true }
+  )
+}
+
 export async function listSavedQueries(
   currentUserId?: string | null
 ): Promise<SavedQuery[]> {
   await ensureTableExists()
+  await ensureSortOrderColumnExists()
 
   const rows = await executeIsqlCommand<SavedQueryRow[]>(
-    `SELECT ID, NAME, QUERY_TEXT, OWNER_ID, OWNER_USERNAME, CREATED_AT, UPDATED_AT
+    `SELECT ID, NAME, QUERY_TEXT, OWNER_ID, OWNER_USERNAME, CREATED_AT, UPDATED_AT, SORT_ORDER
      FROM ${TABLE_NAME}
-     ORDER BY UPDATED_AT DESC;`,
+     ORDER BY SORT_ORDER ASC, UPDATED_AT DESC;`,
     { useServiceCredentials: true }
   )
 
@@ -112,10 +132,11 @@ export async function getSavedQueryById(
   currentUserId?: string | null
 ): Promise<SavedQuery | null> {
   await ensureTableExists()
+  await ensureSortOrderColumnExists()
 
   const escapedId = escapeSqlLiteral(id)
   const rows = await executeIsqlCommand<SavedQueryRow[]>(
-    `SELECT TOP 1 ID, NAME, QUERY_TEXT, OWNER_ID, OWNER_USERNAME, CREATED_AT, UPDATED_AT
+    `SELECT TOP 1 ID, NAME, QUERY_TEXT, OWNER_ID, OWNER_USERNAME, CREATED_AT, UPDATED_AT, SORT_ORDER
      FROM ${TABLE_NAME}
      WHERE ID = '${escapedId}';`,
     { useServiceCredentials: true }
@@ -132,15 +153,21 @@ interface SavePayload {
   query: string
 }
 
+type SavedQueryActor = { id: string; username: string; role: 'admin' | 'user' }
+
+const canManage = (existing: SavedQuery, actor: SavedQueryActor): boolean =>
+  existing.ownerId === actor.id || actor.role === 'admin'
+
 export async function createSavedQuery(
   payload: SavePayload,
-  user: { id: string; username: string } | null
+  user: SavedQueryActor | null
 ): Promise<SavedQuery> {
   if (!user) {
     throw new AuthError('Authentication required to save queries')
   }
 
   await ensureTableExists()
+  await ensureSortOrderColumnExists()
 
   const name = payload.name?.trim()
   const query = payload.query?.trim()
@@ -160,8 +187,9 @@ export async function createSavedQuery(
   const escapedOwnerUsername = escapeSqlLiteral(user.username)
 
   await executeIsqlWithAuth(
-    `INSERT INTO ${TABLE_NAME} (ID, NAME, QUERY_TEXT, OWNER_ID, OWNER_USERNAME, CREATED_AT, UPDATED_AT)
-     VALUES ('${escapedId}', '${escapedName}', '${escapedQuery}', '${escapedOwnerId}', '${escapedOwnerUsername}', NOW(), NOW());`
+    `INSERT INTO ${TABLE_NAME} (ID, NAME, QUERY_TEXT, OWNER_ID, OWNER_USERNAME, CREATED_AT, UPDATED_AT, SORT_ORDER)
+     VALUES ('${escapedId}', '${escapedName}', '${escapedQuery}', '${escapedOwnerId}', '${escapedOwnerUsername}', NOW(), NOW(),
+             (SELECT COALESCE(MAX(SORT_ORDER), -1) + 1 FROM ${TABLE_NAME}));`
   )
 
   const created = await getSavedQueryById(id, user.id)
@@ -175,20 +203,21 @@ export async function createSavedQuery(
 export async function updateSavedQuery(
   id: string,
   payload: SavePayload,
-  user: { id: string; username: string } | null
+  user: SavedQueryActor | null
 ): Promise<SavedQuery> {
   if (!user) {
     throw new AuthError('Authentication required to update queries')
   }
 
   await ensureTableExists()
+  await ensureSortOrderColumnExists()
 
   const existing = await getSavedQueryById(id, user.id)
   if (!existing) {
     throw new QueryError('Saved query not found')
   }
 
-  if (existing.ownerId !== user.id) {
+  if (!canManage(existing, user)) {
     throw new AuthError('You do not own this saved query')
   }
 
@@ -224,20 +253,21 @@ export async function updateSavedQuery(
 
 export async function deleteSavedQuery(
   id: string,
-  user: { id: string; username: string } | null
+  user: SavedQueryActor | null
 ): Promise<void> {
   if (!user) {
     throw new AuthError('Authentication required to delete queries')
   }
 
   await ensureTableExists()
+  await ensureSortOrderColumnExists()
 
   const existing = await getSavedQueryById(id, user.id)
   if (!existing) {
     throw new QueryError('Saved query not found')
   }
 
-  if (existing.ownerId !== user.id) {
+  if (!canManage(existing, user)) {
     throw new AuthError('You do not own this saved query')
   }
 
@@ -246,4 +276,29 @@ export async function deleteSavedQuery(
   await executeIsqlWithAuth(
     `DELETE FROM ${TABLE_NAME} WHERE ID = '${escapedId}';`
   )
+}
+
+export async function reorderSavedQueries(
+  order: Array<{ id: string; position: number }>,
+  user: SavedQueryActor | null
+): Promise<void> {
+  if (!user) {
+    throw new AuthError('Authentication required to reorder queries')
+  }
+  if (user.role !== 'admin') {
+    throw new AuthError('Only administrators can reorder saved queries')
+  }
+
+  await ensureTableExists()
+  await ensureSortOrderColumnExists()
+
+  for (const item of order) {
+    const escapedId = escapeSqlLiteral(item.id)
+    const position = Number.isFinite(item.position)
+      ? Math.trunc(item.position)
+      : 0
+    await executeIsqlWithAuth(
+      `UPDATE ${TABLE_NAME} SET SORT_ORDER = ${position} WHERE ID = '${escapedId}';`
+    )
+  }
 }

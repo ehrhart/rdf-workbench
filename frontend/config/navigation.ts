@@ -81,6 +81,13 @@ export const virtuosoNavigation: NavigationConfig = {
         { title: 'Namespaces', url: '/namespaces' },
         { title: 'Full-Text Index', url: '/fulltext-index' }
       ]
+    },
+    {
+      title: 'Saved Queries',
+      url: '/admin/saved-queries',
+      icon: 'settings',
+      requiresAuth: true,
+      requiredRole: 'admin'
     }
   ],
   navSecondary: [
@@ -124,6 +131,13 @@ export const qleverNavigation: NavigationConfig = {
       title: 'Users',
       url: '/admin/users',
       icon: 'shield',
+      requiresAuth: true,
+      requiredRole: 'admin'
+    },
+    {
+      title: 'Saved Queries',
+      url: '/admin/saved-queries',
+      icon: 'settings',
       requiresAuth: true,
       requiredRole: 'admin'
     }

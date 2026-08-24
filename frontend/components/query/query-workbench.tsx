@@ -97,7 +97,7 @@ export interface QueryWorkbenchProps<TResults> {
   urlSync?: UrlSyncOptions
   exportGroups?: ExportGroup[]
   enableSavedQueries?: boolean
-  currentUser?: { id: string; username: string } | null
+  currentUser?: { id: string; username: string; role?: 'admin' | 'user' } | null
 }
 
 const DEFAULT_QUERY_NOUN = 'query'

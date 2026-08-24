@@ -9,8 +9,10 @@ import {
   Loader2,
   Pencil,
   RefreshCw,
+  Settings2,
   Trash2
 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import {
@@ -44,7 +46,7 @@ import { ScrollArea } from '../ui/scroll-area'
 import { Textarea } from '../ui/textarea'
 
 interface SavedQueriesMenuProps {
-  currentUser?: { id: string; username: string } | null
+  currentUser?: { id: string; username: string; role?: 'admin' | 'user' } | null
   activeTabName: string
   activeQuery: string
   onOpenSavedQuery: (saved: SavedQuery) => void
@@ -60,6 +62,7 @@ export function SavedQueriesMenu({
   onOpenSavedQuery,
   onSaved
 }: SavedQueriesMenuProps) {
+  const router = useRouter()
   const [savedQueries, setSavedQueries] = useState<SavedQuery[]>([])
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [isLoadingList, setIsLoadingList] = useState(false)
@@ -76,6 +79,8 @@ export function SavedQueriesMenu({
     () => Boolean(activeQuery?.trim()) && Boolean(currentUser),
     [activeQuery, currentUser]
   )
+
+  const isAdmin = currentUser?.role === 'admin'
 
   const refreshSavedQueries = useCallback(async () => {
     try {
@@ -329,7 +334,7 @@ export function SavedQueriesMenu({
                           errorMessage="Failed to copy link"
                           copyIcon={<LinkIcon />}
                         />
-                        {saved.isOwner ? (
+                        {saved.isOwner || isAdmin ? (
                           <>
                             <Button
                               variant="ghost"
@@ -364,6 +369,20 @@ export function SavedQueriesMenu({
               )}
             </div>
           </ScrollArea>
+          {isAdmin ? (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onSelect={(event) => {
+                  event.preventDefault()
+                  void router.push('/admin/saved-queries')
+                }}
+              >
+                <Settings2 className="size-4" />
+                Manage saved queries
+              </DropdownMenuItem>
+            </>
+          ) : null}
         </DropdownMenuContent>
       </DropdownMenu>
 

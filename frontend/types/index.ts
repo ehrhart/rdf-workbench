@@ -24,6 +24,7 @@ export interface SavedQuery {
   ownerUsername: string
   createdAt: string
   updatedAt: string
+  position: number
   isOwner: boolean
 }
 

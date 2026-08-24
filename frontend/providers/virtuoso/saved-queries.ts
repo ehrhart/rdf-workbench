@@ -6,6 +6,7 @@ import {
   deleteSavedQuery,
   getSavedQueryById,
   listSavedQueries,
+  reorderSavedQueries,
   updateSavedQuery
 } from './database-saved-queries'
 
@@ -20,5 +21,8 @@ export const virtuosoSavedQueryRepository: SavedQueryRepository = {
   },
   delete(id, owner) {
     return deleteSavedQuery(id, owner)
+  },
+  reorder(order, owner) {
+    return reorderSavedQueries(order, owner)
   }
 }

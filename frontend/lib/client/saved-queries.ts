@@ -77,3 +77,17 @@ export async function deleteSavedQueryClient(id: string): Promise<void> {
     throw new Error(await parseError(response))
   }
 }
+
+export async function reorderSavedQueriesClient(
+  order: Array<{ id: string; position: number }>
+): Promise<void> {
+  const response = await fetch('/api/saved-queries/reorder', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ order })
+  })
+
+  if (!response.ok) {
+    throw new Error(await parseError(response))
+  }
+}

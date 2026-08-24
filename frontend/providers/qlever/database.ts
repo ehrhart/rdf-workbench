@@ -98,6 +98,23 @@ function migrate(db: Database.Database): void {
     })()
   }
 
+  if (current.version < 2) {
+    db.transaction(() => {
+      const columns = db
+        .prepare('PRAGMA table_info(saved_queries)')
+        .all() as Array<{ name: string }>
+      const hasPosition = columns.some((column) => column.name === 'position')
+      if (!hasPosition) {
+        db.exec(
+          'ALTER TABLE saved_queries ADD COLUMN position INTEGER NOT NULL DEFAULT 0;'
+        )
+      }
+      db.prepare(
+        'INSERT INTO schema_migrations (version, applied_at) VALUES (2, ?)'
+      ).run(new Date().toISOString())
+    })()
+  }
+
   const prefixCount = db
     .prepare('SELECT COUNT(*) AS count FROM prefixes')
     .get() as {
