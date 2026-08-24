@@ -30,16 +30,20 @@ import { useResourceData } from './useResourceData'
  * - Filtering and export capabilities
  */
 export default function ResourceManager({
-  fileTypes
+  fileTypes,
+  uri: uriProp = null
 }: {
   fileTypes: readonly FileType[]
+  uri?: string | null
 }) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
-  // Derive all state from URL parameters (single source of truth)
-  const uri = useMemo(() => searchParams.get('uri'), [searchParams])
+  // Derive all state from URL parameters (single source of truth), falling
+  // back to the IRI supplied directly for dereferenced resource URLs.
+  const queryUri = useMemo(() => searchParams.get('uri'), [searchParams])
+  const uri = uriProp ?? queryUri
 
   const role = useMemo(() => {
     const roleParam = searchParams.get('role')

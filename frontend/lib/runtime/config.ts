@@ -8,6 +8,10 @@ const commonSchema = z.object({
   SPARQL_TIMEOUT_MS: z.coerce.number().int().nonnegative().default(60_000),
   WORKBENCH_NAME: z.string().min(1).default('RDF Workbench'),
   WORKBENCH_URL: z.string().url(),
+  RESOURCE_BASE_URI: z
+    .string()
+    .url()
+    .default('http://data.climatesense-project.eu'),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development')
 })
 
