@@ -1,7 +1,6 @@
 'use client'
 
 import { LogOutIcon, MoreVerticalIcon } from 'lucide-react'
-import Link from 'next/link'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -59,13 +58,13 @@ export function NavUser({ user }: { user: NavUserType }) {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <Link
+              <a
                 href="/logout"
                 className="flex items-center w-full cursor-pointer"
               >
                 <LogOutIcon />
                 Log out
-              </Link>
+              </a>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

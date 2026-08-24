@@ -40,10 +40,10 @@ export function UserAccountNav({ user }: UserAccountNavProps) {
         </div>
         <DropdownMenuSeparator />
         <DropdownMenuItem className="cursor-pointer" asChild>
-          <Link href="/logout" className="flex items-center w-full">
+          <a href="/logout" className="flex items-center w-full">
             <LogOutIcon />
             <span>Log out</span>
-          </Link>
+          </a>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
