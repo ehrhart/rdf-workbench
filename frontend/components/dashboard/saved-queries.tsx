@@ -16,7 +16,6 @@ export async function SavedQueriesCard() {
   try {
     const runtime = await getWorkbenchRuntime()
     const savedQueries = await runtime.savedQueries.list(null)
-    const topQueries = savedQueries.slice(0, 5)
     const baseUrl = getRuntimeConfig().WORKBENCH_URL.replace(/\/$/, '')
 
     return (
@@ -28,14 +27,14 @@ export async function SavedQueriesCard() {
           <FolderOpen className="size-5 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          {topQueries.length === 0 ? (
+          {savedQueries.length === 0 ? (
             <p className="text-muted-foreground text-sm">
               No saved queries yet.
             </p>
           ) : (
             <ScrollArea className="max-h-96 pr-2">
               <div className="space-y-3">
-                {topQueries.map((saved) => (
+                {savedQueries.map((saved) => (
                   <Link
                     key={saved.id}
                     href={`/sparql?savedQueryId=${encodeURIComponent(saved.id)}`}
