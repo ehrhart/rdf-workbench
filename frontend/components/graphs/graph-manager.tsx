@@ -73,6 +73,16 @@ import {
 } from '@/providers/virtuoso/capabilities'
 import type { NamedGraph } from '@/types'
 
+interface FileSystemFileHandle {
+  createWritable(): Promise<WritableStream<Uint8Array>>
+}
+
+interface SaveFilePickerWindow extends Window {
+  showSaveFilePicker?: (options?: {
+    suggestedName?: string
+  }) => Promise<FileSystemFileHandle>
+}
+
 interface GraphManagerProps {
   initialGraphs: NamedGraph[]
   canManage?: boolean
@@ -146,6 +156,11 @@ const createDefaultExportState = (): ExportDialogState => ({
 })
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
+const shortGraphName = (uri: string): string => {
+  const local = uri.split(/[/#:]/).filter(Boolean).pop() ?? uri
+  return local.length > 40 ? `${local.slice(0, 37)}...` : local
+}
 
 const calculateTotals = (
   perGraph: Record<string, DeleteGraphProgress>
@@ -440,31 +455,75 @@ export function GraphManager({
     uri: string,
     format: DownloadFormat
   ) => {
+    const filename = `graph.${format.extension}`
+    const query = `CONSTRUCT { ?subject ?predicate ?object } WHERE { GRAPH <${uri}> { ?subject ?predicate ?object } }`
+
+    let fallbackToBlob = false
+    let fileHandle: FileSystemFileHandle | undefined
+    // The save-file picker must be requested within the click gesture while
+    // transient user activation is still valid; deferring it loses permission.
+    const pickerWindow = window as SaveFilePickerWindow
+    if ('showSaveFilePicker' in pickerWindow) {
+      try {
+        fileHandle = await pickerWindow.showSaveFilePicker?.({
+          suggestedName: filename
+        })
+      } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') {
+          toast.info('Download cancelled')
+          return
+        }
+        fallbackToBlob = true
+      }
+    } else {
+      fallbackToBlob = true
+    }
+
+    const label = shortGraphName(uri)
+    const controller = new AbortController()
+    const toastId = toast.loading(`Exporting ${label} as ${format.label}...`, {
+      action: {
+        label: 'Cancel',
+        onClick: () => controller.abort()
+      }
+    })
+
     try {
       const response = await fetch('/api/sparql/download', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          query: `CONSTRUCT { ?subject ?predicate ?object } WHERE { GRAPH <${uri}> { ?subject ?predicate ?object } }`,
-          format: format.mime,
-          filename: `graph.${format.extension}`
-        })
+        body: JSON.stringify({ query, format: format.mime, filename }),
+        signal: controller.signal
       })
       if (!response.ok)
         throw new Error((await response.text()) || 'Export failed')
 
-      const url = URL.createObjectURL(await response.blob())
-      const anchor = document.createElement('a')
-      anchor.href = url
-      anchor.download = `graph.${format.extension}`
-      document.body.appendChild(anchor)
-      anchor.click()
-      anchor.remove()
-      URL.revokeObjectURL(url)
-      toast.success(`Graph downloaded as ${format.label}`)
+      if (!fallbackToBlob && fileHandle && response.body) {
+        const writable = await fileHandle.createWritable()
+        await response.body.pipeTo(writable)
+      } else {
+        const url = URL.createObjectURL(await response.blob())
+        const anchor = document.createElement('a')
+        anchor.href = url
+        anchor.download = filename
+        document.body.appendChild(anchor)
+        anchor.click()
+        anchor.remove()
+        URL.revokeObjectURL(url)
+      }
+
+      toast.success(`Exported ${label} as ${format.label}`, { id: toastId })
     } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        toast.info(`Export of ${label} cancelled`, { id: toastId })
+        return
+      }
+      console.error('Failed during graph export', error)
       toast.error(
-        error instanceof Error ? error.message : 'Graph download failed'
+        `${label}: ${
+          error instanceof Error ? error.message : 'Graph export failed'
+        }`,
+        { id: toastId }
       )
     }
   }
