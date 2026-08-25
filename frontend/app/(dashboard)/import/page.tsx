@@ -24,6 +24,7 @@ import {
 } from 'react'
 import { toast } from 'sonner'
 import { chunkUploadAction } from '@/app/actions/chunk-upload'
+import { cleanupStaleUploads } from '@/app/actions/upload-cleanup'
 import { DashboardHeader } from '@/components/dashboard/header'
 import { DashboardShell } from '@/components/dashboard/shell'
 import { Button } from '@/components/ui/button'
@@ -295,6 +296,10 @@ export default function ImportPage() {
 
     return () => window.clearInterval(interval)
   }, [fetchJobs])
+
+  useEffect(() => {
+    void cleanupStaleUploads()
+  }, [])
 
   const sortedJobs = useMemo(
     () =>
