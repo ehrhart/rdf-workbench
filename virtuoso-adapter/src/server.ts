@@ -28,7 +28,12 @@ import {
   uploadSnippet
 } from './routes/import'
 import { sqlQuery } from './routes/query'
-import { adminPool, destroyAllSessions, initAdminPool } from './session-manager'
+import {
+  adminPool,
+  destroyAllSessions,
+  initAdminPool,
+  startSessionCleanup
+} from './session-manager'
 import { loadSqlScripts } from './sql-loader'
 import type { ErrorResponse } from './types'
 
@@ -113,6 +118,7 @@ async function startServer(): Promise<void> {
   try {
     await ensureExportsDirectory()
     await initAdminPool()
+    startSessionCleanup()
     if (adminPool) {
       try {
         await loadSqlScripts()

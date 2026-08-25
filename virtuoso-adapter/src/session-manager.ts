@@ -173,6 +173,18 @@ export async function destroyAllSessions(): Promise<void> {
   await Promise.all(tokens.map((token) => destroySession(token)))
 }
 
+export function startSessionCleanup(): void {
+  const interval = setInterval(() => {
+    const now = Date.now()
+    for (const [token, session] of sessions) {
+      if (now - session.lastUsed > config.session.ttlMs) {
+        void destroySession(token)
+      }
+    }
+  }, config.session.cleanupIntervalMs)
+  interval.unref?.()
+}
+
 export let adminPool: odbc.Pool | null = null
 
 export async function initAdminPool(): Promise<void> {
