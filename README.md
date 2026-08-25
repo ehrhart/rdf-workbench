@@ -20,7 +20,6 @@ There are some differences between the two providers:
 | SPARQL Update                         | No                  | Via ISQL                                     |
 | Import/export, graph deletion         | No                  | Yes                                          |
 | Text search                           | Yes                 | Yes                                          |
-| Server configuration                  | No                  | Yes                                          |
 
 ## Quick start: QLever
 

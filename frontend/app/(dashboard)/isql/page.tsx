@@ -5,7 +5,7 @@ import { DashboardHeader } from '@/components/dashboard/header'
 import { DashboardShell } from '@/components/dashboard/shell'
 import { IsqlConsole } from '@/components/isql-console/isql-console'
 import { QueryConsoleSkeleton } from '@/components/skeletons'
-import { cfgItemValue } from '../configuration/actions'
+import { cfgItemValue } from '@/providers/virtuoso/config'
 
 export const metadata: Metadata = {
   title: 'ISQL Console',

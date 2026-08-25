@@ -6,7 +6,7 @@ import { DashboardShell } from '@/components/dashboard/shell'
 import { QueryConsole } from '@/components/query/query-console'
 import { QueryConsoleSkeleton } from '@/components/skeletons'
 import { getWorkbenchRuntime } from '@/lib/runtime'
-import { cfgItemValue } from '../configuration/actions'
+import { cfgItemValue } from '@/providers/virtuoso/config'
 
 export const metadata: Metadata = {
   title: 'SPARQL Query Console',

@@ -51,8 +51,7 @@ export async function proxy(request: NextRequest) {
         pathname.startsWith('/import') ||
         pathname.startsWith('/namespaces') ||
         pathname.startsWith('/fulltext-index') ||
-        pathname.startsWith('/monitor') ||
-        pathname.startsWith('/configuration')
+        pathname.startsWith('/monitor')
       : pathname.startsWith('/admin/users')
 
   if (!isDashboardRoute) {
