@@ -1,5 +1,6 @@
 'use client'
 
+import { Table } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import { getResourceSuggestions } from '@/lib/triplestore'
@@ -30,10 +31,19 @@ export function ResourceAutocomplete({
 
   const navigateToResource = (value: string) => {
     if (!value) return
+    router.push(`/resource?uri=${encodeURIComponent(value)}`)
+  }
+
+  const navigateToVisualization = (value: string) => {
+    if (!value) return
+    router.push(`/graphs-visualizations?uri=${encodeURIComponent(value)}`)
+  }
+
+  const navigate = (value: string) => {
     if (searchType === 'table') {
-      router.push(`/resource?uri=${encodeURIComponent(value)}`)
+      navigateToResource(value)
     } else {
-      router.push(`/graphs-visualizations?uri=${encodeURIComponent(value)}`)
+      navigateToVisualization(value)
     }
   }
 
@@ -77,7 +87,7 @@ export function ResourceAutocomplete({
       <AutoComplete
         selectedValue={searchInput}
         onSelectedValueChange={(value) => {
-          navigateToResource(value)
+          navigate(value)
         }}
         searchValue={searchInput}
         onSearchValueChange={setSearchInput}
@@ -94,9 +104,20 @@ export function ResourceAutocomplete({
         resetOnBlur={false}
       />
       {showButton && (
-        <Button type="button" onClick={() => navigateToResource(searchInput)}>
-          Show
-        </Button>
+        <>
+          <Button type="button" onClick={() => navigate(searchInput)}>
+            Show
+          </Button>
+          {searchType === 'visual' && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => navigateToResource(searchInput)}
+            >
+              <Table /> Resource
+            </Button>
+          )}
+        </>
       )}
     </div>
   )
