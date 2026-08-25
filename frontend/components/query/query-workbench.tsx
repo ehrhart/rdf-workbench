@@ -76,6 +76,8 @@ export interface QueryResultView<TResults> {
   id: string
   label: string
   render: (results: TResults) => ReactNode
+  /** When set, the view is only offered if the current results pass this check. */
+  isCompatible?: (results: TResults) => boolean
 }
 
 interface UrlSyncOptions {
@@ -195,6 +197,19 @@ export function QueryWorkbench<TResults>({
   const currentResults = activeTabId ? (tabResults[activeTabId] ?? null) : null
   const currentError = activeTabId ? (tabErrors[activeTabId] ?? null) : null
   const isTabLoading = activeTabId ? loadingTabIds.has(activeTabId) : false
+  const availableViews = useMemo(() => {
+    if (!currentResults) return resultViews
+    return resultViews.filter((view) =>
+      view.isCompatible ? view.isCompatible(currentResults) : true
+    )
+  }, [resultViews, currentResults])
+
+  useEffect(() => {
+    if (availableViews.length === 0) return
+    if (!availableViews.some((view) => view.id === activeView)) {
+      setActiveView(availableViews[0].id)
+    }
+  }, [availableViews, activeView])
   const effectiveExportGroups = useMemo(
     () => exportGroups ?? DEFAULT_EXPORT_GROUPS,
     [exportGroups]
@@ -923,7 +938,7 @@ export function QueryWorkbench<TResults>({
                     </span>
                   </div>
                 )}
-                {resultViews.length > 0 ? (
+                {availableViews.length > 0 ? (
                   <Tabs
                     value={activeView}
                     onValueChange={setActiveView}
@@ -931,7 +946,7 @@ export function QueryWorkbench<TResults>({
                   >
                     <div>
                       <TabsList>
-                        {resultViews.map((view) => (
+                        {availableViews.map((view) => (
                           <TabsTrigger key={view.id} value={view.id}>
                             {view.label}
                           </TabsTrigger>
@@ -939,7 +954,7 @@ export function QueryWorkbench<TResults>({
                       </TabsList>
                     </div>
 
-                    {resultViews.map((view) => (
+                    {availableViews.map((view) => (
                       <TabsContent
                         key={view.id}
                         value={view.id}

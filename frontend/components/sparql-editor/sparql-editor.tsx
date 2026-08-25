@@ -103,11 +103,14 @@ export default function SparqlEditor({
       {
         id: 'table',
         label: 'Table',
+        isCompatible: (value) =>
+          value.kind === 'bindings' || value.kind === 'boolean',
         render: (value) => <ResultsTable results={value} />
       },
       {
         id: 'graph',
         label: 'Graph',
+        isCompatible: (value) => value.kind === 'graph',
         render: (value) => <ResultsGraph results={value} />
       },
       {
