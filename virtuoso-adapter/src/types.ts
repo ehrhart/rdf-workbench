@@ -18,7 +18,6 @@ export interface AppConfig {
   adapterToken: string
   virtuoso: VirtuosoConnectionOptions
   session: SessionConfig
-  sparqlEndpoint: string
 }
 
 export interface VirtuosoUser {
@@ -39,19 +38,6 @@ export interface LoginResponse {
 export interface QueryRequest {
   query: string
 }
-
-export type SparqlBindingValue =
-  | { type: 'uri'; value: string }
-  | { type: 'literal'; value: string; 'xml:lang'?: string }
-  | { type: 'typed-literal'; value: string; datatype: string }
-  | { type: 'bnode'; value: string }
-
-export type SparqlResult =
-  | {
-      head: { vars: string[] }
-      results: { bindings: Record<string, SparqlBindingValue>[] }
-    }
-  | { head?: Record<string, never>; boolean: boolean }
 
 export interface HealthResponse {
   status: 'healthy' | 'unhealthy'

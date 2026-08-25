@@ -17,7 +17,7 @@ There are some differences between the two providers:
 | CONSTRUCT/DESCRIBE downloads          | Turtle              | Turtle, N-Triples, N-Quads, JSON-LD, RDF/XML |
 | Named graphs and resource exploration | Read-only           | Read/write                                   |
 | Authentication                        | Local database      | Virtuoso database login                      |
-| SPARQL Update                         | No                  | Yes                                          |
+| SPARQL Update                         | No                  | Via ISQL                                     |
 | Import/export, graph deletion         | No                  | Yes                                          |
 | Text search                           | Yes                 | Yes                                          |
 | Server configuration                  | No                  | Yes                                          |

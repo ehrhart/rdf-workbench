@@ -33,8 +33,7 @@ export const config: AppConfig = {
       ),
       30_000
     )
-  },
-  sparqlEndpoint: process.env.SPARQL_ENDPOINT || 'http://localhost:8890/sparql'
+  }
 }
 
 // Local directory for storing uploaded RDF files before bulk loading.

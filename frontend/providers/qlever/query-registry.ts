@@ -6,6 +6,13 @@ export interface RegisteredQuery {
   startedAt: number
 }
 
+/**
+ * Owner marker for queries submitted through the anonymous public endpoint.
+ * No caller id ever equals this, so ownsQuery() never matches and such queries
+ * can only be cancelled by an administrator.
+ */
+export const PUBLIC_QUERY_OWNER = '__public_sparql__'
+
 const registry = new Map<string, RegisteredQuery>()
 
 export function registerQuery(

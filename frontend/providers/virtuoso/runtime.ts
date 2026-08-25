@@ -2,46 +2,17 @@ import 'server-only'
 
 import { virtuosoNavigation } from '@/config/navigation'
 import type {
-  DownloadFormat,
   FeatureId,
   SparqlTransport,
   WorkbenchRuntime
 } from '@/lib/runtime/contracts'
 import { virtuosoAuthAdapter } from './auth'
-import {
-  downloadQuery,
-  executeQuery,
-  getEndpointStats,
-  getNamedGraphs,
-  getPrefixes
-} from './capabilities'
+import { getEndpointStats, getNamedGraphs, getPrefixes } from './capabilities'
 import { virtuosoQueryMonitor } from './query-monitor'
 import { virtuosoSavedQueryRepository } from './saved-queries'
+import { virtuosoSparqlTransport } from './sparql'
 
-const TABULAR_FORMATS: readonly DownloadFormat[] = [
-  { label: 'JSON', mime: 'application/sparql-results+json', extension: 'json' },
-  { label: 'XML', mime: 'application/sparql-results+xml', extension: 'xml' },
-  { label: 'CSV', mime: 'text/csv', extension: 'csv' },
-  { label: 'TSV', mime: 'text/tab-separated-values', extension: 'tsv' }
-]
-
-const GRAPH_FORMATS: readonly DownloadFormat[] = [
-  { label: 'Turtle', mime: 'text/turtle', extension: 'ttl' },
-  { label: 'N-Triples', mime: 'application/n-triples', extension: 'nt' },
-  { label: 'N-Quads', mime: 'application/n-quads', extension: 'nq' },
-  { label: 'JSON-LD', mime: 'application/ld+json', extension: 'jsonld' },
-  { label: 'RDF/XML', mime: 'application/rdf+xml', extension: 'rdf' }
-]
-
-const sparql: SparqlTransport = {
-  execute: executeQuery,
-  download: downloadQuery,
-  getDownloadFormats(kind) {
-    return kind === 'construct' || kind === 'describe'
-      ? GRAPH_FORMATS
-      : TABULAR_FORMATS
-  }
-}
+const sparql: SparqlTransport = virtuosoSparqlTransport
 
 const features: ReadonlySet<FeatureId> = new Set([
   'dashboard',

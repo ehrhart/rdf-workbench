@@ -27,7 +27,7 @@ import {
   uploadFromUrl,
   uploadSnippet
 } from './routes/import'
-import { sparqlQuery, sqlQuery } from './routes/query'
+import { sqlQuery } from './routes/query'
 import { adminPool, destroyAllSessions, initAdminPool } from './session-manager'
 import { loadSqlScripts } from './sql-loader'
 import type { ErrorResponse } from './types'
@@ -78,7 +78,6 @@ const errorHandler = (
 app.get('/health', healthCheck)
 app.post('/api/auth/login', login)
 app.post('/api/auth/logout', logout)
-app.post('/api/query/sparql', sparqlQuery)
 app.post('/api/query/sql', authenticateRequest, sqlQuery)
 app.post('/api/import/ensure-directory', authenticateRequest, ensureDirectory)
 app.post('/api/import/upload', authenticateRequest, ...uploadFile)

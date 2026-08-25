@@ -3,7 +3,6 @@ import { logger } from './logger'
 import type { VirtuosoSession } from './session-manager'
 import type {
   QueryResponse,
-  SparqlResult,
   StatementExecutionResult
 } from './types'
 
@@ -228,56 +227,6 @@ async function executeStatement(
   }
 
   return baseResult
-}
-
-export async function executeSparqlQuery(query: string): Promise<SparqlResult> {
-  logger.info('Executing SPARQL query', {
-    query
-  })
-
-  const { config } = await import('./config')
-  const endpoint = config.sparqlEndpoint
-
-  const searchParams = new URLSearchParams()
-  searchParams.set('query', query)
-  searchParams.set('format', 'application/sparql-results+json')
-
-  const auth = btoa(`${config.virtuoso.user}:${config.virtuoso.password}`)
-
-  const requestInit: RequestInit = {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      Accept: 'application/sparql-results+json',
-      Authorization: `Basic ${auth}`
-    },
-    body: searchParams.toString()
-  }
-
-  const response = await fetch(endpoint, requestInit)
-
-  if (!response.ok) {
-    const errorText = await response.text()
-    throw new Error(
-      `Failed to execute query: ${response.status} - ${errorText}`
-    )
-  }
-
-  const result = (await response.json()) as SparqlResult
-  if ('boolean' in result && typeof result.boolean === 'boolean') {
-    return result
-  }
-  if (
-    !('head' in result) ||
-    !result.head ||
-    !('results' in result) ||
-    !result.results ||
-    !Array.isArray(result.results.bindings)
-  ) {
-    throw new Error('Invalid SPARQL result format')
-  }
-
-  return result
 }
 
 export async function executeSqlQuery(

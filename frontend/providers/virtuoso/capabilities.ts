@@ -3,16 +3,15 @@
 import { AuthError, ConnectionError } from '@/lib/errors'
 import { tryCatch } from '@/lib/result'
 import { getRuntimeConfig } from '@/lib/runtime/config'
-import { normalizeSparqlJsonResult } from '@/lib/sparql/results'
 import type {
   EndpointStats,
   NamedGraph,
   ResourceSuggestion,
-  SparqlBindingValue,
-  SparqlQueryResult
+  SparqlBindingValue
 } from '@/types'
 import { executeIsqlCommand, executeIsqlWithAuth } from './odbc-connection'
 import { deleteSession, getAuthTokenFromCookie } from './session'
+import { virtuosoSparqlTransport } from './sparql'
 
 const escapeSqlLiteral = (value: string): string => value.replace(/'/g, "''")
 
@@ -22,91 +21,6 @@ function config() {
     throw new Error('Virtuoso integration requested in a QLever deployment')
   }
   return runtime
-}
-
-export interface ExecuteQueryOptions {
-  timeoutMs?: number
-  resultFormat?: string
-  signal?: AbortSignal
-  additionalParams?: Record<string, string | number | boolean>
-}
-
-export async function getActiveEndpoint(): Promise<string> {
-  return config().SPARQL_ENDPOINT
-}
-
-export async function executeQuery(
-  query: string,
-  options: ExecuteQueryOptions = {}
-): Promise<SparqlQueryResult> {
-  const runtime = config()
-  const timeoutMs = options.timeoutMs ?? runtime.SPARQL_TIMEOUT_MS
-
-  const controller = options.signal ? null : new AbortController()
-  const timeoutId =
-    !options.signal && timeoutMs > 0
-      ? setTimeout(() => controller?.abort(), timeoutMs)
-      : null
-
-  try {
-    const response = await fetch(
-      `${runtime.VIRTUOSO_ADAPTER_URL}/api/query/sparql`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ query }),
-        signal: options.signal ?? controller?.signal
-      }
-    )
-
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({}))
-      throw new Error(
-        error.error || `Failed to execute query: ${response.status}`
-      )
-    }
-
-    return normalizeSparqlJsonResult(await response.json())
-  } finally {
-    if (timeoutId) {
-      clearTimeout(timeoutId)
-    }
-  }
-}
-
-export async function downloadQuery(
-  query: string,
-  format: string,
-  options: ExecuteQueryOptions = {}
-): Promise<Response> {
-  const endpoint = await getActiveEndpoint()
-  const timeoutMs = options.timeoutMs ?? config().SPARQL_TIMEOUT_MS
-
-  const controller = options.signal ? null : new AbortController()
-  const timeoutId =
-    !options.signal && timeoutMs > 0
-      ? setTimeout(() => controller?.abort(), timeoutMs)
-      : null
-
-  const requestInit: RequestInit = {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/sparql-query',
-      Accept: format
-    },
-    body: query,
-    signal: options.signal ?? controller?.signal
-  }
-
-  try {
-    return await fetch(endpoint, requestInit)
-  } finally {
-    if (timeoutId) {
-      clearTimeout(timeoutId)
-    }
-  }
 }
 
 export async function getResourceSuggestions(
@@ -135,7 +49,7 @@ export async function getResourceSuggestions(
       LIMIT 10
     `
 
-    return executeQuery(query)
+    return virtuosoSparqlTransport.execute(query)
   })
 
   if (!result.success) {
@@ -401,7 +315,7 @@ export async function getProperties(): Promise<string[]> {
     LIMIT 1000
   `
 
-  const result = await executeQuery(query)
+  const result = await virtuosoSparqlTransport.execute(query)
 
   if (result.kind !== 'bindings') {
     return []
@@ -423,7 +337,7 @@ export async function getClasses(): Promise<string[]> {
     LIMIT 1000
   `
 
-  const result = await executeQuery(query)
+  const result = await virtuosoSparqlTransport.execute(query)
 
   if (result.kind !== 'bindings') {
     return []

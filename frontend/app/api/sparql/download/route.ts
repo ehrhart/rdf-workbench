@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
 import { getWorkbenchRuntime } from '@/lib/runtime'
-import { detectSparqlQueryKind } from '@/lib/sparql/query-kind'
 
 interface DownloadPayload {
   query?: string
@@ -19,14 +18,8 @@ export async function POST(request: Request) {
     }
 
     const runtime = await getWorkbenchRuntime()
-    const allowedFormats = runtime.sparql.getDownloadFormats(
-      detectSparqlQueryKind(query)
-    )
-    if (!format || !allowedFormats.some((item) => item.mime === format)) {
-      return NextResponse.json({ error: 'Unsupported format' }, { status: 400 })
-    }
 
-    const upstream = await runtime.sparql.download(query, format)
+    const upstream = await runtime.sparql.download(query, format ?? '')
 
     const upstreamContentType = upstream.headers.get('content-type')
     const upstreamDisposition = upstream.headers.get('content-disposition')
@@ -42,7 +35,10 @@ export async function POST(request: Request) {
     }
 
     const headers = new Headers()
-    headers.set('Content-Type', upstreamContentType ?? format)
+    headers.set(
+      'Content-Type',
+      upstreamContentType ?? format ?? 'application/octet-stream'
+    )
 
     const filename = sanitizeFilename(
       payload.filename || extractFilename(upstreamDisposition)
@@ -57,9 +53,7 @@ export async function POST(request: Request) {
     })
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Download failed'
-    const status =
-      error instanceof Error && error.name === 'QleverReadOnlyError' ? 405 : 400
-    return NextResponse.json({ error: message }, { status })
+    return NextResponse.json({ error: message }, { status: 400 })
   }
 }
 

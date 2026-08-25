@@ -1,10 +1,25 @@
 import { type NextRequest, NextResponse } from 'next/server'
+import {
+  acceptsHtml,
+  isSparqlQueryBody,
+  isSparqlResultAccept
+} from '@/lib/sparql/negotiation'
 
 const PUBLIC_PATHS = ['/login', '/logout']
+
+type SparqlRouting = 'page' | 'query' | 'not-acceptable'
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
   const provider = process.env.TRIPLESTORE_PROVIDER
+
+  const routing = classifySparqlRequest(request)
+  if (routing === 'query') {
+    return NextResponse.rewrite(new URL('/api/sparql/query', request.url))
+  }
+  if (routing === 'not-acceptable') {
+    return new NextResponse('Not Acceptable', { status: 406 })
+  }
 
   const unavailableForQlever =
     provider === 'qlever' &&
@@ -62,6 +77,30 @@ export async function proxy(request: NextRequest) {
   }
 
   return NextResponse.next()
+}
+
+function classifySparqlRequest(request: NextRequest): SparqlRouting {
+  if (request.nextUrl.pathname !== '/sparql') return 'page'
+
+  if (isSparqlResultAccept(request.headers.get('accept'))) return 'query'
+
+  if (request.method === 'POST') {
+    return isSparqlQueryBody(request.headers.get('content-type'))
+      ? 'query'
+      : 'page'
+  }
+
+  if (isNextJsInternalRequest(request)) return 'page'
+  return acceptsHtml(request.headers.get('accept')) ? 'page' : 'not-acceptable'
+}
+
+function isNextJsInternalRequest(request: NextRequest): boolean {
+  const accept = request.headers.get('accept') ?? ''
+  return (
+    request.headers.get('rsc') === '1' ||
+    request.headers.has('next-router-state-tree') ||
+    accept.includes('text/x-component')
+  )
 }
 
 export default proxy

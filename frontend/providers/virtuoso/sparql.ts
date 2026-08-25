@@ -2,27 +2,22 @@ import 'server-only'
 
 import { getRuntimeConfig } from '@/lib/runtime/config'
 import type {
-  DownloadFormat,
   SparqlRequestOptions,
   SparqlTransport
 } from '@/lib/runtime/contracts'
-import { TABULAR_FORMATS } from '@/lib/sparql/negotiation'
+import { GRAPH_FORMATS, TABULAR_FORMATS } from '@/lib/sparql/negotiation'
 import { normalizeSparqlJsonResult } from '@/lib/sparql/results'
 import type { SparqlQueryResult } from '@/types'
 
-const GRAPH_FORMATS: readonly DownloadFormat[] = [
-  { label: 'Turtle', mime: 'text/turtle', extension: 'ttl' }
-]
-
 function config() {
   const value = getRuntimeConfig()
-  if (value.TRIPLESTORE_PROVIDER !== 'qlever') {
-    throw new Error('QLever transport requested in a Virtuoso deployment')
+  if (value.TRIPLESTORE_PROVIDER !== 'virtuoso') {
+    throw new Error('Virtuoso transport requested in a QLever deployment')
   }
   return value
 }
 
-async function fetchQlever(
+async function fetchVirtuoso(
   query: string,
   accept: string,
   options: SparqlRequestOptions = {}
@@ -37,15 +32,13 @@ async function fetchQlever(
       : null
 
   try {
-    const body = new URLSearchParams({ query })
     return await fetch(runtime.SPARQL_ENDPOINT, {
       method: 'POST',
       headers: {
         Accept: accept,
-        'Content-Type': 'application/x-www-form-urlencoded',
-        ...(options.queryId ? { 'Query-Id': options.queryId } : {})
+        'Content-Type': 'application/sparql-query'
       },
-      body,
+      body: query,
       signal: options.signal ?? controller?.signal,
       cache: 'no-store'
     })
@@ -54,9 +47,9 @@ async function fetchQlever(
   }
 }
 
-export const qleverSparqlTransport: SparqlTransport = {
+export const virtuosoSparqlTransport: SparqlTransport = {
   async execute(query, options): Promise<SparqlQueryResult> {
-    const response = await fetchQlever(
+    const response = await fetchVirtuoso(
       query,
       'application/sparql-results+json',
       options
@@ -64,7 +57,7 @@ export const qleverSparqlTransport: SparqlTransport = {
     if (!response.ok) {
       const body = await response.text()
       throw new Error(
-        body || `QLever query failed with status ${response.status}`
+        body || `Virtuoso query failed with status ${response.status}`
       )
     }
 
@@ -79,12 +72,12 @@ export const qleverSparqlTransport: SparqlTransport = {
   },
 
   download(query, format, options) {
-    return fetchQlever(query, format, options)
+    return fetchVirtuoso(query, format, options)
   },
 
   getDownloadFormats(kind) {
-    if (kind === 'construct' || kind === 'describe') return GRAPH_FORMATS
-    if (kind === 'select') return TABULAR_FORMATS
-    return []
+    return kind === 'construct' || kind === 'describe'
+      ? GRAPH_FORMATS
+      : TABULAR_FORMATS
   }
 }
