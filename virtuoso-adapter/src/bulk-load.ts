@@ -5,6 +5,27 @@ import { logger } from './logger'
 import type { VirtuosoSession } from './session-manager'
 import type { BulkLoadJobStatus, CpuCountResult, LoadListRow } from './types'
 
+function userImportDir(userId: string): string {
+  return path.join(IMPORTS_PATH, userId)
+}
+
+function scopedFilePattern(userId: string, filename: string): string {
+  return `%/${userId}/${filename}`
+}
+
+function buildJobId(userId: string, filename: string, graphIri: string): string {
+  return `${userId}|${filename}|${graphIri}`
+}
+
+function parseJobId(
+  jobId: string
+): { userId: string; filename: string; graphIri: string } | null {
+  const [userId, filename, ...rest] = jobId.split('|')
+  const graphIri = rest.join('|')
+  if (!userId || !filename || !graphIri) return null
+  return { userId, filename, graphIri }
+}
+
 /**
  * Maps Virtuoso LOAD_LIST state codes to human-readable status strings.
  * Based on Virtuoso documentation: 0=scheduled, 1=loading, 2=completed, 3=failed.
@@ -35,7 +56,9 @@ export function mapStateToStatus(
 
 /**
  * Registers a file for bulk loading into Virtuoso.
- * @param filename Name of the file in imports directory
+ * Files are scoped to the submitting user so identical filenames from
+ * different users do not clobber each other.
+ * @param filename Name of the file in the user's imports directory
  * @param graphIri Target graph IRI
  * @returns Job ID
  */
@@ -45,11 +68,14 @@ export async function registerBulkLoadJob(
   graphIri: string
 ): Promise<string> {
   const connection = await getConnection(session)
+  const filePattern = scopedFilePattern(session.userId, filename)
 
-  // Virtuoso won't process duplicate entries in LOAD_LIST, so remove any existing job for this file and graph
-  // Virtuoso stores absolute paths in LOAD_LIST, so we match by suffix to cover local and remote paths.
+  // Virtuoso won't process duplicate entries in LOAD_LIST, so remove any
+  // existing job for this user's file and graph.
+  // Virtuoso stores absolute paths in LOAD_LIST, so we match by suffix to
+  // cover local and remote paths.
   const existingJob = await connection.query(
-    `SELECT ll_file, ll_graph FROM DB.DBA.LOAD_LIST WHERE ll_file LIKE '%${filename}'`
+    `SELECT ll_file, ll_graph FROM DB.DBA.LOAD_LIST WHERE ll_file LIKE '${filePattern}'`
   )
   if (existingJob.length > 0) {
     logger.info('File already registered in LOAD_LIST, removing existing job', {
@@ -57,23 +83,23 @@ export async function registerBulkLoadJob(
       graphIri
     })
     await connection.query(
-      `DELETE FROM DB.DBA.LOAD_LIST WHERE ll_file LIKE '%${filename}'`
+      `DELETE FROM DB.DBA.LOAD_LIST WHERE ll_file LIKE '${filePattern}'`
     )
   }
 
-  // Register file for loading using relative path that Virtuoso can access
+  // Register file for loading using the user-scoped directory
   logger.info('Registering file for bulk load', {
     filename,
     graphIri,
-    path: IMPORTS_PATH
+    path: userImportDir(session.userId)
   })
   // ld_dir registers files for the RDF bulk loader. Docs: https://docs.openlinksw.com/virtuoso/rdfperstrload/#rdfperstrloadbulk
   await connection.query(
-    `ld_dir('${IMPORTS_PATH}', '${filename}', '${graphIri}')`
+    `ld_dir('${userImportDir(session.userId)}', '${filename}', '${graphIri}')`
   )
   await connection.close()
 
-  const jobId = `${filename}|${graphIri}`
+  const jobId = buildJobId(session.userId, filename, graphIri)
   logger.info('Bulk load job created', { jobId, filename, graphIri })
 
   return jobId
@@ -81,16 +107,16 @@ export async function registerBulkLoadJob(
 
 /**
  * Gets the status of a bulk load job.
- * @param jobId Job identifier in format "filename|graphIri"
+ * @param jobId Job identifier in format "userId|filename|graphIri"
  * @returns Job status details
  */
 export async function getBulkLoadJobStatus(
   session: VirtuosoSession,
   jobId: string
 ): Promise<BulkLoadJobStatus> {
-  const [filename, graphIri] = jobId.split('|')
+  const parsed = parseJobId(jobId)
 
-  if (!filename || !graphIri) {
+  if (!parsed || parsed.userId !== session.userId) {
     throw new Error('Invalid job ID')
   }
 
@@ -102,7 +128,7 @@ export async function getBulkLoadJobStatus(
       ll_file, ll_graph, ll_state, ll_started, ll_done,
       ll_host, ll_work_time, ll_error
     FROM DB.DBA.LOAD_LIST
-    WHERE ll_file LIKE '%${filename}' AND ll_graph = '${graphIri}'
+    WHERE ll_file LIKE '${scopedFilePattern(parsed.userId, parsed.filename)}' AND ll_graph = '${parsed.graphIri}'
   `
 
   const result = await connection.query(query)
@@ -129,20 +155,21 @@ export async function getBulkLoadJobStatus(
 }
 
 /**
- * Gets all bulk load jobs from the LOAD_LIST table.
- * @returns Array of all job statuses
+ * Gets the bulk load jobs belonging to the given user.
+ * @returns Array of job statuses
  */
 export async function getAllBulkLoadJobs(
   session: VirtuosoSession
 ): Promise<BulkLoadJobStatus[]> {
   const connection = await getConnection(session)
 
-  // Query all jobs from the LOAD_LIST table
+  // Query only this user's jobs from the LOAD_LIST table
   const result = await connection.query(`
     SELECT
       ll_file, ll_graph, ll_state, ll_started, ll_done,
       ll_host, ll_work_time, ll_error
     FROM DB.DBA.LOAD_LIST
+    WHERE ll_file LIKE '%/${session.userId}/%'
   `)
   await connection.close()
 
@@ -156,7 +183,11 @@ export async function getAllBulkLoadJobs(
     host: job.ll_host,
     workTime: job.ll_work_time,
     error: job.ll_error,
-    jobId: `${path.basename(job.ll_file)}|${job.ll_graph}` // TODO: maybe hash it?
+    jobId: buildJobId(
+      session.userId,
+      path.basename(job.ll_file),
+      job.ll_graph
+    )
   }))
 
   return jobs
@@ -164,15 +195,15 @@ export async function getAllBulkLoadJobs(
 
 /**
  * Cancels a running or queued bulk load job.
- * @param jobId Job identifier in format "filename|graphIri"
+ * @param jobId Job identifier in format "userId|filename|graphIri"
  */
 export async function cancelBulkLoadJob(
   session: VirtuosoSession,
   jobId: string
 ): Promise<void> {
-  const [filename, graphIri] = jobId.split('|')
+  const parsed = parseJobId(jobId)
 
-  if (!filename || !graphIri) {
+  if (!parsed || parsed.userId !== session.userId) {
     throw new Error('Invalid job ID')
   }
 
@@ -182,7 +213,7 @@ export async function cancelBulkLoadJob(
   const jobResult = await connection.query(`
     SELECT ll_state, ll_error
     FROM DB.DBA.LOAD_LIST
-    WHERE ll_file LIKE '%${filename}' AND ll_graph = '${graphIri}'
+    WHERE ll_file LIKE '${scopedFilePattern(parsed.userId, parsed.filename)}' AND ll_graph = '${parsed.graphIri}'
   `)
 
   if (jobResult.length === 0) {
@@ -198,13 +229,16 @@ export async function cancelBulkLoadJob(
     throw new Error(`Job is already in ${status} state`)
   }
 
-  // Stop the RDF loader
-  await connection.query('rdf_load_stop()')
+  // Only stop the whole loader when this user's job is actually running;
+  // queued jobs can be removed without interrupting other users.
+  if (status === 'in-progress') {
+    await connection.query('rdf_load_stop()')
+  }
 
   // Delete the job from LOAD_LIST
   await connection.query(`
     DELETE FROM DB.DBA.LOAD_LIST
-    WHERE ll_file LIKE '%${filename}' AND ll_graph = '${graphIri}'
+    WHERE ll_file LIKE '${scopedFilePattern(parsed.userId, parsed.filename)}' AND ll_graph = '${parsed.graphIri}'
   `)
 
   await connection.close()
@@ -223,7 +257,7 @@ export async function removeBulkLoadJobsForFile(
   const connection = await getConnection(session)
   await connection.query(`
     DELETE FROM DB.DBA.LOAD_LIST
-    WHERE ll_file LIKE '%${filename}'
+    WHERE ll_file LIKE '${scopedFilePattern(session.userId, filename)}'
   `)
   await connection.close()
   logger.info('Related bulk load jobs removed', { filename })

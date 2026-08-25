@@ -12,6 +12,7 @@ import { IMPORTS_PATH, MAX_UPLOAD_BYTES } from '../config'
 import {
   deleteFile,
   ensureImportsDirectory,
+  ensureUserImportsDirectory,
   fileExists,
   saveRemoteFile,
   saveTextSnippet
@@ -26,12 +27,14 @@ import type {
   UrlImportRequest
 } from '../types'
 
-// Configure multer to stream directly to disk for large file support (>2GB)
+// Configure multer to stream directly to disk for large file support (>2GB).
+// Files are stored in a per-user subdirectory so identical filenames from
+// different users do not overwrite each other.
 const storage = multer.diskStorage({
-  destination: async (_req, _file, cb) => {
+  destination: async (req, _file, cb) => {
     try {
-      await ensureImportsDirectory()
-      cb(null, IMPORTS_PATH)
+      const dir = await ensureUserImportsDirectory(req.dbSession?.userId ?? 'shared')
+      cb(null, dir)
     } catch (error) {
       cb(error as Error, IMPORTS_PATH)
     }
@@ -158,8 +161,18 @@ export async function uploadFromUrl(
     return
   }
 
+  const session = ensureSession(req, res)
+  if (!session) {
+    return
+  }
+
   try {
-    const result = await saveRemoteFile(url, undefined, extension)
+    const result = await saveRemoteFile(
+      url,
+      undefined,
+      extension,
+      session.userId
+    )
     res.json(result)
     return
   } catch (error) {
@@ -190,8 +203,18 @@ export async function uploadSnippet(
     return
   }
 
+  const session = ensureSession(req, res)
+  if (!session) {
+    return
+  }
+
   try {
-    const result = await saveTextSnippet(content, undefined, extension)
+    const result = await saveTextSnippet(
+      content,
+      undefined,
+      extension,
+      session.userId
+    )
     res.json(result)
     return
   } catch (error) {
@@ -225,18 +248,18 @@ export async function bulkLoad(req: Request, res: Response): Promise<void> {
     return
   }
 
-  // Check if file exists in imports folder
-  const exists = await fileExists(filename)
+  const session = ensureSession(req, res)
+  if (!session) {
+    return
+  }
+
+  // Check if file exists in the user's imports folder
+  const exists = await fileExists(filename, session.userId)
   if (!exists) {
     res.status(404).json({
       error: 'File not found',
       message: `File ${filename} does not exist in the imports directory`
     } as ErrorResponse)
-    return
-  }
-
-  const session = ensureSession(req, res)
-  if (!session) {
     return
   }
 
@@ -370,8 +393,8 @@ export async function deleteFileHandler(
   }
 
   try {
-    // Delete the file
-    await deleteFile(filename)
+    // Delete the file from the user's imports directory
+    await deleteFile(filename, session.userId)
 
     // Delete any related jobs from LOAD_LIST if needed
     await removeBulkLoadJobsForFile(session, filename)
