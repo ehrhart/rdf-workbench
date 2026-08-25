@@ -45,7 +45,7 @@ export async function loginVirtuosoUser(
   const principal: Principal = {
     id: String(body.user.id),
     username: String(body.user.username),
-    role: 'user'
+    role: 'admin'
   }
   await createSession(principal.id, principal.username, String(body.token))
   return principal
@@ -57,7 +57,7 @@ export async function getVirtuosoPrincipal(): Promise<Principal | null> {
   return {
     id: session.userId,
     username: session.username,
-    role: 'user'
+    role: 'admin'
   }
 }
 
