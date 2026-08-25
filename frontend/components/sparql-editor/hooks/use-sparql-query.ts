@@ -8,6 +8,7 @@ interface DownloadRequest {
   query?: string
   format: string
   filename?: string
+  results?: SparqlQueryResult | null
 }
 
 export function useSparqlQuery(endpoint: string) {
@@ -106,7 +107,8 @@ export function useSparqlQuery(endpoint: string) {
       body: JSON.stringify({
         query: trimmedQuery,
         format: request.format,
-        filename
+        filename,
+        results: request.results ?? null
       })
     })
 

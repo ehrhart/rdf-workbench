@@ -1,10 +1,13 @@
 import { NextResponse } from 'next/server'
 import { getWorkbenchRuntime } from '@/lib/runtime'
+import { serializeResults } from '@/lib/sparql/serialize'
+import type { SparqlQueryResult } from '@/types'
 
 interface DownloadPayload {
   query?: string
   format?: string
   filename?: string
+  results?: SparqlQueryResult | null
 }
 
 export async function POST(request: Request) {
@@ -13,13 +16,34 @@ export async function POST(request: Request) {
     const query = payload.query?.trim()
     const format = payload.format?.trim()
 
+    if (!format) {
+      return NextResponse.json({ error: 'Format is required' }, { status: 400 })
+    }
+
+    const filename = sanitizeFilename(payload.filename)
+
+    if (payload.results) {
+      const serialized = serializeResults(payload.results, format)
+      if (serialized) {
+        const headers = new Headers()
+        headers.set('Content-Type', serialized.contentType)
+        if (filename) {
+          headers.set(
+            'Content-Disposition',
+            `attachment; filename="${filename}"`
+          )
+        }
+        return new Response(serialized.body, { status: 200, headers })
+      }
+    }
+
     if (!query) {
       return NextResponse.json({ error: 'Query is required' }, { status: 400 })
     }
 
     const runtime = await getWorkbenchRuntime()
 
-    const upstream = await runtime.sparql.download(query, format ?? '')
+    const upstream = await runtime.sparql.download(query, format)
 
     const upstreamContentType = upstream.headers.get('content-type')
     const upstreamDisposition = upstream.headers.get('content-disposition')
@@ -40,11 +64,13 @@ export async function POST(request: Request) {
       upstreamContentType ?? format ?? 'application/octet-stream'
     )
 
-    const filename = sanitizeFilename(
-      payload.filename || extractFilename(upstreamDisposition)
-    )
-    if (filename) {
-      headers.set('Content-Disposition', `attachment; filename="${filename}"`)
+    const upstreamFilename =
+      filename || sanitizeFilename(extractFilename(upstreamDisposition))
+    if (upstreamFilename) {
+      headers.set(
+        'Content-Disposition',
+        `attachment; filename="${upstreamFilename}"`
+      )
     }
 
     return new Response(upstream.body, {
