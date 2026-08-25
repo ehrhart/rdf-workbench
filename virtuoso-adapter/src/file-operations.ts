@@ -2,7 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 import { promisify } from 'node:util'
-import { IMPORTS_PATH } from './config'
+import { IMPORTS_PATH, MAX_UPLOAD_BYTES } from './config'
 import { logger } from './logger'
 
 // Promisified file system operations for async/await usage
@@ -11,6 +11,34 @@ const unlinkAsync = promisify(fs.unlink)
 const statAsync = promisify(fs.stat)
 const mkdirAsync = promisify(fs.mkdir)
 const accessAsync = promisify(fs.access)
+
+const REMOTE_FETCH_TIMEOUT_MS = 60_000
+
+async function readRemoteBody(
+  response: Response,
+  limit: number
+): Promise<Buffer> {
+  if (!response.body) {
+    throw new Error('Remote response has no body')
+  }
+
+  const reader = response.body.getReader()
+  const chunks: Uint8Array[] = []
+  let total = 0
+  for (;;) {
+    const { done, value } = await reader.read()
+    if (done) break
+    total += value.byteLength
+    if (total > limit) {
+      await reader.cancel().catch(() => undefined)
+      throw new Error(
+        `Remote file exceeds the maximum allowed size of ${limit} bytes`
+      )
+    }
+    chunks.push(value)
+  }
+  return Buffer.concat(chunks)
+}
 
 /**
  * Ensures the imports directory exists, creating it if necessary.
@@ -184,14 +212,23 @@ export async function saveRemoteFile(
   userId?: string
 ): Promise<{ filename: string; size: number; path: string }> {
   try {
-    const response = await fetch(sourceUrl)
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), REMOTE_FETCH_TIMEOUT_MS)
+    let response: Response
+    try {
+      response = await fetch(sourceUrl, {
+        signal: controller.signal,
+        redirect: 'follow'
+      })
+    } finally {
+      clearTimeout(timeout)
+    }
 
     if (!response.ok) {
       throw new Error(`Failed to download file: ${response.statusText}`)
     }
 
-    const arrayBuffer = await response.arrayBuffer()
-    const buffer = Buffer.from(arrayBuffer)
+    const buffer = await readRemoteBody(response, MAX_UPLOAD_BYTES)
 
     if (buffer.length === 0) {
       throw new Error('Downloaded file is empty')
