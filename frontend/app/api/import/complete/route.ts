@@ -12,6 +12,10 @@ import { getSessionFromRequest } from '@/providers/virtuoso/request-auth'
 const UPLOADS_DIR = join(process.cwd(), 'uploads')
 const UPLOAD_TIMEOUT_MS = 10 * 60 * 1000 // 10 minutes timeout for large files
 
+function stagedFilePath(userId: string, filename: string): string {
+  return join(UPLOADS_DIR, userId, filename)
+}
+
 /**
  * After chunks are uploaded, this endpoint forwards the complete file
  * to the Virtuoso adapter using streaming to support large files.
@@ -37,7 +41,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const filePath = join(UPLOADS_DIR, filename)
+    const filePath = stagedFilePath(session.userId, filename)
 
     // Check if file exists
     try {
@@ -146,7 +150,7 @@ export async function POST(req: NextRequest) {
     // Clean up file on error if we have a filename
     if (filename) {
       try {
-        await unlink(join(UPLOADS_DIR, filename))
+        await unlink(stagedFilePath(session.userId, filename))
       } catch {
         // Ignore cleanup errors
       }

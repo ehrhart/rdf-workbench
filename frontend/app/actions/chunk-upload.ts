@@ -5,6 +5,7 @@ import { mkdir, open, unlink } from 'node:fs/promises'
 import { join } from 'node:path'
 
 import type { ChunkUploadHandler } from 'nextjs-chunk-upload-action'
+import { getWorkbenchRuntime } from '@/lib/runtime'
 
 const UPLOADS_DIR = join(process.cwd(), 'uploads')
 const MAX_CHUNK_SIZE = 10 * 1024 * 1024 // 10MB max per chunk
@@ -15,9 +16,18 @@ interface ChunkMetadata {
   [key: string]: string | number
 }
 
+async function userUploadsDir(): Promise<string> {
+  const runtime = await getWorkbenchRuntime()
+  const principal = await runtime.auth.getPrincipal()
+  const dir = join(UPLOADS_DIR, principal?.id ?? 'anonymous')
+  await mkdir(dir, { recursive: true })
+  return dir
+}
+
 /**
  * Server action to handle chunked file uploads.
- * Saves chunks to a temporary uploads directory in the frontend.
+ * Saves chunks to a per-user temporary uploads directory in the frontend so
+ * concurrent uploads of the same filename by different users do not collide.
  */
 export const chunkUploadAction: ChunkUploadHandler<ChunkMetadata> = async (
   chunkFormData,
@@ -40,10 +50,7 @@ export const chunkUploadAction: ChunkUploadHandler<ChunkMetadata> = async (
 
   const buffer = Buffer.from(await blob.arrayBuffer())
 
-  // Ensure uploads directory exists
-  await mkdir(UPLOADS_DIR, { recursive: true })
-
-  const filePath = join(UPLOADS_DIR, metadata.name)
+  const filePath = join(await userUploadsDir(), metadata.name)
 
   let fileHandle: FileHandle | undefined
   try {
