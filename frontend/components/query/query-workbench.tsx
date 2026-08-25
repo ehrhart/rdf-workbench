@@ -1,9 +1,11 @@
 'use client'
 
 import {
+  CheckIcon,
   CopyIcon,
   DownloadIcon,
   EditIcon,
+  LinkIcon,
   PlayIcon,
   PlusIcon,
   UndoIcon,
@@ -174,6 +176,7 @@ export function QueryWorkbench<TResults>({
   >({})
   const [elapsedTime, setElapsedTime] = useState<number>(0)
   const [isExporting, setIsExporting] = useState(false)
+  const [isLinkCopied, setIsLinkCopied] = useState(false)
   const initializedRef = useRef<boolean>(false)
 
   const searchParams = useSearchParams()
@@ -421,6 +424,23 @@ export function QueryWorkbench<TResults>({
       })
     }
   }, [runner.abortQuery, activeTabId])
+
+  const handleCopyLink = useCallback(async () => {
+    if (!activeTab?.query.trim()) return
+    const url = `${window.location.origin}${window.location.pathname}?query=${encodeURIComponent(
+      activeTab.query
+    )}`
+    try {
+      await navigator.clipboard.writeText(url)
+      toast.success('Query link copied to clipboard')
+      setIsLinkCopied(true)
+      setTimeout(() => setIsLinkCopied(false), 2000)
+    } catch (err) {
+      toast.error('Failed to copy link', {
+        description: err instanceof Error ? err.message : String(err)
+      })
+    }
+  }, [activeTab?.query])
 
   const handleDownloadResults = useCallback(
     async (format: ExportFormat) => {
@@ -702,6 +722,18 @@ export function QueryWorkbench<TResults>({
               </DropdownMenuContent>
             </DropdownMenu>
           ) : null}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => void handleCopyLink()}
+            disabled={!activeTab?.query?.trim() || isTabLoading}
+            className="hover:bg-primary/10 hover:text-primary hover:border-primary transition-all duration-200"
+          >
+            {isLinkCopied ? <CheckIcon /> : <LinkIcon />}
+            <span className="hidden sm:inline-block">
+              {isLinkCopied ? 'Copied!' : 'Copy Link'}
+            </span>
+          </Button>
         </div>
         <div className="flex items-center gap-2">
           {enableSavedQueries ? (
