@@ -6,8 +6,8 @@ import type {
   AutocompletionToken,
   CompleterConfig
 } from '@zazuko/yasqe/build/ts/src/autocompleters'
-import { Braces, ScanSearch } from 'lucide-react'
-import { memo, useEffect, useRef, useState } from 'react'
+import { Braces, RefreshCw, ScanSearch, TriangleAlert } from 'lucide-react'
+import { memo, useCallback, useEffect, useRef, useState } from 'react'
 import { ResizableBox, type ResizeCallbackData } from 'react-resizable'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -16,6 +16,7 @@ interface QueryEditorProps {
   prefixes?: Record<string, string>
   value: string
   onChange?: (yasqe: Yasqe) => void
+  activeTabId?: string
 }
 
 const MAX_SUGGESTIONS = 100
@@ -63,7 +64,12 @@ const filterIriSuggestions = (
     .slice(0, MAX_SUGGESTIONS)
 }
 
-const QueryEditor = ({ prefixes = {}, value, onChange }: QueryEditorProps) => {
+const QueryEditor = ({
+  prefixes = {},
+  value,
+  onChange,
+  activeTabId = ''
+}: QueryEditorProps) => {
   const editorRef = useRef<HTMLDivElement>(null)
   const yasqeRef = useRef<Yasqe | null>(null)
   const [height, setHeight] = useState<number>(320)
@@ -79,6 +85,14 @@ const QueryEditor = ({ prefixes = {}, value, onChange }: QueryEditorProps) => {
   }>({})
   const initialValueRef = useRef(value)
   const onChangeRef = useRef(onChange)
+  const lastActiveTabIdRef = useRef<string | null>(null)
+  const cursorPositionsRef = useRef<
+    Record<string, { line: number; ch: number }>
+  >({})
+  const [autocompleteError, setAutocompleteError] = useState<string | null>(
+    null
+  )
+  const [autocompleteRetryToken, setAutocompleteRetryToken] = useState(0)
 
   useEffect(() => {
     prefixMapRef.current = prefixes
@@ -94,40 +108,53 @@ const QueryEditor = ({ prefixes = {}, value, onChange }: QueryEditorProps) => {
     onChangeRef.current = onChange
   }, [onChange])
 
-  useEffect(() => {
-    // Fetch properties from API
-    const fetchProps = async () => {
-      try {
-        const response = await fetch('/api/properties')
-        if (response.ok) {
+  const loadAutocompleteSources = useCallback(async (_retryToken: number) => {
+    setAutocompleteError(null)
+    const failures: string[] = []
+
+    await Promise.all([
+      (async () => {
+        try {
+          const response = await fetch('/api/properties')
+          if (!response.ok) {
+            throw new Error(`properties endpoint returned ${response.status}`)
+          }
           const data = await response.json()
           propertiesRef.current = Array.from(
             new Set((data as string[]).filter(Boolean))
           )
+        } catch (error) {
+          failures.push('property names')
+          console.error('Failed to fetch properties:', error)
         }
-      } catch (error) {
-        console.error('Failed to fetch properties:', error)
-      }
-    }
-
-    // Fetch classes from API
-    const fetchCls = async () => {
-      try {
-        const response = await fetch('/api/classes')
-        if (response.ok) {
+      })(),
+      (async () => {
+        try {
+          const response = await fetch('/api/classes')
+          if (!response.ok) {
+            throw new Error(`classes endpoint returned ${response.status}`)
+          }
           const data = await response.json()
           classesRef.current = Array.from(
             new Set((data as string[]).filter(Boolean))
           )
+        } catch (error) {
+          failures.push('class names')
+          console.error('Failed to fetch classes:', error)
         }
-      } catch (error) {
-        console.error('Failed to fetch classes:', error)
-      }
-    }
+      })()
+    ])
 
-    fetchProps()
-    fetchCls()
-  }, []) // Empty dependency array - only run once on mount
+    if (failures.length > 0) {
+      setAutocompleteError(
+        `Could not load ${failures.join(' and ')} for autocomplete.`
+      )
+    }
+  }, [])
+
+  useEffect(() => {
+    void loadAutocompleteSources(autocompleteRetryToken)
+  }, [loadAutocompleteSources, autocompleteRetryToken])
 
   useEffect(() => {
     if (autocompletersRegisteredRef.current) return
@@ -249,13 +276,32 @@ const QueryEditor = ({ prefixes = {}, value, onChange }: QueryEditorProps) => {
     }
   }, []) // Only run once on mount
 
-  // Update editor value when prop changes and differs from current value
+  // Update editor value when prop changes and differs from current value,
+  // preserving the cursor position per tab so switching tabs does not
+  // remount or reset the caret.
   useEffect(() => {
     const yasqe = yasqeRef.current
-    if (yasqe && yasqe.getValue() !== value) {
-      yasqe.setValue(value)
+    if (!yasqe) return
+
+    if (yasqe.getValue() === value) {
+      lastActiveTabIdRef.current = activeTabId
+      return
     }
-  }, [value])
+
+    const previousTabId = lastActiveTabIdRef.current
+    if (previousTabId) {
+      cursorPositionsRef.current[previousTabId] = yasqe.getCursor()
+    }
+
+    yasqe.setValue(value)
+
+    const savedCursor = cursorPositionsRef.current[activeTabId]
+    if (savedCursor) {
+      yasqe.setCursor(savedCursor)
+    }
+
+    lastActiveTabIdRef.current = activeTabId
+  }, [value, activeTabId])
 
   // Handle resize
   const handleResize = (
@@ -319,6 +365,28 @@ const QueryEditor = ({ prefixes = {}, value, onChange }: QueryEditorProps) => {
             <ScanSearch className="size-3.5" />
             Check
           </Button>
+          <div className="ml-auto flex items-center gap-1">
+            {autocompleteError && (
+              <>
+                <span className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400">
+                  <TriangleAlert className="size-3.5" />
+                  Autocomplete data unavailable
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() =>
+                    setAutocompleteRetryToken((token) => token + 1)
+                  }
+                  className="h-7 gap-1 px-2 text-xs"
+                  title={autocompleteError}
+                >
+                  <RefreshCw className="size-3.5" />
+                  Retry
+                </Button>
+              </>
+            )}
+          </div>
         </div>
         <div className="min-h-0 flex-1">
           <div ref={editorRef} className="size-full" />
@@ -331,6 +399,7 @@ const QueryEditor = ({ prefixes = {}, value, onChange }: QueryEditorProps) => {
 export default memo(QueryEditor, (prevProps, nextProps) => {
   return (
     prevProps.value === nextProps.value &&
+    prevProps.activeTabId === nextProps.activeTabId &&
     JSON.stringify(prevProps.prefixes) === JSON.stringify(nextProps.prefixes)
   )
 })

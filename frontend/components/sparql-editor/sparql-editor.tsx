@@ -170,10 +170,10 @@ export default function SparqlEditor({
       currentUser={currentUser ?? null}
       renderEditor={({ value, onChange, activeTabId }) => (
         <QueryEditor
-          key={activeTabId}
           value={value}
           onChange={(editor) => onChange(editor.getValue())}
           prefixes={prefixes}
+          activeTabId={activeTabId}
         />
       )}
       resultViews={resultViews}
