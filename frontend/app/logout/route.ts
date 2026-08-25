@@ -12,7 +12,5 @@ export async function GET(request: NextRequest) {
   await (await getWorkbenchRuntime()).auth.logout()
 
   const requested = safeRedirect(request.nextUrl.searchParams.get('redirect'))
-  redirect(
-    requested ? `/login?redirect=${encodeURIComponent(requested)}` : '/'
-  )
+  redirect(requested ? `/login?redirect=${encodeURIComponent(requested)}` : '/')
 }
