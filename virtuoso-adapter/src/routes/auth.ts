@@ -4,6 +4,62 @@ import { extractAuthToken } from '../middleware/auth'
 import { createUserSession, destroySession } from '../session-manager'
 import type { ErrorResponse, LoginRequest } from '../types'
 
+const MAX_FAILED_ATTEMPTS = 5
+const WINDOW_MS = 15 * 60 * 1000
+const BLOCK_MS = 15 * 60 * 1000
+
+interface LoginAttempt {
+  count: number
+  firstAttempt: number
+  blockedUntil: number
+}
+
+const attempts = new Map<string, LoginAttempt>()
+
+function loginKey(username: string): string {
+  return username.trim().toLowerCase()
+}
+
+function checkRateLimit(key: string): {
+  allowed: boolean
+  retryAfterSeconds?: number
+} {
+  const now = Date.now()
+  const record = attempts.get(key)
+  if (!record) return { allowed: true }
+  if (record.blockedUntil > now) {
+    return {
+      allowed: false,
+      retryAfterSeconds: Math.ceil((record.blockedUntil - now) / 1000)
+    }
+  }
+  if (now - record.firstAttempt > WINDOW_MS) {
+    attempts.delete(key)
+    return { allowed: true }
+  }
+  return { allowed: true }
+}
+
+function recordFailure(key: string): void {
+  const now = Date.now()
+  const record =
+    attempts.get(key) ?? { count: 0, firstAttempt: now, blockedUntil: 0 }
+  if (now - record.firstAttempt > WINDOW_MS) {
+    record.count = 0
+    record.firstAttempt = now
+  }
+  record.count += 1
+  if (record.count >= MAX_FAILED_ATTEMPTS) {
+    record.blockedUntil = now + BLOCK_MS
+    logger.warn('Login temporarily blocked after repeated failures', { key })
+  }
+  attempts.set(key, record)
+}
+
+function recordSuccess(key: string): void {
+  attempts.delete(key)
+}
+
 export async function login(req: Request, res: Response): Promise<void> {
   const { username, password } = req.body as LoginRequest
 
@@ -15,8 +71,20 @@ export async function login(req: Request, res: Response): Promise<void> {
     return
   }
 
+  const key = loginKey(username)
+  const rate = checkRateLimit(key)
+  if (!rate.allowed) {
+    res.set('Retry-After', String(rate.retryAfterSeconds ?? 60))
+    res.status(429).json({
+      error: 'Too many attempts',
+      message: 'Too many failed login attempts. Try again later.'
+    } as ErrorResponse)
+    return
+  }
+
   try {
     const result = await createUserSession(username, password)
+    recordSuccess(key)
     res.json(result)
   } catch (error) {
     const err = error as any
@@ -32,6 +100,10 @@ export async function login(req: Request, res: Response): Promise<void> {
       | undefined
     const isCredentialIssue =
       odbcErrors?.some((e) => e.state === '28000') ?? false
+
+    if (isCredentialIssue) {
+      recordFailure(key)
+    }
 
     res.status(isCredentialIssue ? 401 : 503).json({
       error: 'Authentication failed',
