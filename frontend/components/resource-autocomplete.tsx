@@ -83,7 +83,7 @@ export function ResourceAutocomplete({
   }, [searchInput, enableSuggestions])
 
   return (
-    <div className="flex space-x-2">
+    <div className="flex space-x-2 items-center">
       <AutoComplete
         selectedValue={searchInput}
         onSelectedValueChange={(value) => {
