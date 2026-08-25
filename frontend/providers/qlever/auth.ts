@@ -14,6 +14,7 @@ import { getQleverDatabase } from './database'
 
 const SESSION_COOKIE_NAME = 'session'
 const SESSION_DURATION_MS = 7 * 24 * 60 * 60 * 1000
+export const PASSWORD_MIN_LENGTH = 12
 
 interface UserRow {
   id: string
@@ -194,8 +195,10 @@ export async function createLocalUser(input: {
   await requireLocalAdmin()
   const username = input.username.trim().toLowerCase()
   if (!username) throw new QueryError('Username is required')
-  if (input.password.length < 1) {
-    throw new QueryError('Password is required')
+  if (input.password.length < PASSWORD_MIN_LENGTH) {
+    throw new QueryError(
+      `Password must be at least ${PASSWORD_MIN_LENGTH} characters`
+    )
   }
 
   const db = await getQleverDatabase()
@@ -255,8 +258,10 @@ export async function resetLocalUserPassword(
   password: string
 ): Promise<void> {
   await requireLocalAdmin()
-  if (password.length < 1) {
-    throw new QueryError('Password is required')
+  if (password.length < PASSWORD_MIN_LENGTH) {
+    throw new QueryError(
+      `Password must be at least ${PASSWORD_MIN_LENGTH} characters`
+    )
   }
   const db = await getQleverDatabase()
   const passwordHash = await hash(password)
