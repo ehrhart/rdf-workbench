@@ -69,6 +69,7 @@ import {
   InputGroupInput
 } from '../../ui/input-group'
 import { calculateTableSizing } from '../calculate-table-sizing'
+import ResultsTriples from '../results-triples'
 import { createColumns, type SparqlResultRow } from './table-columns'
 import {
   createDefaultColumnSizingInfo,
@@ -1060,12 +1061,7 @@ const ResultsTableComponent = ({ results }: ResultsTableProps) => {
   }
 
   if (results.kind === 'graph') {
-    return (
-      <div className="flex h-48 items-center justify-center rounded-lg border text-sm text-muted-foreground">
-        This query returned an RDF graph. Switch to the Graph view to inspect
-        it.
-      </div>
-    )
+    return <ResultsTriples results={results} />
   }
 
   return <BindingsResultsTable results={results} />

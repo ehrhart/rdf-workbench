@@ -103,8 +103,6 @@ export default function SparqlEditor({
       {
         id: 'table',
         label: 'Table',
-        isCompatible: (value) =>
-          value.kind === 'bindings' || value.kind === 'boolean',
         render: (value) => <ResultsTable results={value} />
       },
       {
