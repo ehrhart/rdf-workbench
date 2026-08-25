@@ -5,6 +5,7 @@ import type {
   SparqlRequestOptions,
   SparqlTransport
 } from '@/lib/runtime/contracts'
+import { SparqlTimeoutError } from '@/lib/sparql/errors'
 import { GRAPH_FORMATS, TABULAR_FORMATS } from '@/lib/sparql/negotiation'
 import { normalizeSparqlJsonResult } from '@/lib/sparql/results'
 import type { SparqlQueryResult } from '@/types'
@@ -28,9 +29,10 @@ async function fetchVirtuoso(
   const signals: AbortSignal[] = []
   if (options.signal) signals.push(options.signal)
   let timeout: ReturnType<typeof setTimeout> | null = null
+  let timeoutController: AbortController | null = null
   if (timeoutMs > 0) {
-    const timeoutController = new AbortController()
-    timeout = setTimeout(() => timeoutController.abort(), timeoutMs)
+    timeoutController = new AbortController()
+    timeout = setTimeout(() => timeoutController?.abort(), timeoutMs)
     signals.push(timeoutController.signal)
   }
   const signal =
@@ -51,6 +53,11 @@ async function fetchVirtuoso(
       signal,
       cache: 'no-store'
     })
+  } catch (error) {
+    if (timeoutController?.signal.aborted) {
+      throw new SparqlTimeoutError(timeoutMs)
+    }
+    throw error
   } finally {
     if (timeout) clearTimeout(timeout)
   }

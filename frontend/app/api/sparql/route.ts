@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { Parser } from 'sparqljs'
 import { getWorkbenchRuntime } from '@/lib/runtime'
 import type { SparqlQueryKind } from '@/lib/runtime/contracts'
+import { SparqlTimeoutError } from '@/lib/sparql/errors'
 import {
   registerQuery as registerQleverQuery,
   unregisterQuery as unregisterQleverQuery
@@ -80,9 +81,18 @@ export async function POST(request: Request) {
       }
     }
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Server error'
-    const status =
-      error instanceof DOMException && error.name === 'AbortError' ? 504 : 400
-    return NextResponse.json({ error: message }, { status })
+    const isTimeout = error instanceof SparqlTimeoutError
+    const isAbort =
+      !isTimeout && error instanceof DOMException && error.name === 'AbortError'
+    const message = isTimeout
+      ? error.message
+      : isAbort
+        ? 'Query aborted'
+        : error instanceof Error
+          ? error.message
+          : 'Server error'
+    const status = isTimeout ? 504 : isAbort ? 499 : 400
+    const code = isTimeout ? 'timeout' : isAbort ? 'aborted' : 'error'
+    return NextResponse.json({ error: message, code }, { status })
   }
 }

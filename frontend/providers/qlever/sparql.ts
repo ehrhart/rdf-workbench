@@ -6,6 +6,7 @@ import type {
   SparqlRequestOptions,
   SparqlTransport
 } from '@/lib/runtime/contracts'
+import { SparqlTimeoutError } from '@/lib/sparql/errors'
 import { TABULAR_FORMATS } from '@/lib/sparql/negotiation'
 import { normalizeSparqlJsonResult } from '@/lib/sparql/results'
 import type { SparqlQueryResult } from '@/types'
@@ -30,11 +31,21 @@ async function fetchQlever(
   const runtime = config()
 
   const timeoutMs = options.timeoutMs ?? runtime.SPARQL_TIMEOUT_MS
-  const controller = options.signal ? null : new AbortController()
-  const timeout =
-    !options.signal && timeoutMs > 0
-      ? setTimeout(() => controller?.abort(), timeoutMs)
-      : null
+  const signals: AbortSignal[] = []
+  if (options.signal) signals.push(options.signal)
+  let timeout: ReturnType<typeof setTimeout> | null = null
+  let timeoutController: AbortController | null = null
+  if (timeoutMs > 0) {
+    timeoutController = new AbortController()
+    timeout = setTimeout(() => timeoutController?.abort(), timeoutMs)
+    signals.push(timeoutController.signal)
+  }
+  const signal =
+    signals.length === 0
+      ? undefined
+      : signals.length === 1
+        ? signals[0]
+        : AbortSignal.any(signals)
 
   try {
     const body = new URLSearchParams({ query })
@@ -46,9 +57,14 @@ async function fetchQlever(
         ...(options.queryId ? { 'Query-Id': options.queryId } : {})
       },
       body,
-      signal: options.signal ?? controller?.signal,
+      signal,
       cache: 'no-store'
     })
+  } catch (error) {
+    if (timeoutController?.signal.aborted) {
+      throw new SparqlTimeoutError(timeoutMs)
+    }
+    throw error
   } finally {
     if (timeout) clearTimeout(timeout)
   }
