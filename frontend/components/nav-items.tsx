@@ -67,7 +67,7 @@ export function NavItems({
           {items.map((item) => {
             const ItemIcon = item.icon ? NAV_ICONS[item.icon] : null
             const hasSubitems = item.items && item.items.length > 0
-            const isItemActive = pathname === item.url
+            const isItemActive = item.url ? pathname === item.url : false
             const hasActiveSubitem =
               hasSubitems &&
               item.items?.some(
@@ -86,7 +86,11 @@ export function NavItems({
                     isActive={isItemActive}
                     asChild
                   >
-                    <Link href={item.url} target={item.target} rel={item.rel}>
+                    <Link
+                      href={item.url ?? '#'}
+                      target={item.target}
+                      rel={item.rel}
+                    >
                       {ItemIcon && <ItemIcon />}
                       <span className="group-data-[collapsible=icon]:hidden">
                         {item.title}
@@ -128,7 +132,7 @@ export function NavItems({
                       return (
                         <DropdownMenuItem key={subItem.title} asChild>
                           <Link
-                            href={subItem.url}
+                            href={subItem.url ?? '#'}
                             target={subItem.target}
                             rel={subItem.rel}
                             className={isSubItemActive ? 'bg-primary/10' : ''}
@@ -185,7 +189,7 @@ export function NavItems({
                               className="data-[active=true]:bg-primary/10"
                             >
                               <Link
-                                href={subItem.url}
+                                href={subItem.url ?? '#'}
                                 target={subItem.target}
                                 rel={subItem.rel}
                               >

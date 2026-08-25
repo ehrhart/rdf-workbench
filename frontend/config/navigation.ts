@@ -10,7 +10,7 @@ export type NavIcon =
 
 export interface NavItem {
   title: string
-  url: string
+  url?: string
   icon?: NavIcon
   target?: string
   rel?: string
@@ -92,18 +92,22 @@ export const virtuosoNavigation: NavigationConfig = {
   ],
   navSecondary: [
     {
-      title: 'SPARQL docs',
-      url: 'https://www.w3.org/TR/sparql11-query/',
+      title: 'Help',
       icon: 'help',
-      target: '_blank',
-      rel: 'noopener noreferrer'
-    },
-    {
-      title: 'Virtuoso docs',
-      url: 'https://docs.openlinksw.com/virtuoso/',
-      icon: 'help',
-      target: '_blank',
-      rel: 'noopener noreferrer'
+      items: [
+        {
+          title: 'SPARQL docs',
+          url: 'https://www.w3.org/TR/sparql11-query/',
+          target: '_blank',
+          rel: 'noopener noreferrer'
+        },
+        {
+          title: 'Virtuoso docs',
+          url: 'https://docs.openlinksw.com/virtuoso/',
+          target: '_blank',
+          rel: 'noopener noreferrer'
+        }
+      ]
     }
   ]
 }
@@ -139,18 +143,22 @@ export const qleverNavigation: NavigationConfig = {
   ],
   navSecondary: [
     {
-      title: 'SPARQL docs',
-      url: 'https://www.w3.org/TR/sparql11-query/',
+      title: 'Help',
       icon: 'help',
-      target: '_blank',
-      rel: 'noopener noreferrer'
-    },
-    {
-      title: 'QLever docs',
-      url: 'https://docs.qlever.dev/',
-      icon: 'help',
-      target: '_blank',
-      rel: 'noopener noreferrer'
+      items: [
+        {
+          title: 'SPARQL docs',
+          url: 'https://www.w3.org/TR/sparql11-query/',
+          target: '_blank',
+          rel: 'noopener noreferrer'
+        },
+        {
+          title: 'QLever docs',
+          url: 'https://docs.qlever.dev/',
+          target: '_blank',
+          rel: 'noopener noreferrer'
+        }
+      ]
     }
   ]
 }
