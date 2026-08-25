@@ -6,8 +6,11 @@ import type {
   AutocompletionToken,
   CompleterConfig
 } from '@zazuko/yasqe/build/ts/src/autocompleters'
+import { Braces, ScanSearch } from 'lucide-react'
 import { memo, useEffect, useRef, useState } from 'react'
 import { ResizableBox, type ResizeCallbackData } from 'react-resizable'
+import { toast } from 'sonner'
+import { Button } from '@/components/ui/button'
 
 interface QueryEditorProps {
   prefixes?: Record<string, string>
@@ -262,11 +265,31 @@ const QueryEditor = ({ prefixes = {}, value, onChange }: QueryEditorProps) => {
     setHeight(size.height)
   }
 
+  const handleFormat = () => {
+    const yasqe = yasqeRef.current
+    if (!yasqe) return
+    yasqe.autoformat()
+    toast.success('Query formatted')
+  }
+
+  const handleCheckSyntax = () => {
+    const yasqe = yasqeRef.current
+    if (!yasqe) return
+    yasqe.checkSyntax()
+    if (yasqe.queryValid) {
+      toast.success('No syntax errors found')
+    } else {
+      toast.error('Syntax errors found', {
+        description: 'Errors are marked in the editor gutter.'
+      })
+    }
+  }
+
   return (
     <ResizableBox
       width={Infinity}
       height={height}
-      minConstraints={[Infinity, 160]}
+      minConstraints={[Infinity, 200]}
       maxConstraints={[Infinity, 800]}
       resizeHandles={['s']}
       onResize={handleResize}
@@ -276,8 +299,30 @@ const QueryEditor = ({ prefixes = {}, value, onChange }: QueryEditorProps) => {
         </div>
       }
     >
-      <div style={{ height: '100%' }}>
-        <div ref={editorRef} className="size-full" />
+      <div className="flex h-full flex-col">
+        <div className="flex items-center gap-1 border-b bg-muted/30 px-2 py-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleFormat}
+            className="h-7 gap-1.5 px-2 text-xs"
+          >
+            <Braces className="size-3.5" />
+            Format
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleCheckSyntax}
+            className="h-7 gap-1.5 px-2 text-xs"
+          >
+            <ScanSearch className="size-3.5" />
+            Check
+          </Button>
+        </div>
+        <div className="min-h-0 flex-1">
+          <div ref={editorRef} className="size-full" />
+        </div>
       </div>
     </ResizableBox>
   )
