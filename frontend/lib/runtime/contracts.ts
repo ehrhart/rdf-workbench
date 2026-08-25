@@ -114,6 +114,8 @@ export interface RunningQueryInfo {
   query: string
   lifetime: number
   state: 'RUNNING'
+  /** Whether this query can be cancelled through the workbench. */
+  cancellable: boolean
 }
 
 export interface QueryMonitorAdapter {

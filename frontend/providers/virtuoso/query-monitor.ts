@@ -7,6 +7,7 @@ import type {
   RunningQueryInfo
 } from '@/lib/runtime/contracts'
 import { executeIsqlCommand } from './odbc-connection'
+import { cancelQuery, findQueryIdByQuery } from './query-registry'
 
 interface ParsedQuery {
   time: number
@@ -52,18 +53,24 @@ export const virtuosoQueryMonitor: QueryMonitorAdapter = {
       "status('exec')",
       { useServiceCredentials: true }
     )
-    return parseStatusOutput(rawQueries).map((query) => ({
-      id: shortHash(query.query),
-      query: query.query,
-      lifetime: query.time,
-      state: 'RUNNING' as const
-    }))
+    return parseStatusOutput(rawQueries).map((query) => {
+      const registeredId = findQueryIdByQuery(query.query)
+      return {
+        id: registeredId ?? shortHash(query.query),
+        query: query.query,
+        lifetime: query.time,
+        state: 'RUNNING' as const,
+        cancellable: Boolean(registeredId)
+      }
+    })
   },
 
-  async cancel(_id: string, caller: Principal | null): Promise<void> {
+  async cancel(id: string, caller: Principal | null): Promise<void> {
     if (!caller) return
-    await executeIsqlCommand('txn_killall(6)', {
-      useServiceCredentials: true
-    })
+    // Virtuoso treats a cancelled HTTP request as a query cancellation, so
+    // abort the request that is executing this query. Queries that were not
+    // submitted through the workbench (e.g. anonymous /sparql requests)
+    // have no tracked request and cannot be cancelled.
+    cancelQuery(id)
   }
 }

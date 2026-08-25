@@ -213,7 +213,7 @@ export default function QueriesMonitorPage(): React.ReactElement {
                       </Tooltip>
                     </TableCell>
                     <TableCell>
-                      {query.active && (
+                      {query.active && query.cancellable && (
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button

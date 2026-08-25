@@ -51,7 +51,8 @@ async function listServerWide(): Promise<RunningQueryInfo[]> {
     id,
     query: entry.query ?? '',
     lifetime: now - (entry['started-at'] ?? now),
-    state: 'RUNNING' as const
+    state: 'RUNNING' as const,
+    cancellable: true
   }))
 }
 

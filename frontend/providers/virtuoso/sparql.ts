@@ -25,11 +25,20 @@ async function fetchVirtuoso(
   const runtime = config()
 
   const timeoutMs = options.timeoutMs ?? runtime.SPARQL_TIMEOUT_MS
-  const controller = options.signal ? null : new AbortController()
-  const timeout =
-    !options.signal && timeoutMs > 0
-      ? setTimeout(() => controller?.abort(), timeoutMs)
-      : null
+  const signals: AbortSignal[] = []
+  if (options.signal) signals.push(options.signal)
+  let timeout: ReturnType<typeof setTimeout> | null = null
+  if (timeoutMs > 0) {
+    const timeoutController = new AbortController()
+    timeout = setTimeout(() => timeoutController.abort(), timeoutMs)
+    signals.push(timeoutController.signal)
+  }
+  const signal =
+    signals.length === 0
+      ? undefined
+      : signals.length === 1
+        ? signals[0]
+        : AbortSignal.any(signals)
 
   try {
     return await fetch(runtime.SPARQL_ENDPOINT, {
@@ -39,7 +48,7 @@ async function fetchVirtuoso(
         'Content-Type': 'application/sparql-query'
       },
       body: query,
-      signal: options.signal ?? controller?.signal,
+      signal,
       cache: 'no-store'
     })
   } finally {
