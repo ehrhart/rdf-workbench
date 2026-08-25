@@ -58,9 +58,11 @@ async function fetchVirtuoso(
 
 export const virtuosoSparqlTransport: SparqlTransport = {
   async execute(query, options): Promise<SparqlQueryResult> {
+    const kind = options?.kind
+    const isGraph = kind === 'construct' || kind === 'describe'
     const response = await fetchVirtuoso(
       query,
-      'application/sparql-results+json',
+      isGraph ? 'text/turtle' : 'application/sparql-results+json',
       options
     )
     if (!response.ok) {
@@ -68,6 +70,14 @@ export const virtuosoSparqlTransport: SparqlTransport = {
       throw new Error(
         body || `Virtuoso query failed with status ${response.status}`
       )
+    }
+
+    if (isGraph) {
+      return {
+        kind: 'graph',
+        value: await response.text(),
+        format: 'text/turtle'
+      }
     }
 
     const contentType = response.headers.get('content-type') ?? ''

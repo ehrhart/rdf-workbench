@@ -13,6 +13,7 @@ import type { DownloadFormat } from '@/lib/runtime/contracts'
 import type { SparqlQueryResult, User } from '@/types'
 import { Skeleton } from '../ui/skeleton'
 import { useSparqlQuery } from './hooks/use-sparql-query'
+import ResultsGraph from './results-graph'
 import ResultsRaw from './results-raw'
 import ResultsTable from './results-table'
 
@@ -103,6 +104,11 @@ export default function SparqlEditor({
         id: 'table',
         label: 'Table',
         render: (value) => <ResultsTable results={value} />
+      },
+      {
+        id: 'graph',
+        label: 'Graph',
+        render: (value) => <ResultsGraph results={value} />
       },
       {
         id: 'raw',

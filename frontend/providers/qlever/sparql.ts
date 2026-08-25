@@ -56,9 +56,11 @@ async function fetchQlever(
 
 export const qleverSparqlTransport: SparqlTransport = {
   async execute(query, options): Promise<SparqlQueryResult> {
+    const kind = options?.kind
+    const isGraph = kind === 'construct' || kind === 'describe'
     const response = await fetchQlever(
       query,
-      'application/sparql-results+json',
+      isGraph ? 'text/turtle' : 'application/sparql-results+json',
       options
     )
     if (!response.ok) {
@@ -66,6 +68,14 @@ export const qleverSparqlTransport: SparqlTransport = {
       throw new Error(
         body || `QLever query failed with status ${response.status}`
       )
+    }
+
+    if (isGraph) {
+      return {
+        kind: 'graph',
+        value: await response.text(),
+        format: 'text/turtle'
+      }
     }
 
     const contentType = response.headers.get('content-type') ?? ''

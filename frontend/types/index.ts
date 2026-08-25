@@ -94,7 +94,16 @@ export interface SparqlBooleanResult {
   value: boolean
 }
 
-export type SparqlQueryResult = SparqlBindingsResult | SparqlBooleanResult
+export interface SparqlGraphResult {
+  kind: 'graph'
+  value: string
+  format: string
+}
+
+export type SparqlQueryResult =
+  | SparqlBindingsResult
+  | SparqlBooleanResult
+  | SparqlGraphResult
 
 /** @deprecated Prefer SparqlQueryResult and narrow on `kind`. */
 export type SparqlResult = SparqlBindingsResult
