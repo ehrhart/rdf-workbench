@@ -17,7 +17,7 @@ import { queryHistoryService } from '@/lib/client/query-history'
 import type { EndpointStats } from '@/types'
 
 interface StatsCardsProps {
-  stats: Omit<EndpointStats, 'recentQueries'>
+  stats: EndpointStats
   provider: 'virtuoso' | 'qlever'
 }
 

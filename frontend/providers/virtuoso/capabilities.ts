@@ -289,8 +289,7 @@ export async function getEndpointStats(): Promise<EndpointStats> {
     )
     return {
       totalTriples: 0,
-      namedGraphs: 0,
-      recentQueries: 0
+      namedGraphs: 0
     }
   }
 
@@ -300,8 +299,7 @@ export async function getEndpointStats(): Promise<EndpointStats> {
       (sum, graph) => sum + graph.tripleCount,
       0
     ),
-    namedGraphs: namedGraphs.length,
-    recentQueries: 0
+    namedGraphs: namedGraphs.length
   }
 }
 

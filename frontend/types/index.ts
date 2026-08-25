@@ -31,7 +31,6 @@ export interface SavedQuery {
 export interface EndpointStats {
   totalTriples: number
   namedGraphs: number
-  recentQueries: number
 }
 
 export interface ResourceSuggestion {

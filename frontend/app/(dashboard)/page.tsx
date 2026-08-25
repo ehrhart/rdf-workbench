@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { Suspense } from 'react'
 
 import { DashboardHeader } from '@/components/dashboard/header'
+import { RecentQueries } from '@/components/dashboard/recent-queries'
 import { SavedQueriesCard } from '@/components/dashboard/saved-queries'
 import { DashboardShell } from '@/components/dashboard/shell'
 import { StatsCards } from '@/components/dashboard/stats-cards'
@@ -27,13 +28,9 @@ async function StatsSection() {
       typeof overview?.stats['num-triples-normal'] === 'number'
         ? overview.stats['num-triples-normal']
         : graphs.reduce((sum, graph) => sum + graph.tripleCount, 0),
-    namedGraphs: graphs.length,
-    recentQueries: 0
+    namedGraphs: graphs.length
   }
-  const isUnavailable =
-    stats.totalTriples === 0 &&
-    stats.namedGraphs === 0 &&
-    stats.recentQueries === 0
+  const isUnavailable = stats.totalTriples === 0 && stats.namedGraphs === 0
 
   return (
     <>
@@ -63,6 +60,8 @@ export default async function DashboardPage() {
         <Suspense fallback={<StatsCardsSkeleton />}>
           <StatsSection />
         </Suspense>
+
+        <RecentQueries />
 
         <SavedQueriesCard />
       </div>

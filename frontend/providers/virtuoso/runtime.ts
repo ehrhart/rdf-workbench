@@ -48,8 +48,7 @@ export const virtuosoRuntime: WorkbenchRuntime = {
       provider: 'virtuoso',
       stats: {
         'total-triples': stats.totalTriples,
-        'named-graphs': stats.namedGraphs,
-        'recent-queries': stats.recentQueries
+        'named-graphs': stats.namedGraphs
       }
     }
   }
