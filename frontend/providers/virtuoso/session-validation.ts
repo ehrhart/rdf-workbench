@@ -4,7 +4,7 @@ import type { SessionPayload } from '@/lib/definitions'
 import { AuthError, ConnectionError } from '@/lib/errors'
 import { tryCatch } from '@/lib/result'
 import { executeIsqlCommand } from './odbc-connection'
-import { decrypt, getSessionCookie } from './session'
+import { decrypt, getSessionCookie, updateSession } from './session'
 
 interface ValidatedSession {
   userId: string
@@ -44,6 +44,11 @@ export async function validateSession(): Promise<ValidatedSession | null> {
   if (!session?.userId || new Date(session.expiresAt) < new Date()) {
     return null
   }
+
+  // Slide the session expiry on activity so active users are not logged out.
+  // Cookie writes are not available in every context (e.g. the proxy), so a
+  // failure here must not invalidate an otherwise valid session.
+  await updateSession().catch(() => undefined)
 
   // Validate against the Virtuoso adapter
   if (VALIDATE_ADAPTER_SESSION) {
