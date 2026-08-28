@@ -49,6 +49,70 @@ Only `virtuoso-adapter` receives the DBA credentials; the frontend image has
 none. For bulk loading, the mounted imports directory must be visible to
 Virtuoso and allowed by `DirsAllowed`.
 
+## Quick start: published image
+
+Instead of building, use the image published to GitHub Container Registry. Add
+this to your own `compose.yml`:
+
+### QLever
+
+Set the secrets to real values; the remaining variables follow `.env.example`.
+
+```yaml
+services:
+  workbench:
+    image: ghcr.io/ehrhart/rdf-workbench:latest
+    environment:
+      TRIPLESTORE_PROVIDER: qlever
+      SPARQL_ENDPOINT: https://my-triplestore.example/sparql
+      WORKBENCH_URL: http://localhost:3000
+      WORKBENCH_DB_PATH: /data/workbench.sqlite
+      BOOTSTRAP_ADMIN_USERNAME: admin
+      BOOTSTRAP_ADMIN_PASSWORD: replace-with-at-least-12-characters
+    ports:
+      - "3000:3000"
+    volumes:
+      - rdf-workbench-data:/data
+
+volumes:
+  rdf-workbench-data:
+```
+
+### Virtuoso
+
+Set the secrets to real values; the remaining variables follow `.env.example`.
+
+```yaml
+services:
+  workbench:
+    image: ghcr.io/ehrhart/rdf-workbench:latest
+    environment:
+      TRIPLESTORE_PROVIDER: virtuoso
+      SPARQL_ENDPOINT: https://my-triplestore.example/sparql
+      WORKBENCH_URL: http://localhost:3000
+      SESSION_SECRET: replace-with-at-least-32-characters
+      VIRTUOSO_ADAPTER_URL: http://virtuoso-adapter:50118
+      VIRTUOSO_ADAPTER_TOKEN: replace-with-at-least-32-characters
+    ports:
+      - "3000:3000"
+
+  virtuoso-adapter:
+    image: ghcr.io/ehrhart/rdf-workbench-virtuoso-adapter:latest
+    environment:
+      VIRTUOSO_ADAPTER_TOKEN: replace-with-at-least-32-characters
+      VIRTUOSO_HOST: host.docker.internal
+      VIRTUOSO_ISQL_PORT: 1111
+      VIRTUOSO_DBA_USER: dba
+      VIRTUOSO_DBA_PASSWORD: replace-this-password
+    volumes:
+      - rdf-workbench-imports:/app/imports
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+volumes:
+  rdf-workbench-imports:
+```
+
 ## Configuration
 
 Common runtime variables:
@@ -95,34 +159,3 @@ cd virtuoso-adapter
 npm install
 npm run dev
 ```
-
-## Clean-break migration notes
-
-There are no aliases for the former `VIRTUOSO_SPARQL_ENDPOINT`,
-`ISQL_BRIDGE_URL`, or `NEXT_PUBLIC_*` configuration. The service and package
-previously called `isql-bridge` are now `virtuoso-adapter`. Update deployment
-files and secrets before upgrading.
-
-Virtuoso data and saved queries remain in Virtuoso. QLever uses a separate
-SQLite database; no saved-query or prefix migration is attempted between
-providers.
-
-## Verification smoke matrix
-
-Run `pnpm lint` and `pnpm build` in `frontend`, plus `npm run build` in
-`virtuoso-adapter`. Then verify:
-
-- Virtuoso: login/logout, saved-query ownership, namespaces, ISQL, imports,
-  full-text administration, graph mutation/export, and both monitor pages.
-- QLever: typed-literal SELECT, ASK, syntax/upstream error display, timeouts,
-  graph listing/visualization, direct resource lookup, supported downloads, and
-  public ping/stats/settings.
-- QLever writes: SPARQL Update returns 405; Virtuoso-only pages and APIs return
-  404 and are absent from navigation.
-- Authorization: anonymous reads work; saved-query ownership and prefix/user
-  admin rules are enforced; disable/reset revokes sessions; the final active
-  administrator cannot be disabled.
-- Deployment: QLever starts without the adapter and persists SQLite; Virtuoso
-  starts with `virtuoso-adapter`; the frontend contains no DBA credentials.
-
-The provider-aware health endpoint is `GET /health`.
