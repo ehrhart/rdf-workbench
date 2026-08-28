@@ -72,11 +72,12 @@ export function AppSidebar({
         <NavItems items={visibleMainItems} />
         <NavItems items={visibleSecondaryItems} className="mt-auto" />
       </SidebarContent>
-      {user && (
-        <SidebarFooter>
-          <NavUser user={user} />
-        </SidebarFooter>
-      )}
+      <SidebarFooter>
+        {user && <NavUser user={user} />}
+        <div className="px-2 pb-2 text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">
+          v{process.env.NEXT_PUBLIC_APP_VERSION ?? 'dev'}
+        </div>
+      </SidebarFooter>
     </Sidebar>
   )
 }
