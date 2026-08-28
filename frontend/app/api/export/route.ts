@@ -1,7 +1,7 @@
 import crypto from 'node:crypto'
 import { PassThrough, Readable } from 'node:stream'
 import type { ReadableStream as ReadableStreamWeb } from 'node:stream/web'
-import archiver from 'archiver'
+import { type Archiver, ZipArchive } from 'archiver'
 import type { NextRequest } from 'next/server'
 import { isSameOriginMutation, sameOriginError } from '@/lib/same-origin'
 import { getVirtuosoConfig } from '@/providers/virtuoso/config'
@@ -276,7 +276,7 @@ function createSingleGraphStream(
 }
 
 function appendStreamToArchive(
-  archiveInstance: archiver.Archiver,
+  archiveInstance: Archiver,
   stream: Readable,
   entryName: string
 ): Promise<void> {
@@ -291,7 +291,7 @@ function createZipStream(
   artifacts: ExportArtifact[],
   authToken: string
 ): ReadableStream<Uint8Array> {
-  const archive = archiver('zip', { zlib: { level: 9 } })
+  const archive = new ZipArchive({ zlib: { level: 9 } })
   const passThrough = new PassThrough()
   const stream = Readable.toWeb(passThrough) as ReadableStream<Uint8Array>
   const cleanupTargets = artifacts.flatMap((artifact) =>

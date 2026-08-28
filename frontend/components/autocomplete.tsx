@@ -18,8 +18,10 @@ function HighlightedText({ text }: { text: string }) {
       return null
     }
     return isBold ? (
+      // biome-ignore lint/suspicious/noArrayIndexKey: parts can repeat; position disambiguates
       <b key={`${i}-${part}`}>{part}</b>
     ) : (
+      // biome-ignore lint/suspicious/noArrayIndexKey: parts can repeat; position disambiguates
       <Fragment key={`${i}-${part}`}>{part}</Fragment>
     )
   })

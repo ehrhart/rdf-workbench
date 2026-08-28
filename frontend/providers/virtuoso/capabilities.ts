@@ -57,7 +57,7 @@ export async function getResourceSuggestions(
     return []
   }
 
-  if (!result.data || result.data.kind !== 'bindings') {
+  if (result.data?.kind !== 'bindings') {
     return []
   }
 

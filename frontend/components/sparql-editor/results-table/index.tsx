@@ -36,11 +36,7 @@ import {
   useRef,
   useState
 } from 'react'
-import {
-  customFilterFn,
-  customGlobalFilterFn
-} from '@/components/tables/filter-fns'
-import { compareValues } from '@/components/tables/value-utils'
+import { customGlobalFilterFn } from '@/components/tables/filter-fns'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -341,15 +337,7 @@ const BindingsResultsTable = ({
     onPaginationChange: handlePaginationChange,
     onColumnSizingChange: handleColumnSizingChange,
     onColumnSizingInfoChange: handleColumnSizingInfoChange,
-    globalFilterFn: 'customGlobalFilter',
-    filterFns: {
-      customFilter: customFilterFn,
-      customGlobalFilter: customGlobalFilterFn
-    },
-    sortingFns: {
-      customSorting: (rowA, rowB, columnId) =>
-        compareValues(rowA.getValue(columnId), rowB.getValue(columnId))
-    },
+    globalFilterFn: customGlobalFilterFn,
     getColumnCanGlobalFilter: (column) => column.id !== INDEX_COLUMN_ID,
     getRowId: (row) => `${row.__index}`,
     autoResetPageIndex: false,
@@ -1068,5 +1056,5 @@ const ResultsTableComponent = ({ results }: ResultsTableProps) => {
 }
 
 export default memo(ResultsTableComponent)
-export type { ResultsTableProps }
 export type { SparqlResultRow } from './table-columns'
+export type { ResultsTableProps }

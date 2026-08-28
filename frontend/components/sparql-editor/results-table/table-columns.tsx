@@ -13,6 +13,7 @@ import { useCallback, useState } from 'react'
 import type { SparqlBindingValue } from '../../../types'
 import { ColumnFilterDropdown } from '../../tables/ColumnFilterDropdown'
 import { FilterContent } from '../../tables/FilterContent'
+import { customFilterFn, customSortingFn } from '../../tables/filter-fns'
 import { Button } from '../../ui/button'
 import {
   DropdownMenu,
@@ -130,8 +131,8 @@ export const createColumns = (
     },
     cell: ({ getValue }) =>
       renderBindingValue(getValue<SparqlBindingValue | null>()),
-    filterFn: 'customFilter' as const,
-    sortingFn: 'customSorting' as const,
+    filterFn: customFilterFn,
+    sortingFn: customSortingFn,
     enableResizing: true
   }))
 

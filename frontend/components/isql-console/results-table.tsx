@@ -117,6 +117,7 @@ export function IsqlResultsTable({ statements }: ResultsTableProps) {
         </div>
       ) : null}
       {statements.map((statement, index) => (
+        // biome-ignore lint/suspicious/noArrayIndexKey: statements can repeat; position disambiguates
         <div key={`${index}-${statement.statement}`} className="space-y-3">
           <div className="rounded-md border bg-muted/30 p-3 text-xs">
             <div className="flex flex-wrap items-center justify-between gap-3">

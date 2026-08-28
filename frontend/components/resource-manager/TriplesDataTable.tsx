@@ -28,9 +28,9 @@ import { memo, useEffect, useMemo, useState } from 'react'
 import { ColumnFilterDropdown } from '@/components/tables/ColumnFilterDropdown'
 import {
   customFilterFn,
-  customGlobalFilterFn
+  customGlobalFilterFn,
+  customSortingFn
 } from '@/components/tables/filter-fns'
-import { compareValues } from '@/components/tables/value-utils'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import {
@@ -93,8 +93,8 @@ const createColumns = (): ColumnDef<Triple>[] => [
     ),
     accessorFn: (row) => row.subject,
     cell: ({ getValue }) => <ResourceLink node={getValue<RDFNode>()} />,
-    filterFn: 'customFilter',
-    sortingFn: 'customSorting'
+    filterFn: customFilterFn,
+    sortingFn: customSortingFn
   },
   {
     id: 'predicate',
@@ -120,8 +120,8 @@ const createColumns = (): ColumnDef<Triple>[] => [
     ),
     accessorFn: (row) => row.predicate,
     cell: ({ getValue }) => <ResourceLink node={getValue<RDFNode>()} />,
-    filterFn: 'customFilter',
-    sortingFn: 'customSorting'
+    filterFn: customFilterFn,
+    sortingFn: customSortingFn
   },
   {
     id: 'object',
@@ -147,8 +147,8 @@ const createColumns = (): ColumnDef<Triple>[] => [
     ),
     accessorFn: (row) => row.object,
     cell: ({ getValue }) => <ResourceLink node={getValue<RDFNode>()} />,
-    filterFn: 'customFilter',
-    sortingFn: 'customSorting'
+    filterFn: customFilterFn,
+    sortingFn: customSortingFn
   },
   {
     id: 'context',
@@ -174,8 +174,8 @@ const createColumns = (): ColumnDef<Triple>[] => [
     ),
     accessorFn: (row) => row.context,
     cell: ({ getValue }) => <ResourceLink node={getValue<RDFNode>()} />,
-    filterFn: 'customFilter',
-    sortingFn: 'customSorting'
+    filterFn: customFilterFn,
+    sortingFn: customSortingFn
   }
 ]
 
@@ -242,20 +242,12 @@ export const TriplesDataTable = memo(function TriplesDataTable({
     onRowSelectionChange: setRowSelection,
     onGlobalFilterChange: setGlobalFilter,
     onPaginationChange: setPagination,
-    filterFns: {
-      customFilter: customFilterFn,
-      customGlobalFilter: customGlobalFilterFn
-    },
     getColumnCanGlobalFilter: (column) => column.id !== 'index',
     enableGlobalFilter: true,
-    globalFilterFn: 'customGlobalFilter',
+    globalFilterFn: customGlobalFilterFn,
     autoResetPageIndex: false,
     enableSorting: true,
-    enableSortingRemoval: true,
-    sortingFns: {
-      customSorting: (rowA, rowB, columnId) =>
-        compareValues(rowA.getValue(columnId), rowB.getValue(columnId))
-    }
+    enableSortingRemoval: true
   })
 
   const isLoading = status === 'loading'

@@ -1,15 +1,15 @@
-import type { FilterFn } from '@tanstack/react-table'
+import type { Row, RowData } from '@tanstack/react-table'
 import type { ColumnFilterValue } from './filter-types'
-import { getComparableValue } from './value-utils'
+import { compareValues, getComparableValue } from './value-utils'
 
 /**
  * Custom column filter compatible with the shared column filter dropdown.
  */
-export const customFilterFn: FilterFn<unknown> = (
-  row,
-  columnId,
-  rawFilterValue
-) => {
+export const customFilterFn = <TData extends RowData>(
+  row: Row<TData>,
+  columnId: string,
+  rawFilterValue: unknown
+): boolean => {
   const filterValue = rawFilterValue as ColumnFilterValue | undefined
   if (!filterValue) return true
 
@@ -43,11 +43,11 @@ export const customFilterFn: FilterFn<unknown> = (
 /**
  * Global filter that searches across all cell values exposed by the table.
  */
-export const customGlobalFilterFn: FilterFn<unknown> = (
-  row,
-  _columnId,
-  filterValue
-) => {
+export const customGlobalFilterFn = <TData extends RowData>(
+  row: Row<TData>,
+  _columnId: string,
+  filterValue: unknown
+): boolean => {
   const searchValue = String(filterValue ?? '').toLowerCase()
   if (!searchValue) return true
 
@@ -57,3 +57,12 @@ export const customGlobalFilterFn: FilterFn<unknown> = (
       getComparableValue(cell.getValue()).toLowerCase().includes(searchValue)
     )
 }
+
+/**
+ * Custom column sort that compares on the comparable string representation.
+ */
+export const customSortingFn = <TData extends RowData>(
+  rowA: Row<TData>,
+  rowB: Row<TData>,
+  columnId: string
+): number => compareValues(rowA.getValue(columnId), rowB.getValue(columnId))

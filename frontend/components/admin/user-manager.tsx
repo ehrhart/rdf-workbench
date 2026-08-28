@@ -65,9 +65,7 @@ export function UserManager({ users, currentUserId }: UserManagerProps) {
   }
 
   async function resetPassword(user: LocalUser) {
-    const password = window.prompt(
-      `Enter a new password for ${user.username}:`
-    )
+    const password = window.prompt(`Enter a new password for ${user.username}:`)
     if (password === null) return
     setPending(user.id)
     const result = await resetUserPasswordAction(user.id, password)

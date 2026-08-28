@@ -160,9 +160,9 @@ function InputGroupTextarea({
 export {
   InputGroup,
   InputGroupAddon,
-  InputGroupIcon,
   InputGroupButton,
-  InputGroupText,
+  InputGroupIcon,
   InputGroupInput,
+  InputGroupText,
   InputGroupTextarea
 }
