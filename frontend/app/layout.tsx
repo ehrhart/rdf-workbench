@@ -17,10 +17,7 @@ export function generateMetadata(): Metadata {
       default: appName,
       template: `%s | ${appName}`
     },
-    description: 'A workbench for exploring RDF triplestores',
-    icons: {
-      icon: '/favicon.ico'
-    }
+    description: 'A workbench for exploring RDF triplestores'
   }
 }
 
