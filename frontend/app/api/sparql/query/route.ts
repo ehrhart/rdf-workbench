@@ -15,7 +15,9 @@ export async function GET(request: NextRequest) {
   if (!query) {
     return jsonError('No query provided', 400)
   }
-  return runPublicQuery(query, request.headers.get('accept'))
+  const format = request.nextUrl.searchParams.get('format')
+  const accept = format ?? request.headers.get('accept')
+  return runPublicQuery(query, accept)
 }
 
 export async function POST(request: NextRequest) {

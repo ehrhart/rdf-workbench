@@ -2,7 +2,8 @@ import { type NextRequest, NextResponse } from 'next/server'
 import {
   acceptsHtml,
   isSparqlQueryBody,
-  isSparqlResultAccept
+  isSparqlResultAccept,
+  isSparqlResultFormat
 } from '@/lib/sparql/negotiation'
 
 const PUBLIC_PATHS = ['/login', '/logout']
@@ -90,6 +91,12 @@ function classifySparqlRequest(request: NextRequest): SparqlRouting {
   }
 
   if (isNextJsInternalRequest(request)) return 'page'
+
+  const format = request.nextUrl.searchParams.get('format')
+  if (format) {
+    return isSparqlResultFormat(format) ? 'query' : 'not-acceptable'
+  }
+
   return acceptsHtml(request.headers.get('accept')) ? 'page' : 'not-acceptable'
 }
 

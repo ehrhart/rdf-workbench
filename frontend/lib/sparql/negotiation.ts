@@ -38,6 +38,13 @@ export function isSparqlResultAccept(accept: string | null): boolean {
   return SPARQL_RESULT_MEDIA_TYPES.some((mime) => normalized.includes(mime))
 }
 
+export function isSparqlResultFormat(format: string | null): boolean {
+  if (!format) return false
+  const [mime] = format.split(';')
+  const normalized = mime?.trim().toLowerCase() ?? ''
+  return SPARQL_RESULT_MEDIA_TYPES.includes(normalized)
+}
+
 export function isSparqlQueryBody(contentType: string | null): boolean {
   if (!contentType) return false
   const normalized = contentType.toLowerCase()
