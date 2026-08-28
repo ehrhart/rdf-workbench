@@ -1,0 +1,47 @@
+services:
+  workbench:
+    environment:
+      TRIPLESTORE_PROVIDER: virtuoso
+      SESSION_SECRET: ${SESSION_SECRET}
+      VIRTUOSO_ADAPTER_URL: http://virtuoso-adapter:50118
+      VIRTUOSO_ADAPTER_TOKEN: ${VIRTUOSO_ADAPTER_TOKEN}
+      VIRTUOSO_EXPORT_BASE_PATH: ${VIRTUOSO_EXPORT_BASE_PATH:-./imports/exports}
+      GRAPH_EXPORT_FILE_LIMIT: ${GRAPH_EXPORT_FILE_LIMIT:-50000000000}
+      GRAPH_EXPORT_POLL_INTERVAL_MS: ${GRAPH_EXPORT_POLL_INTERVAL_MS:-1000}
+      GRAPH_EXPORT_POLL_ATTEMPTS: ${GRAPH_EXPORT_POLL_ATTEMPTS:-60}
+    depends_on:
+      virtuoso-adapter:
+        condition: service_healthy
+
+  virtuoso-adapter:
+    build:
+      context: ./virtuoso-adapter
+      dockerfile: Dockerfile
+    environment:
+      VIRTUOSO_ADAPTER_TOKEN: ${VIRTUOSO_ADAPTER_TOKEN}
+      VIRTUOSO_HOST: ${VIRTUOSO_HOST}
+      VIRTUOSO_ISQL_PORT: ${VIRTUOSO_ISQL_PORT:-1111}
+      VIRTUOSO_DBA_USER: ${VIRTUOSO_DBA_USER}
+      VIRTUOSO_DBA_PASSWORD: ${VIRTUOSO_DBA_PASSWORD}
+      SPARQL_ENDPOINT: ${SPARQL_ENDPOINT}
+      VIRTUOSO_IMPORTS_PATH: ${VIRTUOSO_IMPORTS_PATH:-./imports}
+      VIRTUOSO_ADAPTER_MAX_UPLOAD_BYTES: ${VIRTUOSO_ADAPTER_MAX_UPLOAD_BYTES:-107374182400}
+      VIRTUOSO_ADAPTER_SESSION_TTL_MS: ${VIRTUOSO_ADAPTER_SESSION_TTL_MS:-86400000}
+      VIRTUOSO_ADAPTER_SESSION_CLEANUP_INTERVAL_MS: ${VIRTUOSO_ADAPTER_SESSION_CLEANUP_INTERVAL_MS:-300000}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ${VIRTUOSO_IMPORTS_HOST_PATH:-./virtuoso-database/imports}:/app/imports
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:50118/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped

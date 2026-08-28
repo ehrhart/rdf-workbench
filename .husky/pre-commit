@@ -1,0 +1,2 @@
+(cd frontend && pnpm format)
+(cd frontend && pnpm lint)

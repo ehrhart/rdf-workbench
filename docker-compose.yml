@@ -1,0 +1,28 @@
+services:
+  workbench:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    environment:
+      TRIPLESTORE_PROVIDER: ${TRIPLESTORE_PROVIDER}
+      SPARQL_ENDPOINT: ${SPARQL_ENDPOINT}
+      SPARQL_TIMEOUT_MS: ${SPARQL_TIMEOUT_MS:-60000}
+      WORKBENCH_NAME: ${WORKBENCH_NAME:-RDF Workbench}
+      WORKBENCH_URL: ${WORKBENCH_URL}
+    ports:
+      - "${WORKBENCH_PORT:-3000}:3000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped

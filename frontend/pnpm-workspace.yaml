@@ -1,0 +1,5 @@
+onlyBuiltDependencies:
+  - '@fortawesome/fontawesome-common-types'
+  - '@fortawesome/free-solid-svg-icons'
+  - sharp
+  - unrs-resolver

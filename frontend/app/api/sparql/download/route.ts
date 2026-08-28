@@ -1,0 +1,80 @@
+import { NextResponse } from 'next/server'
+import { getWorkbenchRuntime } from '@/lib/runtime'
+import { detectSparqlQueryKind } from '@/lib/sparql/query-kind'
+
+interface DownloadPayload {
+  query?: string
+  format?: string
+  filename?: string
+}
+
+export async function POST(request: Request) {
+  try {
+    const payload = (await request.json()) as DownloadPayload
+    const query = payload.query?.trim()
+    const format = payload.format?.trim()
+
+    if (!query) {
+      return NextResponse.json({ error: 'Query is required' }, { status: 400 })
+    }
+
+    const runtime = await getWorkbenchRuntime()
+    const allowedFormats = runtime.sparql.getDownloadFormats(
+      detectSparqlQueryKind(query)
+    )
+    if (!format || !allowedFormats.some((item) => item.mime === format)) {
+      return NextResponse.json({ error: 'Unsupported format' }, { status: 400 })
+    }
+
+    const upstream = await runtime.sparql.download(query, format)
+
+    const upstreamContentType = upstream.headers.get('content-type')
+    const upstreamDisposition = upstream.headers.get('content-disposition')
+
+    if (!upstream.ok) {
+      const errorBody = await upstream.text()
+      return new Response(errorBody || 'Download failed', {
+        status: upstream.status,
+        headers: {
+          'Content-Type': upstreamContentType || 'text/plain'
+        }
+      })
+    }
+
+    const headers = new Headers()
+    headers.set('Content-Type', upstreamContentType ?? format)
+
+    const filename = sanitizeFilename(
+      payload.filename || extractFilename(upstreamDisposition)
+    )
+    if (filename) {
+      headers.set('Content-Disposition', `attachment; filename="${filename}"`)
+    }
+
+    return new Response(upstream.body, {
+      status: upstream.status,
+      headers
+    })
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Download failed'
+    const status =
+      error instanceof Error && error.name === 'QleverReadOnlyError' ? 405 : 400
+    return NextResponse.json({ error: message }, { status })
+  }
+}
+
+function sanitizeFilename(filename: string | null | undefined): string | null {
+  if (!filename) return null
+  const value = filename
+    .replace(/[\r\n"\\/]/g, '_')
+    .replace(/[^A-Za-z0-9._-]/g, '_')
+    .slice(0, 160)
+  return value || null
+}
+
+function extractFilename(contentDisposition: string | null): string | null {
+  if (!contentDisposition) return null
+
+  const match = /filename="?([^";]+)"?/i.exec(contentDisposition)
+  return match ? match[1] : null
+}
