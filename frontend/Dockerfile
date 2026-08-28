@@ -18,7 +18,6 @@ RUN addgroup --system --gid 1001 nodejs && \
     mkdir -p /app/uploads /data && \
     chown -R nextjs:nodejs /app/uploads /data
 
-COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
