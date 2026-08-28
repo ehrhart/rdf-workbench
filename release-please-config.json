@@ -1,6 +1,5 @@
 {
   "release-type": "simple",
-  "release-as": "1.0.0",
   "packages": {
     ".": {
       "extra-files": [
