@@ -1,6 +1,7 @@
 import 'server-only'
 
 import { buildNavigation } from '@/config/navigation'
+import { dereferenceRepository } from '@/lib/dereference/repository'
 import { getRuntimeConfig } from '@/lib/runtime/config'
 import type { FeatureId, WorkbenchRuntime } from '@/lib/runtime/contracts'
 import { savedQueryRepository } from '@/lib/saved-queries'
@@ -21,6 +22,7 @@ const features: ReadonlySet<FeatureId> = new Set([
   'sparql',
   'graphs',
   'resource-explorer',
+  'dereference',
   'saved-queries',
   'endpoint-monitor',
   'qlever-namespaces',
@@ -37,6 +39,7 @@ export const qleverRuntime: WorkbenchRuntime = {
   graphs: qleverGraphReader,
   prefixes: qleverPrefixSource,
   savedQueries: savedQueryRepository,
+  dereference: dereferenceRepository,
   auth: qleverAuthAdapter,
   features,
   navigation,

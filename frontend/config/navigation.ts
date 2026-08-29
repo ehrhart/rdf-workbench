@@ -114,6 +114,12 @@ const navMain: NavItem[] = [
         requiredFeature: 'virtuoso-fulltext'
       },
       {
+        title: 'Dereferencing',
+        url: '/admin/dereference',
+        requiresAuth: true,
+        requiredRole: 'admin'
+      },
+      {
         title: 'Saved Queries',
         url: '/admin/saved-queries',
         requiresAuth: true,

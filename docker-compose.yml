@@ -9,6 +9,7 @@ services:
       SPARQL_TIMEOUT_MS: ${SPARQL_TIMEOUT_MS:-60000}
       WORKBENCH_NAME: ${WORKBENCH_NAME:-RDF Workbench}
       WORKBENCH_URL: ${WORKBENCH_URL}
+      RESOURCE_BASE_URI: ${RESOURCE_BASE_URI}
     ports:
       - "${WORKBENCH_PORT:-3000}:3000"
     extra_hosts:

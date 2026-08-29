@@ -1,6 +1,7 @@
 import 'server-only'
 
 import { buildNavigation } from '@/config/navigation'
+import { dereferenceRepository } from '@/lib/dereference/repository'
 import type {
   FeatureId,
   SparqlTransport,
@@ -19,6 +20,7 @@ const features: ReadonlySet<FeatureId> = new Set([
   'sparql',
   'graphs',
   'resource-explorer',
+  'dereference',
   'saved-queries',
   'endpoint-monitor',
   'virtuoso-import',
@@ -38,6 +40,7 @@ export const virtuosoRuntime: WorkbenchRuntime = {
   graphs: { listNamedGraphs: getNamedGraphs },
   prefixes: { list: getPrefixes },
   savedQueries: savedQueryRepository,
+  dereference: dereferenceRepository,
   auth: virtuosoAuthAdapter,
   features,
   navigation,

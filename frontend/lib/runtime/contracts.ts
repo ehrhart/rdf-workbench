@@ -8,6 +8,7 @@ export type FeatureId =
   | 'sparql'
   | 'graphs'
   | 'resource-explorer'
+  | 'dereference'
   | 'saved-queries'
   | 'endpoint-monitor'
   | 'virtuoso-import'
@@ -91,6 +92,17 @@ export interface SavedQueryRepository {
   ): Promise<void>
 }
 
+export interface DereferencePath {
+  path: string
+}
+
+export interface DereferenceRepository {
+  list(): Promise<DereferencePath[]>
+  create(path: string): Promise<void>
+  rename(oldPath: string, newPath: string): Promise<void>
+  remove(path: string): Promise<void>
+}
+
 export interface LoginCredentials {
   username: string
   password: string
@@ -132,6 +144,7 @@ export interface WorkbenchRuntime {
   graphs: GraphReader
   prefixes: PrefixSource
   savedQueries: SavedQueryRepository
+  dereference: DereferenceRepository
   auth: AuthAdapter
   features: ReadonlySet<FeatureId>
   navigation: NavigationConfig

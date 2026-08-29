@@ -23,18 +23,17 @@ There are some differences between the two providers:
 
 ## Quick start: QLever
 
-Copy `.env.example` to `.env`, keep the development endpoint, and replace the
-bootstrap password:
+Copy `.env.example` to `.env`, set your QLever SPARQL endpoint and resource
+base URI, and replace the bootstrap password:
 
 ```bash
 cp .env.example .env
 docker compose -f docker-compose.yml -f docker-compose.qlever.yml up --build -d
 ```
 
-The default development endpoint is
-`https://climatesense-qlever-server.tools.eurecom.fr/`. SQLite lives in the
-named `qlever-workbench-data` volume and survives container recreation. The
-bootstrap administrator is created only when the `users` table is empty.
+SQLite lives in the named `qlever-workbench-data` volume and survives container
+recreation. The bootstrap administrator is created only when the `users` table
+is empty.
 
 ## Quick start: Virtuoso
 
@@ -66,6 +65,7 @@ services:
       TRIPLESTORE_PROVIDER: qlever
       SPARQL_ENDPOINT: https://my-triplestore.example/sparql
       WORKBENCH_URL: http://localhost:3000
+      RESOURCE_BASE_URI: https://data.example.org
       WORKBENCH_DB_PATH: /data/workbench.sqlite
       BOOTSTRAP_ADMIN_USERNAME: admin
       BOOTSTRAP_ADMIN_PASSWORD: replace-with-at-least-12-characters
@@ -90,6 +90,7 @@ services:
       TRIPLESTORE_PROVIDER: virtuoso
       SPARQL_ENDPOINT: https://my-triplestore.example/sparql
       WORKBENCH_URL: http://localhost:3000
+      RESOURCE_BASE_URI: https://data.example.org
       WORKBENCH_DB_PATH: /data/workbench.sqlite
       SESSION_SECRET: replace-with-at-least-32-characters
       VIRTUOSO_ADAPTER_URL: http://virtuoso-adapter:50118
@@ -126,6 +127,9 @@ Common runtime variables:
 - `WORKBENCH_NAME`: runtime display name; defaults to `RDF Workbench`.
 - `WORKBENCH_URL`: externally visible origin used for redirects and mutation
   origin checks.
+- `RESOURCE_BASE_URI`: base IRI of dereferenceable resources. A path
+  configured for dereferencing maps `/path/<id>` to
+  `<RESOURCE_BASE_URI>/path/<id>`.
 - `WORKBENCH_DB_PATH`: sqlite database holding workbench-owned data (saved
   queries, dereference paths, prefixes).
 
