@@ -150,3 +150,5 @@ process.on('SIGINT', async () => {
 startServer()
 
 export default app
+
+const brokenTypeCheck: number = "not a number"
