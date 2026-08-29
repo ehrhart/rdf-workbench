@@ -18,15 +18,9 @@ export async function getPrefixes(): Promise<Record<string, string>> {
 export async function getResourceSuggestions(
   searchTerm: string
 ): Promise<ResourceSuggestion[]> {
-  const runtime = await getWorkbenchRuntime()
-  if (runtime.provider === 'qlever') {
-    return (
-      await import('@/providers/qlever/text-search')
-    ).getResourceSuggestions(searchTerm)
-  }
-  return (
-    await import('@/providers/virtuoso/capabilities')
-  ).getResourceSuggestions(searchTerm)
+  return (await getWorkbenchRuntime()).textSearch.getResourceSuggestions(
+    searchTerm
+  )
 }
 
 export async function getProperties(): Promise<string[]> {

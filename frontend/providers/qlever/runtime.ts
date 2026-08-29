@@ -2,15 +2,16 @@ import 'server-only'
 
 import { buildNavigation } from '@/config/navigation'
 import { dereferenceRepository } from '@/lib/dereference/repository'
+import { localAuthAdapter } from '@/lib/local-auth'
+import { localPrefixSource } from '@/lib/local-prefixes'
 import { getRuntimeConfig } from '@/lib/runtime/config'
 import type { FeatureId, WorkbenchRuntime } from '@/lib/runtime/contracts'
 import { savedQueryRepository } from '@/lib/saved-queries'
-import { qleverAuthAdapter } from './auth'
 import { qleverGraphReader } from './graphs'
 import { getQleverEndpointOverview } from './overview'
-import { qleverPrefixSource } from './prefixes'
 import { qleverQueryMonitor } from './query-monitor'
 import { qleverSparqlTransport } from './sparql'
+import { getResourceSuggestions } from './text-search'
 
 const qleverConfig = getRuntimeConfig()
 const hasServerWideMonitor =
@@ -37,12 +38,13 @@ export const qleverRuntime: WorkbenchRuntime = {
   label: 'QLever',
   sparql: qleverSparqlTransport,
   graphs: qleverGraphReader,
-  prefixes: qleverPrefixSource,
+  prefixes: localPrefixSource,
   savedQueries: savedQueryRepository,
   dereference: dereferenceRepository,
-  auth: qleverAuthAdapter,
+  auth: localAuthAdapter,
   features,
   navigation,
   queryMonitor: qleverQueryMonitor,
+  textSearch: { getResourceSuggestions },
   getEndpointOverview: getQleverEndpointOverview
 }

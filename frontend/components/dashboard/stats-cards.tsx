@@ -14,11 +14,12 @@ import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { queryHistoryService } from '@/lib/client/query-history'
+import type { TriplestoreProvider } from '@/lib/runtime/contracts'
 import type { EndpointStats } from '@/types'
 
 interface StatsCardsProps {
   stats: EndpointStats
-  provider: 'virtuoso' | 'qlever'
+  provider: TriplestoreProvider
 }
 
 export function StatsCards({ stats, provider }: StatsCardsProps) {

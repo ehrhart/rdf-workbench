@@ -57,11 +57,12 @@ function KeyValueTable({
   )
 }
 
-async function QleverSystemMonitor() {
-  const overview = await (await getWorkbenchRuntime()).getEndpointOverview()
+async function EndpointOverviewMonitor() {
+  const runtime = await getWorkbenchRuntime()
+  const overview = await runtime.getEndpointOverview()
   return (
     <DashboardShell>
-      <DashboardHeader heading="QLever Endpoint" />
+      <DashboardHeader heading={`${runtime.label} Endpoint`} />
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
@@ -78,7 +79,7 @@ async function QleverSystemMonitor() {
           <CardHeader>
             <CardTitle>Runtime Settings</CardTitle>
             <CardDescription>
-              Public settings reported by the QLever server
+              Public settings reported by the {runtime.label} server
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -92,9 +93,9 @@ async function QleverSystemMonitor() {
 
 export default async function SystemMonitorPage() {
   const runtime = await getWorkbenchRuntime()
-  return runtime.provider === 'qlever' ? (
-    <QleverSystemMonitor />
-  ) : (
+  return runtime.provider === 'virtuoso' ? (
     <VirtuosoSystemMonitor />
+  ) : (
+    <EndpointOverviewMonitor />
   )
 }

@@ -1,4 +1,4 @@
-import type { FeatureId } from '@/lib/runtime/contracts'
+import type { FeatureId, TriplestoreProvider } from '@/lib/runtime/contracts'
 
 export type NavIcon =
   | 'activity'
@@ -161,7 +161,7 @@ function filterByFeatures(
 }
 
 export function buildNavigation(
-  provider: 'virtuoso' | 'qlever',
+  provider: TriplestoreProvider,
   features: ReadonlySet<FeatureId>
 ): NavigationConfig {
   return {

@@ -2,6 +2,7 @@ import 'server-only'
 
 import { buildNavigation } from '@/config/navigation'
 import { dereferenceRepository } from '@/lib/dereference/repository'
+import { getRuntimeConfig } from '@/lib/runtime/config'
 import type {
   FeatureId,
   SparqlTransport,
@@ -9,7 +10,15 @@ import type {
 } from '@/lib/runtime/contracts'
 import { savedQueryRepository } from '@/lib/saved-queries'
 import { virtuosoAuthAdapter } from './auth'
-import { getEndpointStats, getNamedGraphs, getPrefixes } from './capabilities'
+import {
+  addPrefix,
+  deletePrefix,
+  getEndpointStats,
+  getNamedGraphs,
+  getPrefixes,
+  getResourceSuggestions,
+  updatePrefix
+} from './capabilities'
 import { virtuosoQueryMonitor } from './query-monitor'
 import { virtuosoSparqlTransport } from './sparql'
 
@@ -38,17 +47,38 @@ export const virtuosoRuntime: WorkbenchRuntime = {
   label: 'Virtuoso',
   sparql,
   graphs: { listNamedGraphs: getNamedGraphs },
-  prefixes: { list: getPrefixes },
+  prefixes: {
+    list: getPrefixes,
+    create: async (prefix, namespace) => {
+      await addPrefix(prefix, namespace)
+    },
+    update: async (oldPrefix, prefix, namespace) => {
+      await updatePrefix(oldPrefix, prefix, namespace)
+    },
+    delete: deletePrefix
+  },
   savedQueries: savedQueryRepository,
   dereference: dereferenceRepository,
   auth: virtuosoAuthAdapter,
   features,
   navigation,
   queryMonitor: virtuosoQueryMonitor,
+  textSearch: { getResourceSuggestions },
   async getEndpointOverview() {
-    const stats = await getEndpointStats()
+    const config = getRuntimeConfig()
+    if (config.TRIPLESTORE_PROVIDER !== 'virtuoso') {
+      throw new Error('Virtuoso runtime used with a different provider')
+    }
+    const [stats, adapter] = await Promise.all([
+      getEndpointStats(),
+      fetch(new URL('/health', config.VIRTUOSO_ADAPTER_URL), {
+        cache: 'no-store'
+      })
+        .then((response) => response.ok)
+        .catch(() => false)
+    ])
     return {
-      healthy: stats.totalTriples > 0 || stats.namedGraphs > 0,
+      healthy: adapter,
       name: 'Virtuoso',
       provider: 'virtuoso',
       stats: {

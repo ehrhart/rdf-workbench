@@ -26,9 +26,9 @@ async function GraphsContent() {
         runtime.features.has('virtuoso-graph-mutations') && Boolean(session)
       }
       portableExportFormats={
-        runtime.provider === 'qlever'
-          ? runtime.sparql.getDownloadFormats('construct')
-          : []
+        runtime.provider === 'virtuoso'
+          ? []
+          : runtime.sparql.getDownloadFormats('construct')
       }
     />
   )

@@ -1,12 +1,12 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { requireFeature } from '@/lib/runtime'
 import {
   createLocalUser,
   resetLocalUserPassword,
   setLocalUserDisabled
-} from '@/providers/qlever/auth'
+} from '@/lib/local-auth'
+import { requireFeature } from '@/lib/runtime'
 
 export interface UserActionResult {
   ok: boolean

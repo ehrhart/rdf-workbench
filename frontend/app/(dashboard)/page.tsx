@@ -30,7 +30,7 @@ async function StatsSection() {
         : graphs.reduce((sum, graph) => sum + graph.tripleCount, 0),
     namedGraphs: graphs.length
   }
-  const isUnavailable = stats.totalTriples === 0 && stats.namedGraphs === 0
+  const isUnavailable = overview === null || overview.healthy === false
 
   return (
     <>

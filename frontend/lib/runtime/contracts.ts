@@ -1,5 +1,10 @@
 import type { NavigationConfig } from '@/config/navigation'
-import type { NamedGraph, SavedQuery, SparqlQueryResult } from '@/types'
+import type {
+  NamedGraph,
+  ResourceSuggestion,
+  SavedQuery,
+  SparqlQueryResult
+} from '@/types'
 
 export type TriplestoreProvider = 'virtuoso' | 'qlever'
 
@@ -63,6 +68,18 @@ export interface GraphReader {
 
 export interface PrefixSource {
   list(): Promise<Record<string, string>>
+}
+
+export interface PrefixStore extends PrefixSource {
+  create(prefix: string, namespace: string): Promise<void>
+  update(oldPrefix: string, prefix: string, namespace: string): Promise<void>
+  delete(prefix: string): Promise<void>
+}
+
+export interface GraphMutations {
+  getGraphTripleCount(uri: string): Promise<number>
+  deleteGraph(uri: string): Promise<void>
+  clearRepository(): Promise<void>
 }
 
 export interface SavedQueryInput {
@@ -137,17 +154,23 @@ export interface QueryMonitorAdapter {
   cancel(id: string, caller: Principal | null): Promise<void>
 }
 
+export interface TextSearchAdapter {
+  getResourceSuggestions(searchTerm: string): Promise<ResourceSuggestion[]>
+}
+
 export interface WorkbenchRuntime {
   provider: TriplestoreProvider
   label: string
   sparql: SparqlTransport
   graphs: GraphReader
-  prefixes: PrefixSource
+  prefixes: PrefixStore
   savedQueries: SavedQueryRepository
   dereference: DereferenceRepository
   auth: AuthAdapter
   features: ReadonlySet<FeatureId>
   navigation: NavigationConfig
   queryMonitor?: QueryMonitorAdapter
+  textSearch: TextSearchAdapter
+  graphMutations?: GraphMutations
   getEndpointOverview(): Promise<EndpointOverview>
 }

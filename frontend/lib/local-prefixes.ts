@@ -1,9 +1,9 @@
 import 'server-only'
 
 import { QueryError } from '@/lib/errors'
-import type { PrefixSource } from '@/lib/runtime/contracts'
+import type { PrefixStore } from '@/lib/runtime/contracts'
 import { getWorkbenchDatabase } from '@/lib/workbench-database'
-import { requireLocalAdmin } from './auth'
+import { requireLocalAdmin } from './local-auth'
 
 const PREFIX_PATTERN = /^[A-Za-z][A-Za-z0-9._-]*$/
 
@@ -21,7 +21,7 @@ function validatePrefix(prefix: string, namespace: string) {
   return { prefix: normalizedPrefix, namespace: normalizedNamespace }
 }
 
-export async function listQleverPrefixes(): Promise<Record<string, string>> {
+export async function listLocalPrefixes(): Promise<Record<string, string>> {
   const db = await getWorkbenchDatabase()
   const rows = db
     .prepare(
@@ -31,11 +31,14 @@ export async function listQleverPrefixes(): Promise<Record<string, string>> {
   return Object.fromEntries(rows.map((row) => [row.prefix, row.namespace]))
 }
 
-export const qleverPrefixSource: PrefixSource = {
-  list: listQleverPrefixes
+export const localPrefixSource: PrefixStore = {
+  list: listLocalPrefixes,
+  create: createLocalPrefix,
+  update: updateLocalPrefix,
+  delete: deleteLocalPrefix
 }
 
-export async function createQleverPrefix(
+export async function createLocalPrefix(
   prefix: string,
   namespace: string
 ): Promise<void> {
@@ -57,7 +60,7 @@ export async function createQleverPrefix(
   }
 }
 
-export async function updateQleverPrefix(
+export async function updateLocalPrefix(
   oldPrefix: string,
   prefix: string,
   namespace: string
@@ -74,7 +77,7 @@ export async function updateQleverPrefix(
   if (result.changes === 0) throw new QueryError('Prefix not found')
 }
 
-export async function deleteQleverPrefix(prefix: string): Promise<void> {
+export async function deleteLocalPrefix(prefix: string): Promise<void> {
   await requireLocalAdmin()
   const db = await getWorkbenchDatabase()
   const result = db

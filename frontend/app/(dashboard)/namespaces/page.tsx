@@ -5,7 +5,7 @@ import { DashboardHeader } from '@/components/dashboard/header'
 import { DashboardShell } from '@/components/dashboard/shell'
 import { PrefixManager } from '@/components/prefixes/prefix-manager'
 import { getPrefixes } from '@/lib/prefix-actions'
-import { getWorkbenchRuntime } from '@/lib/runtime'
+import { getWorkbenchRuntime, hasAnyFeature } from '@/lib/runtime'
 
 export const metadata: Metadata = {
   title: 'Namespaces',
@@ -14,10 +14,7 @@ export const metadata: Metadata = {
 
 export default async function NamespacesPage() {
   const runtime = await getWorkbenchRuntime()
-  if (
-    !runtime.features.has('virtuoso-namespaces') &&
-    !runtime.features.has('qlever-namespaces')
-  ) {
+  if (!(await hasAnyFeature(['virtuoso-namespaces', 'qlever-namespaces']))) {
     notFound()
   }
 

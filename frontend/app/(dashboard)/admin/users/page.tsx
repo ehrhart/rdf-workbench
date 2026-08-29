@@ -3,8 +3,8 @@ import { notFound, redirect } from 'next/navigation'
 import { UserManager } from '@/components/admin/user-manager'
 import { DashboardHeader } from '@/components/dashboard/header'
 import { DashboardShell } from '@/components/dashboard/shell'
+import { listLocalUsers } from '@/lib/local-auth'
 import { getWorkbenchRuntime } from '@/lib/runtime'
-import { listLocalUsers } from '@/providers/qlever/auth'
 
 export const metadata: Metadata = {
   title: 'User Administration',
@@ -13,7 +13,9 @@ export const metadata: Metadata = {
 
 export default async function UsersPage() {
   const runtime = await getWorkbenchRuntime()
-  if (!runtime.features.has('qlever-user-admin')) notFound()
+  if (!runtime.features.has('qlever-user-admin')) {
+    notFound()
+  }
 
   const administrator = await runtime.auth.getPrincipal()
   if (!administrator) redirect('/logout?redirect=/admin/users')

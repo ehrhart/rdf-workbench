@@ -1,4 +1,5 @@
 import { QueryError } from '@/lib/errors'
+import type { TriplestoreProvider } from '@/lib/runtime/contracts'
 
 export const RESERVED_WORKBENCH_PATHS = [
   'admin',
@@ -19,7 +20,7 @@ export const RESERVED_WORKBENCH_PATHS = [
 ] as const
 
 export const RESERVED_PROVIDER_PATHS: Record<
-  'virtuoso' | 'qlever',
+  TriplestoreProvider,
   readonly string[]
 > = {
   virtuoso: ['sparql', 'fct', 'conductor', 'DAV', 'describe'],
@@ -29,7 +30,7 @@ export const RESERVED_PROVIDER_PATHS: Record<
 const PATH_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 const MAX_PATH_LENGTH = 64
 
-export function reservedPathsFor(provider: 'virtuoso' | 'qlever'): string[] {
+export function reservedPathsFor(provider: TriplestoreProvider): string[] {
   return [
     ...new Set([
       ...RESERVED_WORKBENCH_PATHS,
@@ -54,7 +55,7 @@ export function validateDereferencePathFormat(rawPath: string): string {
 
 export function validateDereferencePath(
   rawPath: string,
-  provider: 'virtuoso' | 'qlever'
+  provider: TriplestoreProvider
 ): string {
   const path = validateDereferencePathFormat(rawPath)
   if (reservedPathsFor(provider).includes(path)) {

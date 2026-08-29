@@ -25,9 +25,9 @@ same moment the release is created. No manual tagging is needed.
 
 ### Release token
 
-`release-please` must run with a token whose events trigger other workflows.
-The default `GITHUB_TOKEN` never does, so without setup the tag it creates does
-not fire `docker-publish.yml`. Set a fine-grained personal access token with
+`release-please` must run with a token whose events trigger other workflows. The
+default `GITHUB_TOKEN` never does, so without setup the tag it creates does not
+fire `docker-publish.yml`. Set a fine-grained personal access token with
 `Contents` (read and write) and `Pull requests` (read and write) permissions as
 the `RELEASE_PLEASE_TOKEN` repository secret. The workflow falls back to
 `GITHUB_TOKEN` if the secret is missing.

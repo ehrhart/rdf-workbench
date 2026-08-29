@@ -64,13 +64,13 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table'
-import type { DownloadFormat } from '@/lib/runtime/contracts'
-import { GRAPH_EXPORT_FILE_TYPES, type GraphExportFileType } from '@/lib/utils'
 import {
   clearRepository,
   deleteGraph,
   getGraphTripleCount
-} from '@/providers/virtuoso/capabilities'
+} from '@/lib/graph-actions'
+import type { DownloadFormat } from '@/lib/runtime/contracts'
+import { GRAPH_EXPORT_FILE_TYPES, type GraphExportFileType } from '@/lib/utils'
 import type { NamedGraph } from '@/types'
 
 interface FileSystemFileHandle {

@@ -10,18 +10,7 @@ export async function addPrefix(
   prefix: string,
   namespace: string
 ): Promise<Record<string, string>> {
-  const runtime = await getWorkbenchRuntime()
-  if (runtime.provider === 'virtuoso') {
-    return (await import('@/providers/virtuoso/capabilities')).addPrefix(
-      prefix,
-      namespace
-    )
-  }
-
-  await (await import('@/providers/qlever/prefixes')).createQleverPrefix(
-    prefix,
-    namespace
-  )
+  await (await getWorkbenchRuntime()).prefixes.create(prefix, namespace)
   return { [prefix.trim()]: namespace.trim() }
 }
 
@@ -30,16 +19,7 @@ export async function updatePrefix(
   prefix: string,
   namespace: string
 ): Promise<Record<string, string>> {
-  const runtime = await getWorkbenchRuntime()
-  if (runtime.provider === 'virtuoso') {
-    return (await import('@/providers/virtuoso/capabilities')).updatePrefix(
-      oldPrefix,
-      prefix,
-      namespace
-    )
-  }
-
-  await (await import('@/providers/qlever/prefixes')).updateQleverPrefix(
+  await (await getWorkbenchRuntime()).prefixes.update(
     oldPrefix,
     prefix,
     namespace
@@ -48,14 +28,5 @@ export async function updatePrefix(
 }
 
 export async function deletePrefix(prefix: string): Promise<void> {
-  const runtime = await getWorkbenchRuntime()
-  if (runtime.provider === 'virtuoso') {
-    return (await import('@/providers/virtuoso/capabilities')).deletePrefix(
-      prefix
-    )
-  }
-
-  return (await import('@/providers/qlever/prefixes')).deleteQleverPrefix(
-    prefix
-  )
+  await (await getWorkbenchRuntime()).prefixes.delete(prefix)
 }

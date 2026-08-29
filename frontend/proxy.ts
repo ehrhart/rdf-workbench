@@ -6,9 +6,21 @@ import {
   isSparqlResultFormat
 } from '@/lib/sparql/negotiation'
 
-const PUBLIC_PATHS = ['/login', '/logout']
+const PUBLIC_PATHS = ['/login', '/logout', '/health']
 
 type SparqlRouting = 'page' | 'query' | 'not-acceptable'
+
+const blockedPathPrefixes: Partial<Record<string, readonly string[]>> = {
+  qlever: [
+    '/isql',
+    '/import',
+    '/fulltext-index',
+    '/api/isql',
+    '/api/import',
+    '/api/export'
+  ],
+  virtuoso: ['/admin/users']
+}
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -22,20 +34,15 @@ export async function proxy(request: NextRequest) {
     return new NextResponse('Not Acceptable', { status: 406 })
   }
 
-  const unavailableForQlever =
-    provider === 'qlever' &&
-    (pathname.startsWith('/isql') ||
-      pathname.startsWith('/import') ||
-      pathname.startsWith('/fulltext-index') ||
-      (pathname.startsWith('/monitor/queries') &&
-        !process.env.QLEVER_ACCESS_TOKEN) ||
-      pathname.startsWith('/api/isql') ||
-      pathname.startsWith('/api/import') ||
-      pathname === '/api/export')
-  const unavailableForVirtuoso =
-    provider === 'virtuoso' && pathname.startsWith('/admin/users')
+  const blockedForProvider =
+    blockedPathPrefixes[provider ?? '']?.some((prefix) =>
+      pathname.startsWith(prefix)
+    ) ??
+    (provider === 'qlever' &&
+      pathname.startsWith('/monitor/queries') &&
+      !process.env.QLEVER_ACCESS_TOKEN)
 
-  if (unavailableForQlever || unavailableForVirtuoso) {
+  if (blockedForProvider) {
     return new NextResponse('Not Found', { status: 404 })
   }
 
@@ -44,22 +51,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Only protect paths that are clearly protected (e.g., start with specific prefixes)
-  // This allows for public pages to exist without forcing login
-  const isDashboardRoute =
-    provider === 'virtuoso'
-      ? pathname.startsWith('/isql') ||
-        pathname.startsWith('/import') ||
-        pathname.startsWith('/namespaces') ||
-        pathname.startsWith('/fulltext-index') ||
-        pathname.startsWith('/monitor')
-      : pathname.startsWith('/admin/users')
-
-  if (!isDashboardRoute) {
-    return NextResponse.next()
-  }
-
-  // Get and verify session
+  // All other routes require a session
   const session =
     provider === 'virtuoso'
       ? await (

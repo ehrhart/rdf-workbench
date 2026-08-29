@@ -1,6 +1,7 @@
 import 'server-only'
 
 import { z } from 'zod'
+import type { TriplestoreProvider } from './contracts'
 
 const commonSchema = z.object({
   TRIPLESTORE_PROVIDER: z.enum(['virtuoso', 'qlever']),
@@ -35,6 +36,13 @@ export type VirtuosoRuntimeConfig = z.infer<typeof virtuosoSchema>
 export type QleverRuntimeConfig = z.infer<typeof qleverSchema>
 export type RuntimeConfig = VirtuosoRuntimeConfig | QleverRuntimeConfig
 
+type RuntimeSchema = typeof virtuosoSchema | typeof qleverSchema
+
+const providerSchemas = {
+  virtuoso: virtuosoSchema,
+  qlever: qleverSchema
+} satisfies Record<TriplestoreProvider, RuntimeSchema>
+
 let cachedConfig: RuntimeConfig | undefined
 
 /**
@@ -47,7 +55,7 @@ export function getRuntimeConfig(): RuntimeConfig {
   const provider = z
     .enum(['virtuoso', 'qlever'])
     .parse(process.env.TRIPLESTORE_PROVIDER)
-  const schema = provider === 'virtuoso' ? virtuosoSchema : qleverSchema
+  const schema = providerSchemas[provider]
 
   cachedConfig = schema.parse(process.env)
   return cachedConfig

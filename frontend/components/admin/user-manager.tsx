@@ -27,7 +27,7 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table'
-import type { LocalUser } from '@/providers/qlever/auth'
+import type { LocalUser } from '@/lib/local-auth'
 
 interface UserManagerProps {
   users: LocalUser[]

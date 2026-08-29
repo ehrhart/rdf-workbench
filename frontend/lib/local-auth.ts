@@ -137,7 +137,7 @@ export async function logoutLocalUser(): Promise<void> {
   cookieStore.delete(SESSION_COOKIE_NAME)
 }
 
-export const qleverAuthAdapter: AuthAdapter = {
+export const localAuthAdapter: AuthAdapter = {
   login: loginLocalUser,
   getPrincipal: getLocalPrincipal,
   logout: logoutLocalUser,
