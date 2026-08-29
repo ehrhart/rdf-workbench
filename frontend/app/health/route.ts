@@ -28,33 +28,59 @@ export async function GET() {
       })
     }
 
-    const [{ getWorkbenchDatabase }, adapter, endpoint] = await Promise.all([
+    if (config.TRIPLESTORE_PROVIDER === 'virtuoso') {
+      const [{ getWorkbenchDatabase }, adapter, endpoint] = await Promise.all([
+        import('@/lib/workbench-database'),
+        fetch(new URL('/health', config.VIRTUOSO_ADAPTER_URL), {
+          cache: 'no-store'
+        }),
+        fetch(config.SPARQL_ENDPOINT, {
+          method: 'POST',
+          headers: {
+            Accept: 'application/sparql-results+json',
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: new URLSearchParams({ query: 'ASK { ?s ?p ?o }' }),
+          cache: 'no-store'
+        })
+      ])
+      const db = await getWorkbenchDatabase()
+      db.prepare('SELECT 1').get()
+      if (!adapter.ok || !endpoint.ok) {
+        throw new Error(
+          `Virtuoso health failure (adapter ${adapter.status}, endpoint ${endpoint.status})`
+        )
+      }
+
+      return NextResponse.json({
+        status: 'healthy',
+        provider: 'virtuoso',
+        services: { sqlite: 'healthy', adapter: 'healthy', endpoint: 'healthy' }
+      })
+    }
+
+    const [{ getWorkbenchDatabase }, endpoint] = await Promise.all([
       import('@/lib/workbench-database'),
-      fetch(new URL('/health', config.VIRTUOSO_ADAPTER_URL), {
-        cache: 'no-store'
-      }),
       fetch(config.SPARQL_ENDPOINT, {
         method: 'POST',
         headers: {
           Accept: 'application/sparql-results+json',
-          'Content-Type': 'application/x-www-form-urlencoded'
+          'Content-Type': 'application/sparql-query'
         },
-        body: new URLSearchParams({ query: 'ASK { ?s ?p ?o }' }),
+        body: 'ASK { ?s ?p ?o }',
         cache: 'no-store'
       })
     ])
     const db = await getWorkbenchDatabase()
     db.prepare('SELECT 1').get()
-    if (!adapter.ok || !endpoint.ok) {
-      throw new Error(
-        `Virtuoso health failure (adapter ${adapter.status}, endpoint ${endpoint.status})`
-      )
+    if (!endpoint.ok) {
+      throw new Error(`Oxigraph health failure (endpoint ${endpoint.status})`)
     }
 
     return NextResponse.json({
       status: 'healthy',
-      provider: 'virtuoso',
-      services: { sqlite: 'healthy', adapter: 'healthy', endpoint: 'healthy' }
+      provider: 'oxigraph',
+      services: { sqlite: 'healthy', endpoint: 'healthy' }
     })
   } catch (error) {
     return NextResponse.json(

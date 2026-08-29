@@ -54,13 +54,20 @@ const qleverDocs: NavItem = {
   rel: 'noopener noreferrer'
 }
 
+const oxigraphDocs: NavItem = {
+  title: 'Oxigraph docs',
+  url: 'https://oxigraph.org/',
+  target: '_blank',
+  rel: 'noopener noreferrer'
+}
+
 const navMain: NavItem[] = [
   {
     title: 'Import',
     url: '/import',
     icon: 'import',
     requiresAuth: true,
-    requiredFeature: 'virtuoso-import'
+    requiredFeature: ['virtuoso-import', 'oxigraph-import']
   },
   {
     title: 'Explore',
@@ -106,7 +113,11 @@ const navMain: NavItem[] = [
       {
         title: 'Namespaces',
         url: '/namespaces',
-        requiredFeature: ['qlever-namespaces', 'virtuoso-namespaces']
+        requiredFeature: [
+          'qlever-namespaces',
+          'virtuoso-namespaces',
+          'oxigraph-namespaces'
+        ]
       },
       {
         title: 'Full-Text Index',
@@ -130,7 +141,7 @@ const navMain: NavItem[] = [
         url: '/admin/users',
         requiresAuth: true,
         requiredRole: 'admin',
-        requiredFeature: 'qlever-user-admin'
+        requiredFeature: ['qlever-user-admin', 'oxigraph-user-admin']
       }
     ]
   }
@@ -170,7 +181,14 @@ export function buildNavigation(
       {
         title: 'Help',
         icon: 'help',
-        items: [sparqlDocs, provider === 'virtuoso' ? virtuosoDocs : qleverDocs]
+        items: [
+          sparqlDocs,
+          provider === 'virtuoso'
+            ? virtuosoDocs
+            : provider === 'qlever'
+              ? qleverDocs
+              : oxigraphDocs
+        ]
       }
     ]
   }

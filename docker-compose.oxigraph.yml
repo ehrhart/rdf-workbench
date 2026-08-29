@@ -1,0 +1,40 @@
+services:
+  workbench:
+    environment:
+      TRIPLESTORE_PROVIDER: oxigraph
+      SPARQL_ENDPOINT: http://oxigraph:7878/sparql
+      WORKBENCH_DB_PATH: /data/workbench.sqlite
+      BOOTSTRAP_ADMIN_USERNAME: ${BOOTSTRAP_ADMIN_USERNAME}
+      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD}
+    volumes:
+      - oxigraph-workbench-data:/data
+    depends_on:
+      oxigraph:
+        condition: service_healthy
+
+  oxigraph:
+    image: oxigraph/oxigraph:0.5.9
+    command:
+      [
+        "serve",
+        "--location",
+        "/data",
+        "--bind",
+        "0.0.0.0:7878",
+        "--union-default-graph"
+      ]
+    ports:
+      - "${OXIGRAPH_PORT:-7878}:7878"
+    volumes:
+      - oxigraph-data:/data
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/oxigraph", "--version"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+
+volumes:
+  oxigraph-workbench-data:
+  oxigraph-data:

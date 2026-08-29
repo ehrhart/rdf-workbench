@@ -151,7 +151,10 @@ async function initialize(): Promise<Database.Database> {
   const db = new Database(config.WORKBENCH_DB_PATH)
   migrate(db)
 
-  if (config.TRIPLESTORE_PROVIDER === 'qlever') {
+  if (
+    config.TRIPLESTORE_PROVIDER === 'qlever' ||
+    config.TRIPLESTORE_PROVIDER === 'oxigraph'
+  ) {
     const userCount = db
       .prepare('SELECT COUNT(*) AS count FROM users')
       .get() as {

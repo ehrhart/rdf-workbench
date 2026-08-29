@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { notFound } from 'next/navigation'
+import OxigraphImportManager from '@/components/import/oxigraph-import-manager'
 import VirtuosoImportManager from '@/components/import/virtuoso-import-manager'
 import { getWorkbenchRuntime } from '@/lib/runtime'
 
@@ -10,6 +10,9 @@ export const metadata: Metadata = {
 
 export default async function ImportPage() {
   const runtime = await getWorkbenchRuntime()
-  if (runtime.provider !== 'virtuoso') notFound()
-  return <VirtuosoImportManager />
+  return runtime.provider === 'virtuoso' ? (
+    <VirtuosoImportManager />
+  ) : (
+    <OxigraphImportManager />
+  )
 }

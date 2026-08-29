@@ -17,7 +17,9 @@ const runtimeFactories: Record<
   qlever: async () =>
     (await import('@/providers/qlever/runtime')).qleverRuntime,
   virtuoso: async () =>
-    (await import('@/providers/virtuoso/runtime')).virtuosoRuntime
+    (await import('@/providers/virtuoso/runtime')).virtuosoRuntime,
+  oxigraph: async () =>
+    (await import('@/providers/oxigraph/runtime')).oxigraphRuntime
 }
 
 export async function getWorkbenchRuntime(): Promise<WorkbenchRuntime> {

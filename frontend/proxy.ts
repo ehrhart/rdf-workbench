@@ -19,7 +19,15 @@ const blockedPathPrefixes: Partial<Record<string, readonly string[]>> = {
     '/api/import',
     '/api/export'
   ],
-  virtuoso: ['/admin/users']
+  virtuoso: ['/admin/users'],
+  oxigraph: [
+    '/isql',
+    '/fulltext-index',
+    '/monitor/queries',
+    '/api/isql',
+    '/api/import',
+    '/api/export'
+  ]
 }
 
 export async function proxy(request: NextRequest) {

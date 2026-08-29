@@ -23,7 +23,9 @@ async function GraphsContent() {
     <GraphManager
       initialGraphs={graphs}
       canManage={
-        runtime.features.has('virtuoso-graph-mutations') && Boolean(session)
+        (runtime.features.has('virtuoso-graph-mutations') ||
+          runtime.features.has('oxigraph-graph-mutations')) &&
+        Boolean(session)
       }
       portableExportFormats={
         runtime.provider === 'virtuoso'

@@ -6,7 +6,7 @@ import type {
   SparqlQueryResult
 } from '@/types'
 
-export type TriplestoreProvider = 'virtuoso' | 'qlever'
+export type TriplestoreProvider = 'virtuoso' | 'qlever' | 'oxigraph'
 
 export type FeatureId =
   | 'dashboard'
@@ -25,6 +25,10 @@ export type FeatureId =
   | 'qlever-namespaces'
   | 'qlever-user-admin'
   | 'qlever-query-monitor'
+  | 'oxigraph-import'
+  | 'oxigraph-graph-mutations'
+  | 'oxigraph-namespaces'
+  | 'oxigraph-user-admin'
 
 export type SparqlQueryKind =
   | 'select'

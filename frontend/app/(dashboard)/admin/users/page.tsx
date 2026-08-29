@@ -4,7 +4,7 @@ import { UserManager } from '@/components/admin/user-manager'
 import { DashboardHeader } from '@/components/dashboard/header'
 import { DashboardShell } from '@/components/dashboard/shell'
 import { listLocalUsers } from '@/lib/local-auth'
-import { getWorkbenchRuntime } from '@/lib/runtime'
+import { getWorkbenchRuntime, hasAnyFeature } from '@/lib/runtime'
 
 export const metadata: Metadata = {
   title: 'User Administration',
@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 
 export default async function UsersPage() {
   const runtime = await getWorkbenchRuntime()
-  if (!runtime.features.has('qlever-user-admin')) {
+  if (!(await hasAnyFeature(['qlever-user-admin', 'oxigraph-user-admin']))) {
     notFound()
   }
 

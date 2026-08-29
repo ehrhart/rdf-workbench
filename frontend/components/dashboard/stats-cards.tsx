@@ -59,7 +59,7 @@ export function StatsCards({ stats, provider }: StatsCardsProps) {
           </div>
           <p className="text-muted-foreground text-xs">Across all graphs</p>
           <div className="flex flex-wrap items-center gap-2 pt-2">
-            {provider === 'virtuoso' && (
+            {(provider === 'virtuoso' || provider === 'oxigraph') && (
               <Button asChild variant="ghost" size="sm" className="h-7 text-xs">
                 <Link href="/import">
                   <UploadIcon />

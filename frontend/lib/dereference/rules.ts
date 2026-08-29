@@ -24,7 +24,8 @@ export const RESERVED_PROVIDER_PATHS: Record<
   readonly string[]
 > = {
   virtuoso: ['sparql', 'fct', 'conductor', 'DAV', 'describe'],
-  qlever: []
+  qlever: [],
+  oxigraph: []
 }
 
 const PATH_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/

@@ -14,7 +14,13 @@ export const metadata: Metadata = {
 
 export default async function NamespacesPage() {
   const runtime = await getWorkbenchRuntime()
-  if (!(await hasAnyFeature(['virtuoso-namespaces', 'qlever-namespaces']))) {
+  if (
+    !(await hasAnyFeature([
+      'virtuoso-namespaces',
+      'qlever-namespaces',
+      'oxigraph-namespaces'
+    ]))
+  ) {
     notFound()
   }
 

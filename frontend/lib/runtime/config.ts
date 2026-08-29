@@ -4,7 +4,7 @@ import { z } from 'zod'
 import type { TriplestoreProvider } from './contracts'
 
 const commonSchema = z.object({
-  TRIPLESTORE_PROVIDER: z.enum(['virtuoso', 'qlever']),
+  TRIPLESTORE_PROVIDER: z.enum(['virtuoso', 'qlever', 'oxigraph']),
   SPARQL_ENDPOINT: z.string().url(),
   SPARQL_TIMEOUT_MS: z.coerce.number().int().nonnegative().default(60_000),
   WORKBENCH_NAME: z.string().min(1).default('RDF Workbench'),
@@ -32,15 +32,29 @@ const qleverSchema = commonSchema.extend({
   QLEVER_ACCESS_TOKEN: z.string().min(1).optional()
 })
 
+const oxigraphSchema = commonSchema.extend({
+  TRIPLESTORE_PROVIDER: z.literal('oxigraph'),
+  BOOTSTRAP_ADMIN_USERNAME: z.string().min(1),
+  BOOTSTRAP_ADMIN_PASSWORD: z.string().min(1)
+})
+
 export type VirtuosoRuntimeConfig = z.infer<typeof virtuosoSchema>
 export type QleverRuntimeConfig = z.infer<typeof qleverSchema>
-export type RuntimeConfig = VirtuosoRuntimeConfig | QleverRuntimeConfig
+export type OxigraphRuntimeConfig = z.infer<typeof oxigraphSchema>
+export type RuntimeConfig =
+  | VirtuosoRuntimeConfig
+  | QleverRuntimeConfig
+  | OxigraphRuntimeConfig
 
-type RuntimeSchema = typeof virtuosoSchema | typeof qleverSchema
+type RuntimeSchema =
+  | typeof virtuosoSchema
+  | typeof qleverSchema
+  | typeof oxigraphSchema
 
 const providerSchemas = {
   virtuoso: virtuosoSchema,
-  qlever: qleverSchema
+  qlever: qleverSchema,
+  oxigraph: oxigraphSchema
 } satisfies Record<TriplestoreProvider, RuntimeSchema>
 
 let cachedConfig: RuntimeConfig | undefined
@@ -53,7 +67,7 @@ export function getRuntimeConfig(): RuntimeConfig {
   if (cachedConfig) return cachedConfig
 
   const provider = z
-    .enum(['virtuoso', 'qlever'])
+    .enum(['virtuoso', 'qlever', 'oxigraph'])
     .parse(process.env.TRIPLESTORE_PROVIDER)
   const schema = providerSchemas[provider]
 
