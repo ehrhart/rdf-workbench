@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.1.0](https://github.com/ehrhart/rdf-workbench/compare/v1.0.0...v1.1.0) (2026-08-29)
+
+
+### Features
+
+* **frontend:** configurable dereference paths ([954ba56](https://github.com/ehrhart/rdf-workbench/commit/954ba565f0824d82c1e065ddeff4508e5b09a75a))
+* **frontend:** larger touch targets and compact labels on small screens ([a36bc50](https://github.com/ehrhart/rdf-workbench/commit/a36bc5098e6143d1560e0454b057ec421791c49a))
+
+
+### Bug Fixes
+
+* **frontend:** add title to app icon svg ([a003a2a](https://github.com/ehrhart/rdf-workbench/commit/a003a2ab9ef94235145709080a0760d05f05f88c))
+
 ## [1.0.0](https://github.com/ehrhart/rdf-workbench/compare/v0.1.0...v1.0.0) (2026-08-28)
 
 
