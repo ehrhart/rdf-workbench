@@ -7,12 +7,12 @@ import {
 } from '@/config/navigation'
 import { getRuntimeConfig } from '@/lib/runtime/config'
 import type { FeatureId, WorkbenchRuntime } from '@/lib/runtime/contracts'
+import { savedQueryRepository } from '@/lib/saved-queries'
 import { qleverAuthAdapter } from './auth'
 import { qleverGraphReader } from './graphs'
 import { getQleverEndpointOverview } from './overview'
 import { qleverPrefixSource } from './prefixes'
 import { qleverQueryMonitor } from './query-monitor'
-import { qleverSavedQueryRepository } from './saved-queries'
 import { qleverSparqlTransport } from './sparql'
 
 const qleverConfig = getRuntimeConfig()
@@ -59,7 +59,7 @@ export const qleverRuntime: WorkbenchRuntime = {
   sparql: qleverSparqlTransport,
   graphs: qleverGraphReader,
   prefixes: qleverPrefixSource,
-  savedQueries: qleverSavedQueryRepository,
+  savedQueries: savedQueryRepository,
   auth: qleverAuthAdapter,
   features,
   navigation,

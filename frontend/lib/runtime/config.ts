@@ -12,6 +12,7 @@ const commonSchema = z.object({
     .string()
     .url()
     .default('http://data.climatesense-project.eu'),
+  WORKBENCH_DB_PATH: z.string().min(1),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development')
 })
 
@@ -28,7 +29,6 @@ const virtuosoSchema = commonSchema.extend({
 
 const qleverSchema = commonSchema.extend({
   TRIPLESTORE_PROVIDER: z.literal('qlever'),
-  WORKBENCH_DB_PATH: z.string().min(1),
   BOOTSTRAP_ADMIN_USERNAME: z.string().min(1),
   BOOTSTRAP_ADMIN_PASSWORD: z.string().min(1),
   QLEVER_ACCESS_TOKEN: z.string().min(1).optional()

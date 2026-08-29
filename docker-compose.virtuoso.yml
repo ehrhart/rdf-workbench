@@ -2,6 +2,7 @@ services:
   workbench:
     environment:
       TRIPLESTORE_PROVIDER: virtuoso
+      WORKBENCH_DB_PATH: /data/workbench.sqlite
       SESSION_SECRET: ${SESSION_SECRET}
       SPARQL_ENDPOINT: ${SPARQL_ENDPOINT}
       VIRTUOSO_ADAPTER_URL: http://virtuoso-adapter:50118
@@ -10,6 +11,8 @@ services:
       GRAPH_EXPORT_FILE_LIMIT: ${GRAPH_EXPORT_FILE_LIMIT:-50000000000}
       GRAPH_EXPORT_POLL_INTERVAL_MS: ${GRAPH_EXPORT_POLL_INTERVAL_MS:-1000}
       GRAPH_EXPORT_POLL_ATTEMPTS: ${GRAPH_EXPORT_POLL_ATTEMPTS:-60}
+    volumes:
+      - virtuoso-workbench-data:/data
     depends_on:
       virtuoso-adapter:
         condition: service_healthy
@@ -45,3 +48,6 @@ services:
       retries: 3
       start_period: 30s
     restart: unless-stopped
+
+volumes:
+  virtuoso-workbench-data:

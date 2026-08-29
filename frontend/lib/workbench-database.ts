@@ -5,10 +5,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { hash } from '@node-rs/argon2'
 import Database from 'better-sqlite3'
-import {
-  getRuntimeConfig,
-  type QleverRuntimeConfig
-} from '@/lib/runtime/config'
+import { getRuntimeConfig } from '@/lib/runtime/config'
 
 const DEFAULT_PREFIXES: Record<string, string> = {
   rdf: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
@@ -22,14 +19,6 @@ const DEFAULT_PREFIXES: Record<string, string> = {
 
 let database: Database.Database | undefined
 let initialization: Promise<Database.Database> | undefined
-
-function getQleverConfig(): QleverRuntimeConfig {
-  const config = getRuntimeConfig()
-  if (config.TRIPLESTORE_PROVIDER !== 'qlever') {
-    throw new Error('QLever database requested in a Virtuoso deployment')
-  }
-  return config
-}
 
 function migrate(db: Database.Database): void {
   db.pragma('journal_mode = WAL')
@@ -75,7 +64,7 @@ function migrate(db: Database.Database): void {
           id TEXT PRIMARY KEY,
           name TEXT NOT NULL,
           query_text TEXT NOT NULL,
-          owner_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          owner_id TEXT NOT NULL,
           owner_username TEXT NOT NULL,
           created_at TEXT NOT NULL,
           updated_at TEXT NOT NULL
@@ -115,6 +104,22 @@ function migrate(db: Database.Database): void {
     })()
   }
 
+  if (current.version < 3) {
+    db.transaction(() => {
+      db.exec(`
+        CREATE TABLE dereference_paths (
+          path TEXT PRIMARY KEY,
+          created_by TEXT REFERENCES users(id) ON DELETE SET NULL,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL
+        );
+      `)
+      db.prepare(
+        'INSERT INTO schema_migrations (version, applied_at) VALUES (3, ?)'
+      ).run(new Date().toISOString())
+    })()
+  }
+
   const prefixCount = db
     .prepare('SELECT COUNT(*) AS count FROM prefixes')
     .get() as {
@@ -136,7 +141,7 @@ function migrate(db: Database.Database): void {
 }
 
 async function initialize(): Promise<Database.Database> {
-  const config = getQleverConfig()
+  const config = getRuntimeConfig()
   const directory = path.dirname(config.WORKBENCH_DB_PATH)
   if (!directory) {
     throw new Error('WORKBENCH_DB_PATH must include a writable directory')
@@ -146,33 +151,37 @@ async function initialize(): Promise<Database.Database> {
   const db = new Database(config.WORKBENCH_DB_PATH)
   migrate(db)
 
-  const userCount = db.prepare('SELECT COUNT(*) AS count FROM users').get() as {
-    count: number
-  }
-  if (userCount.count === 0) {
-    const now = new Date().toISOString()
-    const passwordHash = await hash(config.BOOTSTRAP_ADMIN_PASSWORD)
-    db.prepare(`
-      INSERT INTO users
-        (id, username, password_hash, role, disabled, created_at, updated_at)
-      VALUES (?, ?, ?, 'admin', 0, ?, ?)
-    `).run(
-      crypto.randomUUID(),
-      config.BOOTSTRAP_ADMIN_USERNAME.trim().toLowerCase(),
-      passwordHash,
-      now,
-      now
+  if (config.TRIPLESTORE_PROVIDER === 'qlever') {
+    const userCount = db
+      .prepare('SELECT COUNT(*) AS count FROM users')
+      .get() as {
+      count: number
+    }
+    if (userCount.count === 0) {
+      const now = new Date().toISOString()
+      const passwordHash = await hash(config.BOOTSTRAP_ADMIN_PASSWORD)
+      db.prepare(`
+        INSERT INTO users
+          (id, username, password_hash, role, disabled, created_at, updated_at)
+        VALUES (?, ?, ?, 'admin', 0, ?, ?)
+      `).run(
+        crypto.randomUUID(),
+        config.BOOTSTRAP_ADMIN_USERNAME.trim().toLowerCase(),
+        passwordHash,
+        now,
+        now
+      )
+    }
+    db.prepare('DELETE FROM sessions WHERE expires_at <= ?').run(
+      new Date().toISOString()
     )
   }
 
-  db.prepare('DELETE FROM sessions WHERE expires_at <= ?').run(
-    new Date().toISOString()
-  )
   database = db
   return db
 }
 
-export async function getQleverDatabase(): Promise<Database.Database> {
+export async function getWorkbenchDatabase(): Promise<Database.Database> {
   if (database) return database
   initialization ??= initialize()
   return initialization

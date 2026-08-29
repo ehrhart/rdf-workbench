@@ -8,8 +8,8 @@ export async function GET() {
 
   try {
     if (config.TRIPLESTORE_PROVIDER === 'qlever') {
-      const [{ getQleverDatabase }, ping] = await Promise.all([
-        import('@/providers/qlever/database'),
+      const [{ getWorkbenchDatabase }, ping] = await Promise.all([
+        import('@/lib/workbench-database'),
         fetch(
           new URL('ping', `${config.SPARQL_ENDPOINT.replace(/\/$/, '')}/`),
           {
@@ -17,7 +17,7 @@ export async function GET() {
           }
         )
       ])
-      const db = await getQleverDatabase()
+      const db = await getWorkbenchDatabase()
       db.prepare('SELECT 1').get()
       if (!ping.ok) throw new Error(`QLever ping returned ${ping.status}`)
 
@@ -28,7 +28,8 @@ export async function GET() {
       })
     }
 
-    const [adapter, endpoint] = await Promise.all([
+    const [{ getWorkbenchDatabase }, adapter, endpoint] = await Promise.all([
+      import('@/lib/workbench-database'),
       fetch(new URL('/health', config.VIRTUOSO_ADAPTER_URL), {
         cache: 'no-store'
       }),
@@ -42,6 +43,8 @@ export async function GET() {
         cache: 'no-store'
       })
     ])
+    const db = await getWorkbenchDatabase()
+    db.prepare('SELECT 1').get()
     if (!adapter.ok || !endpoint.ok) {
       throw new Error(
         `Virtuoso health failure (adapter ${adapter.status}, endpoint ${endpoint.status})`
@@ -51,7 +54,7 @@ export async function GET() {
     return NextResponse.json({
       status: 'healthy',
       provider: 'virtuoso',
-      services: { adapter: 'healthy', endpoint: 'healthy' }
+      services: { sqlite: 'healthy', adapter: 'healthy', endpoint: 'healthy' }
     })
   } catch (error) {
     return NextResponse.json(

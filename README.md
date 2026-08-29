@@ -90,11 +90,14 @@ services:
       TRIPLESTORE_PROVIDER: virtuoso
       SPARQL_ENDPOINT: https://my-triplestore.example/sparql
       WORKBENCH_URL: http://localhost:3000
+      WORKBENCH_DB_PATH: /data/workbench.sqlite
       SESSION_SECRET: replace-with-at-least-32-characters
       VIRTUOSO_ADAPTER_URL: http://virtuoso-adapter:50118
       VIRTUOSO_ADAPTER_TOKEN: replace-with-at-least-32-characters
     ports:
       - "3000:3000"
+    volumes:
+      - rdf-workbench-data:/data
 
   virtuoso-adapter:
     image: ghcr.io/ehrhart/rdf-workbench-virtuoso-adapter:latest
@@ -123,10 +126,11 @@ Common runtime variables:
 - `WORKBENCH_NAME`: runtime display name; defaults to `RDF Workbench`.
 - `WORKBENCH_URL`: externally visible origin used for redirects and mutation
   origin checks.
+- `WORKBENCH_DB_PATH`: sqlite database holding workbench-owned data (saved
+  queries, dereference paths, prefixes).
 
 QLever variables:
 
-- `WORKBENCH_DB_PATH`
 - `BOOTSTRAP_ADMIN_USERNAME`
 - `BOOTSTRAP_ADMIN_PASSWORD`
 

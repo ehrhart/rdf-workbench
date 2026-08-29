@@ -7,8 +7,8 @@ import type {
   SavedQueryInput,
   SavedQueryRepository
 } from '@/lib/runtime/contracts'
+import { getWorkbenchDatabase } from '@/lib/workbench-database'
 import type { SavedQuery } from '@/types'
-import { getQleverDatabase } from './database'
 
 interface SavedQueryRow {
   id: string
@@ -50,7 +50,7 @@ async function getSavedQuery(
   id: string,
   viewerId?: string | null
 ): Promise<SavedQuery | null> {
-  const db = await getQleverDatabase()
+  const db = await getWorkbenchDatabase()
   const row = db.prepare('SELECT * FROM saved_queries WHERE id = ?').get(id) as
     | SavedQueryRow
     | undefined
@@ -60,9 +60,9 @@ async function getSavedQuery(
 const canManage = (existing: SavedQuery, owner: Principal): boolean =>
   existing.ownerId === owner.id || owner.role === 'admin'
 
-export const qleverSavedQueryRepository: SavedQueryRepository = {
+export const savedQueryRepository: SavedQueryRepository = {
   async list(viewerId) {
-    const db = await getQleverDatabase()
+    const db = await getWorkbenchDatabase()
     const rows = db
       .prepare(
         'SELECT * FROM saved_queries ORDER BY position ASC, updated_at DESC'
@@ -76,7 +76,7 @@ export const qleverSavedQueryRepository: SavedQueryRepository = {
   async create(input, owner) {
     if (!owner) throw new AuthError('Authentication required to save queries')
     const value = validateInput(input)
-    const db = await getQleverDatabase()
+    const db = await getWorkbenchDatabase()
     const id = crypto.randomUUID()
     const now = new Date().toISOString()
     const nextPosition = db
@@ -111,7 +111,7 @@ export const qleverSavedQueryRepository: SavedQueryRepository = {
       throw new AuthError('You do not own this saved query')
     }
     const value = validateInput(input)
-    const db = await getQleverDatabase()
+    const db = await getWorkbenchDatabase()
     db.prepare(`
       UPDATE saved_queries
       SET name = ?, query_text = ?, updated_at = ?
@@ -129,7 +129,7 @@ export const qleverSavedQueryRepository: SavedQueryRepository = {
     if (!canManage(existing, owner)) {
       throw new AuthError('You do not own this saved query')
     }
-    const db = await getQleverDatabase()
+    const db = await getWorkbenchDatabase()
     db.prepare('DELETE FROM saved_queries WHERE id = ?').run(id)
   },
 
@@ -139,7 +139,7 @@ export const qleverSavedQueryRepository: SavedQueryRepository = {
     if (owner.role !== 'admin') {
       throw new AuthError('Only administrators can reorder saved queries')
     }
-    const db = await getQleverDatabase()
+    const db = await getWorkbenchDatabase()
     const update = db.prepare(
       'UPDATE saved_queries SET position = ? WHERE id = ?'
     )

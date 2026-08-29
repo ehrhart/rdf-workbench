@@ -10,7 +10,7 @@ import type {
   LoginCredentials,
   Principal
 } from '@/lib/runtime/contracts'
-import { getQleverDatabase } from './database'
+import { getWorkbenchDatabase } from '@/lib/workbench-database'
 
 const SESSION_COOKIE_NAME = 'session'
 const SESSION_DURATION_MS = 7 * 24 * 60 * 60 * 1000
@@ -44,7 +44,7 @@ function asPrincipal(
 }
 
 async function createLocalSession(user: Principal): Promise<void> {
-  const db = await getQleverDatabase()
+  const db = await getWorkbenchDatabase()
   const token = crypto.randomBytes(32).toString('base64url')
   const createdAt = new Date()
   const expiresAt = new Date(createdAt.getTime() + SESSION_DURATION_MS)
@@ -73,7 +73,7 @@ async function createLocalSession(user: Principal): Promise<void> {
 export async function loginLocalUser(
   credentials: LoginCredentials
 ): Promise<Principal> {
-  const db = await getQleverDatabase()
+  const db = await getWorkbenchDatabase()
   const username = credentials.username.trim().toLowerCase()
   const row = db
     .prepare(`
@@ -100,7 +100,7 @@ export async function getLocalPrincipal(): Promise<Principal | null> {
   const token = (await cookies()).get(SESSION_COOKIE_NAME)?.value
   if (!token) return null
 
-  const db = await getQleverDatabase()
+  const db = await getWorkbenchDatabase()
   const now = new Date().toISOString()
   const row = db
     .prepare(`
@@ -129,7 +129,7 @@ export async function logoutLocalUser(): Promise<void> {
   const cookieStore = await cookies()
   const token = cookieStore.get(SESSION_COOKIE_NAME)?.value
   if (token) {
-    const db = await getQleverDatabase()
+    const db = await getWorkbenchDatabase()
     db.prepare('DELETE FROM sessions WHERE token_hash = ?').run(
       tokenHash(token)
     )
@@ -162,7 +162,7 @@ export function requireLocalAdmin(): Promise<Principal> {
 
 export async function listLocalUsers(): Promise<LocalUser[]> {
   await requireLocalAdmin()
-  const db = await getQleverDatabase()
+  const db = await getWorkbenchDatabase()
   const rows = db
     .prepare(`
       SELECT id, username, role, disabled, created_at, updated_at
@@ -201,7 +201,7 @@ export async function createLocalUser(input: {
     )
   }
 
-  const db = await getQleverDatabase()
+  const db = await getWorkbenchDatabase()
   const now = new Date().toISOString()
   const passwordHash = await hash(input.password)
   try {
@@ -223,7 +223,7 @@ export async function setLocalUserDisabled(
   disabled: boolean
 ): Promise<void> {
   const administrator = await requireLocalAdmin()
-  const db = await getQleverDatabase()
+  const db = await getWorkbenchDatabase()
   const target = db
     .prepare('SELECT id, role, disabled FROM users WHERE id = ?')
     .get(userId) as Pick<UserRow, 'id' | 'role' | 'disabled'> | undefined
@@ -263,7 +263,7 @@ export async function resetLocalUserPassword(
       `Password must be at least ${PASSWORD_MIN_LENGTH} characters`
     )
   }
-  const db = await getQleverDatabase()
+  const db = await getWorkbenchDatabase()
   const passwordHash = await hash(password)
   db.transaction(() => {
     const result = db

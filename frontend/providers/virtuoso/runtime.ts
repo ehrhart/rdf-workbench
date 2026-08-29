@@ -6,10 +6,10 @@ import type {
   SparqlTransport,
   WorkbenchRuntime
 } from '@/lib/runtime/contracts'
+import { savedQueryRepository } from '@/lib/saved-queries'
 import { virtuosoAuthAdapter } from './auth'
 import { getEndpointStats, getNamedGraphs, getPrefixes } from './capabilities'
 import { virtuosoQueryMonitor } from './query-monitor'
-import { virtuosoSavedQueryRepository } from './saved-queries'
 import { virtuosoSparqlTransport } from './sparql'
 
 const sparql: SparqlTransport = virtuosoSparqlTransport
@@ -35,7 +35,7 @@ export const virtuosoRuntime: WorkbenchRuntime = {
   sparql,
   graphs: { listNamedGraphs: getNamedGraphs },
   prefixes: { list: getPrefixes },
-  savedQueries: virtuosoSavedQueryRepository,
+  savedQueries: savedQueryRepository,
   auth: virtuosoAuthAdapter,
   features,
   navigation: virtuosoNavigation,

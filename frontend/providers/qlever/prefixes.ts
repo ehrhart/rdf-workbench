@@ -2,8 +2,8 @@ import 'server-only'
 
 import { QueryError } from '@/lib/errors'
 import type { PrefixSource } from '@/lib/runtime/contracts'
+import { getWorkbenchDatabase } from '@/lib/workbench-database'
 import { requireLocalAdmin } from './auth'
-import { getQleverDatabase } from './database'
 
 const PREFIX_PATTERN = /^[A-Za-z][A-Za-z0-9._-]*$/
 
@@ -22,7 +22,7 @@ function validatePrefix(prefix: string, namespace: string) {
 }
 
 export async function listQleverPrefixes(): Promise<Record<string, string>> {
-  const db = await getQleverDatabase()
+  const db = await getWorkbenchDatabase()
   const rows = db
     .prepare(
       'SELECT prefix, namespace FROM prefixes ORDER BY prefix COLLATE NOCASE'
@@ -41,7 +41,7 @@ export async function createQleverPrefix(
 ): Promise<void> {
   const administrator = await requireLocalAdmin()
   const value = validatePrefix(prefix, namespace)
-  const db = await getQleverDatabase()
+  const db = await getWorkbenchDatabase()
   const now = new Date().toISOString()
   try {
     db.prepare(`
@@ -64,7 +64,7 @@ export async function updateQleverPrefix(
 ): Promise<void> {
   await requireLocalAdmin()
   const value = validatePrefix(prefix, namespace)
-  const db = await getQleverDatabase()
+  const db = await getWorkbenchDatabase()
   const result = db
     .prepare(`
       UPDATE prefixes SET prefix = ?, namespace = ?, updated_at = ?
@@ -76,7 +76,7 @@ export async function updateQleverPrefix(
 
 export async function deleteQleverPrefix(prefix: string): Promise<void> {
   await requireLocalAdmin()
-  const db = await getQleverDatabase()
+  const db = await getWorkbenchDatabase()
   const result = db
     .prepare('DELETE FROM prefixes WHERE prefix = ? COLLATE NOCASE')
     .run(prefix)
