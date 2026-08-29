@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { virtuosoNavigation } from '@/config/navigation'
+import { buildNavigation } from '@/config/navigation'
 import type {
   FeatureId,
   SparqlTransport,
@@ -29,6 +29,8 @@ const features: ReadonlySet<FeatureId> = new Set([
   'virtuoso-graph-mutations'
 ])
 
+const navigation = buildNavigation('virtuoso', features)
+
 export const virtuosoRuntime: WorkbenchRuntime = {
   provider: 'virtuoso',
   label: 'Virtuoso',
@@ -38,7 +40,7 @@ export const virtuosoRuntime: WorkbenchRuntime = {
   savedQueries: savedQueryRepository,
   auth: virtuosoAuthAdapter,
   features,
-  navigation: virtuosoNavigation,
+  navigation,
   queryMonitor: virtuosoQueryMonitor,
   async getEndpointOverview() {
     const stats = await getEndpointStats()

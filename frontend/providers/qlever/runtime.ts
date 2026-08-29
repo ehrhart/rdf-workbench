@@ -1,10 +1,6 @@
 import 'server-only'
 
-import {
-  type NavItem,
-  type NavigationConfig,
-  qleverNavigation
-} from '@/config/navigation'
+import { buildNavigation } from '@/config/navigation'
 import { getRuntimeConfig } from '@/lib/runtime/config'
 import type { FeatureId, WorkbenchRuntime } from '@/lib/runtime/contracts'
 import { savedQueryRepository } from '@/lib/saved-queries'
@@ -32,26 +28,7 @@ const features: ReadonlySet<FeatureId> = new Set([
   ...(hasServerWideMonitor ? ['qlever-query-monitor' as FeatureId] : [])
 ])
 
-const navigation: NavigationConfig = {
-  ...qleverNavigation,
-  navMain: qleverNavigation.navMain.map(
-    (item): NavItem =>
-      item.url === '/monitor/system'
-        ? {
-            title: 'Monitor',
-            url: '/monitor/queries',
-            icon: 'activity',
-            requiredRole: 'admin',
-            items: [
-              ...(hasServerWideMonitor
-                ? [{ title: 'Queries and update', url: '/monitor/queries' }]
-                : []),
-              { title: 'System', url: '/monitor/system' }
-            ]
-          }
-        : item
-  )
-}
+const navigation = buildNavigation('qlever', features)
 
 export const qleverRuntime: WorkbenchRuntime = {
   provider: 'qlever',

@@ -8,7 +8,6 @@ import {
   type LucideIcon,
   NetworkIcon,
   SettingsIcon,
-  ShieldIcon,
   SquareActivityIcon,
   TerminalIcon
 } from 'lucide-react'
@@ -40,13 +39,12 @@ import {
 import type { NavIcon, NavItem } from '@/config/navigation'
 
 const NAV_ICONS: Record<NavIcon, LucideIcon> = {
+  activity: SquareActivityIcon,
   braces: BracesIcon,
   help: HelpCircleIcon,
   import: ImportIcon,
   network: NetworkIcon,
   settings: SettingsIcon,
-  shield: ShieldIcon,
-  activity: SquareActivityIcon,
   terminal: TerminalIcon
 }
 
