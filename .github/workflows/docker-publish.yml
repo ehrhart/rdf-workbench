@@ -51,7 +51,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ github.repository }}${{ matrix.suffix }}
           tags: |
-            type=sha,format=sha-{{sha}}
+            type=sha,format=long
 
       - name: Build and push provisional sha tag
         uses: docker/build-push-action@v7
