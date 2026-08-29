@@ -1248,7 +1248,7 @@ export function GraphManager({
               onChange={(event) =>
                 table.getColumn('uri')?.setFilterValue(event.target.value)
               }
-              className="flex-1 min-w-sm"
+              className="flex-1 min-w-56"
             />
 
             {canManage && (

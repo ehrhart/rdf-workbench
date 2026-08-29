@@ -1,6 +1,11 @@
 'use client'
 
-import { BracketsIcon, DownloadIcon, ExternalLinkIcon } from 'lucide-react'
+import {
+  DownloadIcon,
+  ExternalLinkIcon,
+  EyeIcon,
+  EyeOffIcon
+} from 'lucide-react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useCallback, useMemo } from 'react'
 import { toast } from 'sonner'
@@ -202,20 +207,23 @@ export default function ResourceManager({
             ))}
           </TabsList>
         </Tabs>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap justify-end gap-2">
           <Button
             variant={showBlankNodes ? 'secondary' : 'outline'}
             size="sm"
             onClick={handleToggleBlankNodes}
             aria-label="Toggle blank nodes visibility"
           >
-            <BracketsIcon />
-            Blank Nodes: {showBlankNodes ? 'Shown' : 'Hidden'}
+            {showBlankNodes ? <EyeIcon /> : <EyeOffIcon />}
+            <span className="hidden sm:inline">Blank Nodes</span>
+            <span className="sm:hidden">BNodes</span>
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm">
-                <DownloadIcon /> Download As
+                <DownloadIcon />
+                <span className="hidden sm:inline">Download As</span>
+                <span className="sm:hidden">Download</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
@@ -230,7 +238,9 @@ export default function ResourceManager({
             </DropdownMenuContent>
           </DropdownMenu>
           <Button size="sm" onClick={handleVisualize}>
-            <ExternalLinkIcon /> Visual Graph
+            <ExternalLinkIcon />
+            <span className="hidden sm:inline">Visual Graph</span>
+            <span className="sm:hidden">Graph</span>
           </Button>
         </div>
       </div>
