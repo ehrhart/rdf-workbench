@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/ehrhart/rdf-workbench/compare/v1.1.0...v1.2.0) (2026-09-04)
+
+
+### Features
+
+* **frontend:** add Oxigraph provider, import, and compose stack ([0342252](https://github.com/ehrhart/rdf-workbench/commit/0342252b9bd417d141017948f98758be5b321b81))
+
 ## [1.1.0](https://github.com/ehrhart/rdf-workbench/compare/v1.0.0...v1.1.0) (2026-08-29)
 
 
