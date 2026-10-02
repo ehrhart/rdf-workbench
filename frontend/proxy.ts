@@ -10,6 +10,25 @@ const PUBLIC_PATHS = ['/login', '/logout', '/health']
 
 type SparqlRouting = 'page' | 'query' | 'not-acceptable'
 
+const anonymousProtectedPrefixes: Partial<Record<string, readonly string[]>> = {
+  virtuoso: [
+    '/admin',
+    '/isql',
+    '/import',
+    '/namespaces',
+    '/fulltext-index',
+    '/monitor',
+    '/configuration'
+  ],
+  qlever: ['/admin'],
+  oxigraph: ['/admin']
+}
+
+function anonymousReadEnabled(): boolean {
+  const value = process.env.ALLOW_ANONYMOUS_READ
+  return value === '1' || value?.toLowerCase() === 'true'
+}
+
 const blockedPathPrefixes: Partial<Record<string, readonly string[]>> = {
   qlever: [
     '/isql',
@@ -59,7 +78,15 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // All other routes require a session
+  const requiresSession =
+    !anonymousReadEnabled() ||
+    (anonymousProtectedPrefixes[provider ?? ''] ?? ['/admin']).some((prefix) =>
+      pathname.startsWith(prefix)
+    )
+  if (!requiresSession) {
+    return NextResponse.next()
+  }
+
   const session =
     provider === 'virtuoso'
       ? await (
