@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.3.0](https://github.com/ehrhart/rdf-workbench/compare/v1.2.0...v1.3.0) (2026-10-02)
+
+
+### Features
+
+* **frontend:** add ALLOW_ANONYMOUS_READ flag for public read pages ([72d5150](https://github.com/ehrhart/rdf-workbench/commit/72d51507cb86dbcec5ce9043d6acd7febb8f1bae))
+* **frontend:** replace Copy Link with Copy snippet dropdown ([13cb867](https://github.com/ehrhart/rdf-workbench/commit/13cb867c9a54210aa0f98fbc6cb91a6d96ef6879))
+* **frontend:** show update notice next to sidebar version ([6ceeb51](https://github.com/ehrhart/rdf-workbench/commit/6ceeb51b3fa79fb8a3f26dc39a3a92f164bade5c))
+
+
+### Bug Fixes
+
+* **auth:** require a session to stage chunked uploads ([d1f7c8c](https://github.com/ehrhart/rdf-workbench/commit/d1f7c8cbc64887142304c8f6a219c72137598a2e))
+* **frontend:** size dropdown menus to their content ([a01904f](https://github.com/ehrhart/rdf-workbench/commit/a01904f9c8f32e414a6e8a59ce303998a8203fc1))
+
 ## [1.2.0](https://github.com/ehrhart/rdf-workbench/compare/v1.1.0...v1.2.0) (2026-09-04)
 
 
