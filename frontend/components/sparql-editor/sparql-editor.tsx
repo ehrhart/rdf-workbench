@@ -163,6 +163,14 @@ export default function SparqlEditor({
         downloadResults,
         abortQuery
       }}
+      copyRequest={{
+        endpoint,
+        headers: {
+          'Content-Type': 'application/sparql-query',
+          Accept: 'application/sparql-results+json'
+        },
+        bodyMode: 'raw'
+      }}
       queryNoun="SPARQL query"
       urlSync={{ enabled: true, paramKey: 'query' }}
       exportGroups={exportGroups}

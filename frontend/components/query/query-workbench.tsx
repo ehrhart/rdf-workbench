@@ -5,7 +5,6 @@ import {
   CopyIcon,
   DownloadIcon,
   EditIcon,
-  LinkIcon,
   PlayIcon,
   PlusIcon,
   UndoIcon,
@@ -32,6 +31,11 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+  COPY_SNIPPET_ACTIONS,
+  type CopyRequestDescriptor,
+  type CopySnippetAction
+} from '@/lib/client/copy-snippets'
 import type { QueryHistoryService } from '@/lib/client/query-history'
 import { fetchSavedQuery } from '@/lib/client/saved-queries'
 import { cn } from '@/lib/utils'
@@ -90,6 +94,7 @@ export interface QueryWorkbenchProps<TResults> {
   defaultQuery?: string
   historyService: QueryHistoryService
   runner: QueryWorkbenchRunner<TResults>
+  copyRequest: CopyRequestDescriptor
   renderEditor: (props: QueryEditorRenderProps) => ReactNode
   resultViews?: QueryResultView<TResults>[]
   initialResultViewId?: string
@@ -138,6 +143,7 @@ export function QueryWorkbench<TResults>({
   defaultQuery = '',
   historyService,
   runner,
+  copyRequest,
   renderEditor,
   resultViews = [],
   initialResultViewId,
@@ -178,7 +184,7 @@ export function QueryWorkbench<TResults>({
   >({})
   const [elapsedTime, setElapsedTime] = useState<number>(0)
   const [isExporting, setIsExporting] = useState(false)
-  const [isLinkCopied, setIsLinkCopied] = useState(false)
+  const [isCopied, setIsCopied] = useState(false)
   const initializedRef = useRef<boolean>(false)
 
   const searchParams = useSearchParams()
@@ -440,22 +446,26 @@ export function QueryWorkbench<TResults>({
     }
   }, [runner.abortQuery, activeTabId])
 
-  const handleCopyLink = useCallback(async () => {
-    if (!activeTab?.query.trim()) return
-    const url = `${window.location.origin}${window.location.pathname}?query=${encodeURIComponent(
-      activeTab.query
-    )}`
-    try {
-      await navigator.clipboard.writeText(url)
-      toast.success('Query link copied to clipboard')
-      setIsLinkCopied(true)
-      setTimeout(() => setIsLinkCopied(false), 2000)
-    } catch (err) {
-      toast.error('Failed to copy link', {
-        description: err instanceof Error ? err.message : String(err)
+  const handleCopy = useCallback(
+    async (action: CopySnippetAction) => {
+      if (!activeTab?.query.trim()) return
+      const text = action.build({
+        request: copyRequest,
+        query: activeTab.query
       })
-    }
-  }, [activeTab?.query])
+      try {
+        await navigator.clipboard.writeText(text)
+        toast.success('Copied to clipboard')
+        setIsCopied(true)
+        setTimeout(() => setIsCopied(false), 2000)
+      } catch (err) {
+        toast.error('Failed to copy', {
+          description: err instanceof Error ? err.message : String(err)
+        })
+      }
+    },
+    [activeTab?.query, copyRequest]
+  )
 
   const handleDownloadResults = useCallback(
     async (format: ExportFormat) => {
@@ -713,7 +723,7 @@ export function QueryWorkbench<TResults>({
                   <span className="hidden sm:inline-block">▾</span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-64">
+              <DropdownMenuContent align="start">
                 {availableExportGroups.map((group, groupIndex) => (
                   <div key={group.label}>
                     <DropdownMenuLabel>{group.label}</DropdownMenuLabel>
@@ -737,18 +747,33 @@ export function QueryWorkbench<TResults>({
               </DropdownMenuContent>
             </DropdownMenu>
           ) : null}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => void handleCopyLink()}
-            disabled={!activeTab?.query?.trim() || isTabLoading}
-            className="hover:bg-primary/10 hover:text-primary hover:border-primary transition-all duration-200"
-          >
-            {isLinkCopied ? <CheckIcon /> : <LinkIcon />}
-            <span className="hidden sm:inline-block">
-              {isLinkCopied ? 'Copied!' : 'Copy Link'}
-            </span>
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={!activeTab?.query?.trim() || isTabLoading}
+                className="hover:bg-primary/10 hover:text-primary hover:border-primary transition-all duration-200"
+              >
+                {isCopied ? <CheckIcon /> : <CopyIcon />}
+                <span className="hidden sm:inline-block">
+                  {isCopied ? 'Copied!' : 'Copy'}
+                </span>
+                <span className="hidden sm:inline-block">▾</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              {COPY_SNIPPET_ACTIONS.map((action) => (
+                <DropdownMenuItem
+                  key={action.id}
+                  disabled={!activeTab?.query?.trim() || isTabLoading}
+                  onClick={() => void handleCopy(action)}
+                >
+                  {action.label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
         <div className="flex items-center gap-2">
           {enableSavedQueries ? (

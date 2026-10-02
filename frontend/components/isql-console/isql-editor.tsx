@@ -81,6 +81,11 @@ export function IsqlEditor({ defaultQuery = '' }: IsqlEditorProps) {
         downloadResults,
         abortQuery
       }}
+      copyRequest={{
+        endpoint: '/api/isql',
+        headers: { 'Content-Type': 'application/json' },
+        bodyMode: 'json'
+      }}
       queryNoun="ISQL command"
       runButtonLabel="Run Command"
       exportFilename="isql-results"
