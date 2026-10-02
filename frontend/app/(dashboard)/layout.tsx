@@ -4,6 +4,7 @@ import { SiteHeader } from '@/components/site-header'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { getWorkbenchRuntime } from '@/lib/runtime'
 import { getWorkbenchName } from '@/lib/runtime/config'
+import { getUpdateInfo } from '@/lib/update-check'
 
 export const dynamic = 'force-dynamic'
 
@@ -21,6 +22,7 @@ export default async function DashboardLayout({
         role: session.role
       }
     : null
+  const updateInfo = session ? await getUpdateInfo() : null
 
   return (
     <SidebarProvider
@@ -34,6 +36,7 @@ export default async function DashboardLayout({
       <AppSidebar
         variant="floating"
         user={user}
+        updateInfo={updateInfo}
         navMainItems={runtime.navigation.navMain}
         navSecondaryItems={runtime.navigation.navSecondary}
         appName={getWorkbenchName()}
