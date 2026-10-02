@@ -16,10 +16,8 @@ interface ChunkMetadata {
   [key: string]: string | number
 }
 
-async function userUploadsDir(): Promise<string> {
-  const runtime = await getWorkbenchRuntime()
-  const principal = await runtime.auth.getPrincipal()
-  const dir = join(UPLOADS_DIR, principal?.id ?? 'anonymous')
+async function userUploadsDir(userId: string): Promise<string> {
+  const dir = join(UPLOADS_DIR, userId)
   await mkdir(dir, { recursive: true })
   return dir
 }
@@ -33,6 +31,12 @@ export const chunkUploadAction: ChunkUploadHandler<ChunkMetadata> = async (
   chunkFormData,
   metadata
 ) => {
+  const runtime = await getWorkbenchRuntime()
+  const principal = await runtime.auth.getPrincipal()
+  if (!principal) {
+    throw new Error('Authentication required to upload files')
+  }
+
   const blob = chunkFormData.get('blob')
   if (!blob || !(blob instanceof Blob)) {
     throw new Error('Invalid chunk data')
@@ -50,7 +54,7 @@ export const chunkUploadAction: ChunkUploadHandler<ChunkMetadata> = async (
 
   const buffer = Buffer.from(await blob.arrayBuffer())
 
-  const filePath = join(await userUploadsDir(), metadata.name)
+  const filePath = join(await userUploadsDir(principal.id), metadata.name)
 
   let fileHandle: FileHandle | undefined
   try {
