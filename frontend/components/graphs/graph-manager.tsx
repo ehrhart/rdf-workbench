@@ -1421,7 +1421,7 @@ export function GraphManager({
                         <ChevronDownIcon className="h-3 w-3 opacity-50" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Export Format</DropdownMenuLabel>
                       <DropdownMenuSeparator />
                       {GRAPH_EXPORT_FILE_TYPES.map((type) => (
