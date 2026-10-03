@@ -4,6 +4,7 @@ import type { FeatureId, TriplestoreProvider } from '@/lib/runtime/contracts'
 export type NavIcon =
   | 'activity'
   | 'braces'
+  | 'chat'
   | 'help'
   | 'import'
   | 'network'
@@ -81,6 +82,12 @@ const navMain: NavItem[] = [
     title: 'SPARQL',
     url: '/sparql',
     icon: 'braces'
+  },
+  {
+    title: 'Ask',
+    url: '/ask',
+    icon: 'chat',
+    requiredFeature: 'ai-ask'
   },
   {
     title: 'ISQL Console',

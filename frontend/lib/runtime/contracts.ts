@@ -11,6 +11,7 @@ export type TriplestoreProvider = 'virtuoso' | 'qlever' | 'oxigraph'
 export type FeatureId =
   | 'dashboard'
   | 'sparql'
+  | 'ai-ask'
   | 'graphs'
   | 'resource-explorer'
   | 'dereference'
