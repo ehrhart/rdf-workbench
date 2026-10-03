@@ -1,10 +1,15 @@
 import { type NextRequest, NextResponse } from 'next/server'
+import { requirePrincipal } from '@/lib/api-auth'
 import { isSameOriginMutation, sameOriginError } from '@/lib/same-origin'
 import { getVirtuosoConfig } from '@/providers/virtuoso/config'
 import { getSessionFromRequest } from '@/providers/virtuoso/request-auth'
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   if (!isSameOriginMutation(request)) return sameOriginError()
+
+  const auth = await requirePrincipal()
+  if (auth.response) return auth.response
+
   const session = await getSessionFromRequest(request)
   if (!session) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })

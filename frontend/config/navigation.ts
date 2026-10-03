@@ -1,3 +1,4 @@
+import { resolveBaseAccess } from '@/config/access'
 import type { FeatureId, TriplestoreProvider } from '@/lib/runtime/contracts'
 
 export type NavIcon =
@@ -15,7 +16,6 @@ export interface NavItem {
   icon?: NavIcon
   target?: string
   rel?: string
-  requiresAuth?: boolean
   requiredRole?: 'admin'
   /** Item is visible when the provider exposes any of these features. */
   requiredFeature?: FeatureId | readonly FeatureId[]
@@ -66,7 +66,6 @@ const navMain: NavItem[] = [
     title: 'Import',
     url: '/import',
     icon: 'import',
-    requiresAuth: true,
     requiredFeature: ['virtuoso-import', 'oxigraph-import']
   },
   {
@@ -87,14 +86,12 @@ const navMain: NavItem[] = [
     title: 'ISQL Console',
     url: '/isql',
     icon: 'terminal',
-    requiresAuth: true,
     requiredFeature: 'virtuoso-isql'
   },
   {
     title: 'Monitor',
     url: '/monitor/queries',
     icon: 'activity',
-    requiresAuth: true,
     items: [
       {
         title: 'Queries and update',
@@ -108,7 +105,6 @@ const navMain: NavItem[] = [
     title: 'Setup',
     url: '/namespaces',
     icon: 'settings',
-    requiresAuth: true,
     items: [
       {
         title: 'Namespaces',
@@ -127,19 +123,16 @@ const navMain: NavItem[] = [
       {
         title: 'Dereferencing',
         url: '/admin/dereference',
-        requiresAuth: true,
         requiredRole: 'admin'
       },
       {
         title: 'Saved Queries',
         url: '/admin/saved-queries',
-        requiresAuth: true,
         requiredRole: 'admin'
       },
       {
         title: 'Users',
         url: '/admin/users',
-        requiresAuth: true,
         requiredRole: 'admin',
         requiredFeature: ['qlever-user-admin', 'oxigraph-user-admin']
       }
@@ -195,11 +188,22 @@ export function buildNavigation(
 }
 
 function isVisible(item: NavItem, user: NavUser | null): boolean {
-  if (item.requiresAuth && !user) return false
+  if (item.url) {
+    const baseAccess = resolveBaseAccess(item.url)
+    if ((baseAccess === 'session' || baseAccess === 'admin') && !user) {
+      return false
+    }
+  }
   if (item.requiredRole && user?.role !== item.requiredRole) return false
   return true
 }
 
+/**
+ * Filters items by access visibility. Runs on the server only: the
+ * dashboard layout calls it before the lists reach the client sidebar,
+ * so visibility can be derived from `config/access.ts` without sending
+ * policy or env reads to the browser.
+ */
 export function getVisibleNavItems(
   items: NavItem[],
   user: NavUser | null

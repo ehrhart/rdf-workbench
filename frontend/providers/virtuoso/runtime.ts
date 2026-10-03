@@ -8,6 +8,7 @@ import type {
   SparqlTransport,
   WorkbenchRuntime
 } from '@/lib/runtime/contracts'
+import { computeFeatures } from '@/lib/runtime/features'
 import { savedQueryRepository } from '@/lib/saved-queries'
 import { virtuosoAuthAdapter } from './auth'
 import {
@@ -24,21 +25,10 @@ import { virtuosoSparqlTransport } from './sparql'
 
 const sparql: SparqlTransport = virtuosoSparqlTransport
 
-const features: ReadonlySet<FeatureId> = new Set([
-  'dashboard',
-  'sparql',
-  'graphs',
-  'resource-explorer',
-  'dereference',
-  'saved-queries',
-  'endpoint-monitor',
-  'virtuoso-import',
-  'virtuoso-isql',
-  'virtuoso-query-monitor',
-  'virtuoso-namespaces',
-  'virtuoso-fulltext',
-  'virtuoso-graph-mutations'
-])
+const features: ReadonlySet<FeatureId> = computeFeatures(
+  'virtuoso',
+  process.env
+)
 
 const navigation = buildNavigation('virtuoso', features)
 

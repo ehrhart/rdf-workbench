@@ -10,7 +10,7 @@ import { StatsCards } from '@/components/dashboard/stats-cards'
 import { ResourceSearch } from '@/components/resource-search'
 import { StatsCardsSkeleton } from '@/components/skeletons'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { getWorkbenchRuntime } from '@/lib/runtime'
+import { getWorkbenchRuntime, requirePageAccess } from '@/lib/runtime'
 
 export const metadata: Metadata = {
   title: 'Dashboard',
@@ -51,6 +51,7 @@ async function StatsSection() {
 }
 
 export default async function DashboardPage() {
+  await requirePageAccess('anonymousRead')
   return (
     <DashboardShell>
       <DashboardHeader heading="Dashboard" />

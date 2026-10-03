@@ -5,6 +5,7 @@ import { dereferenceRepository } from '@/lib/dereference/repository'
 import { localAuthAdapter } from '@/lib/local-auth'
 import { localPrefixSource } from '@/lib/local-prefixes'
 import type { FeatureId, WorkbenchRuntime } from '@/lib/runtime/contracts'
+import { computeFeatures } from '@/lib/runtime/features'
 import { savedQueryRepository } from '@/lib/saved-queries'
 import {
   clearRepository,
@@ -16,19 +17,10 @@ import { getOxigraphEndpointOverview } from './overview'
 import { oxigraphSparqlTransport } from './sparql'
 import { getResourceSuggestions } from './text-search'
 
-const features: ReadonlySet<FeatureId> = new Set([
-  'dashboard',
-  'sparql',
-  'graphs',
-  'resource-explorer',
-  'dereference',
-  'saved-queries',
-  'endpoint-monitor',
-  'oxigraph-import',
-  'oxigraph-graph-mutations',
-  'oxigraph-namespaces',
-  'oxigraph-user-admin'
-])
+const features: ReadonlySet<FeatureId> = computeFeatures(
+  'oxigraph',
+  process.env
+)
 
 const navigation = buildNavigation('oxigraph', features)
 

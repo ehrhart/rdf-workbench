@@ -5,7 +5,7 @@ import { DashboardHeader } from '@/components/dashboard/header'
 import { DashboardShell } from '@/components/dashboard/shell'
 import { QueryConsole } from '@/components/query/query-console'
 import { QueryConsoleSkeleton } from '@/components/skeletons'
-import { getWorkbenchRuntime } from '@/lib/runtime'
+import { getWorkbenchRuntime, requirePageAccess } from '@/lib/runtime'
 import { cfgItemValue } from '@/providers/virtuoso/config'
 
 export const metadata: Metadata = {
@@ -46,7 +46,8 @@ async function QueryConsoleContent() {
   )
 }
 
-export default function QueryPage() {
+export default async function QueryPage() {
+  await requirePageAccess('anonymousRead')
   return (
     <DashboardShell>
       <DashboardHeader heading="SPARQL Query Console" />

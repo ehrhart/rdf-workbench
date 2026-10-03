@@ -96,8 +96,16 @@ export async function loginLocalUser(
   return principal
 }
 
-export async function getLocalPrincipal(): Promise<Principal | null> {
-  const token = (await cookies()).get(SESSION_COOKIE_NAME)?.value
+/**
+ * Validates a raw session token against the workbench database: the
+ * sha256 token hash must exist, belong to an enabled user and be
+ * unexpired; expired or unknown tokens are deleted. Shared by
+ * `getLocalPrincipal` (cookie-based) and the proxy, which passes the
+ * token from the request cookie.
+ */
+export async function getLocalPrincipalByToken(
+  token: string | undefined
+): Promise<Principal | null> {
   if (!token) return null
 
   const db = await getWorkbenchDatabase()
@@ -123,6 +131,11 @@ export async function getLocalPrincipal(): Promise<Principal | null> {
   }
 
   return asPrincipal(row)
+}
+
+export async function getLocalPrincipal(): Promise<Principal | null> {
+  const token = (await cookies()).get(SESSION_COOKIE_NAME)?.value
+  return getLocalPrincipalByToken(token)
 }
 
 export async function logoutLocalUser(): Promise<void> {

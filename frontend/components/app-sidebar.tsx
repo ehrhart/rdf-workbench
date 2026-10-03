@@ -13,11 +13,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem
 } from '@/components/ui/sidebar'
-import {
-  getVisibleNavItems,
-  type NavItem,
-  type NavUser as NavUserType
-} from '@/config/navigation'
+import type { NavItem, NavUser as NavUserType } from '@/config/navigation'
 import type { UpdateInfo } from '@/lib/update-check'
 import { cn } from '@/lib/utils'
 import RDFIcon from './rdf-icon'
@@ -41,13 +37,6 @@ export function AppSidebar({
   appIcon: AppIcon = RDFIcon,
   ...props
 }: AppSidebarProps) {
-  // Filter navigation items based on authentication
-  const visibleMainItems = getVisibleNavItems(navMainItems ?? [], user)
-  const visibleSecondaryItems = getVisibleNavItems(
-    navSecondaryItems ?? [],
-    user
-  )
-
   return (
     <Sidebar
       collapsible="icon"
@@ -72,8 +61,8 @@ export function AppSidebar({
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavItems items={visibleMainItems} />
-        <NavItems items={visibleSecondaryItems} className="mt-auto" />
+        <NavItems items={navMainItems ?? []} />
+        <NavItems items={navSecondaryItems ?? []} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
         {user && <NavUser user={user} />}

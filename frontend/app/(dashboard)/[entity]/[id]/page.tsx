@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import ResourceManager from '@/components/resource-manager'
-import { getWorkbenchRuntime } from '@/lib/runtime'
+import { getWorkbenchRuntime, requirePageAccess } from '@/lib/runtime'
 import { getRuntimeConfig } from '@/lib/runtime/config'
 
 export default async function ResourceDereferencePage({
@@ -8,6 +8,7 @@ export default async function ResourceDereferencePage({
 }: {
   params: Promise<{ entity: string; id: string }>
 }) {
+  await requirePageAccess('anonymousRead')
   const { entity, id } = await params
 
   const runtime = await getWorkbenchRuntime()
