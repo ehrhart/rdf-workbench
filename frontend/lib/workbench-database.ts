@@ -163,7 +163,7 @@ function migrate(db: Database.Database): void {
       db.exec(`
         CREATE TABLE conversations (
           id TEXT PRIMARY KEY,
-          owner_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          owner_id TEXT NOT NULL,
           title TEXT NOT NULL,
           created_at TEXT NOT NULL,
           updated_at TEXT NOT NULL
