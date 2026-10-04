@@ -25,25 +25,16 @@ export async function deleteGraphAsync(
     return
   }
 
-  const session = req.dbSession
-  if (!session) {
-    res.status(401).json({
-      error: 'Unauthorized',
-      message: 'Database session is not available'
-    } as ErrorResponse)
-    return
-  }
-
   try {
     // Decode the URI (it will be URL-encoded in the path)
-    const decodedGraphUri = decodeURIComponent(graphUri)
+    const decodedGraphUri = decodeURIComponent(String(graphUri))
 
     // Start the deletion in the background without waiting
     // Using setImmediate to ensure the response is sent immediately
     setImmediate(async () => {
       let connection: Awaited<ReturnType<typeof getConnection>> | undefined
       try {
-        connection = await getConnection(session)
+        connection = await getConnection()
         const command = `SPARQL DEFINE sql:log-enable 3\nCLEAR SILENT GRAPH <${decodedGraphUri}>`
 
         logger.info('Starting async graph deletion', {

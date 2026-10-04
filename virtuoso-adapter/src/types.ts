@@ -2,37 +2,16 @@ export interface VirtuosoConnectionOptions {
   driver: string
   host: string
   port: number
-  user?: string
-  password?: string
+  user: string
+  password: string
   connectionTimeout: number
   loginTimeout: number
-}
-
-export interface SessionConfig {
-  ttlMs: number
-  cleanupIntervalMs: number
 }
 
 export interface AppConfig {
   port: number
   adapterToken: string
   virtuoso: VirtuosoConnectionOptions
-  session: SessionConfig
-}
-
-export interface VirtuosoUser {
-  id: string
-  username: string
-}
-
-export interface LoginRequest {
-  username: string
-  password: string
-}
-
-export interface LoginResponse {
-  token: string
-  user: VirtuosoUser
 }
 
 export interface QueryRequest {

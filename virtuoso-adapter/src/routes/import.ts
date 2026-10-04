@@ -12,13 +12,11 @@ import { IMPORTS_PATH, MAX_UPLOAD_BYTES } from '../config'
 import {
   deleteFile,
   ensureImportsDirectory,
-  ensureUserImportsDirectory,
   fileExists,
   saveRemoteFile,
   saveTextSnippet
 } from '../file-operations'
 import { logger } from '../logger'
-import type { VirtuosoSession } from '../session-manager'
 import type {
   BulkLoadRequest,
   BulkLoadResponse,
@@ -28,13 +26,11 @@ import type {
 } from '../types'
 
 // Configure multer to stream directly to disk for large file support (>2GB).
-// Files are stored in a per-user subdirectory so identical filenames from
-// different users do not overwrite each other.
 const storage = multer.diskStorage({
-  destination: async (req, _file, cb) => {
+  destination: async (_req, _file, cb) => {
     try {
-      const dir = await ensureUserImportsDirectory(req.dbSession?.userId ?? 'shared')
-      cb(null, dir)
+      await ensureImportsDirectory()
+      cb(null, IMPORTS_PATH)
     } catch (error) {
       cb(error as Error, IMPORTS_PATH)
     }
@@ -50,22 +46,6 @@ const upload = multer({
     fileSize: MAX_UPLOAD_BYTES
   }
 })
-
-/**
- * Ensures the imports directory exists, creating it if necessary.
- * @returns Success confirmation with directory path
- */
-function ensureSession(req: Request, res: Response): VirtuosoSession | null {
-  const session = req.dbSession
-  if (!session) {
-    res.status(401).json({
-      error: 'Unauthorized',
-      message: 'Database session is not available'
-    } as ErrorResponse)
-    return null
-  }
-  return session
-}
 
 export async function ensureDirectory(
   _req: Request,
@@ -161,18 +141,8 @@ export async function uploadFromUrl(
     return
   }
 
-  const session = ensureSession(req, res)
-  if (!session) {
-    return
-  }
-
   try {
-    const result = await saveRemoteFile(
-      url,
-      undefined,
-      extension,
-      session.userId
-    )
+    const result = await saveRemoteFile(url, undefined, extension)
     res.json(result)
     return
   } catch (error) {
@@ -203,18 +173,8 @@ export async function uploadSnippet(
     return
   }
 
-  const session = ensureSession(req, res)
-  if (!session) {
-    return
-  }
-
   try {
-    const result = await saveTextSnippet(
-      content,
-      undefined,
-      extension,
-      session.userId
-    )
+    const result = await saveTextSnippet(content, undefined, extension)
     res.json(result)
     return
   } catch (error) {
@@ -248,13 +208,7 @@ export async function bulkLoad(req: Request, res: Response): Promise<void> {
     return
   }
 
-  const session = ensureSession(req, res)
-  if (!session) {
-    return
-  }
-
-  // Check if file exists in the user's imports folder
-  const exists = await fileExists(filename, session.userId)
+  const exists = await fileExists(filename)
   if (!exists) {
     res.status(404).json({
       error: 'File not found',
@@ -264,9 +218,9 @@ export async function bulkLoad(req: Request, res: Response): Promise<void> {
   }
 
   try {
-    const jobId = await registerBulkLoadJob(session, filename, graphIri)
+    const jobId = await registerBulkLoadJob(filename, graphIri)
 
-    startBulkLoad(session).catch((error) => {
+    startBulkLoad().catch((error) => {
       logger.error('Background bulk load failed to start', {
         error: (error as Error).message
       })
@@ -299,15 +253,10 @@ export async function bulkLoad(req: Request, res: Response): Promise<void> {
  * @returns Job status details or error response
  */
 export async function getJobStatus(req: Request, res: Response): Promise<void> {
-  const jobId = req.params.jobId
-
-  const session = ensureSession(req, res)
-  if (!session) {
-    return
-  }
+  const jobId = String(req.params.jobId)
 
   try {
-    const jobStatus = await getBulkLoadJobStatus(session, jobId)
+    const jobStatus = await getBulkLoadJobStatus(jobId)
     res.json(jobStatus)
     return
   } catch (error) {
@@ -326,13 +275,8 @@ export async function getJobStatus(req: Request, res: Response): Promise<void> {
  * @returns Array of all job statuses
  */
 export async function getAllJobs(req: Request, res: Response): Promise<void> {
-  const session = ensureSession(req, res)
-  if (!session) {
-    return
-  }
-
   try {
-    const jobs = await getAllBulkLoadJobs(session)
+    const jobs = await getAllBulkLoadJobs()
     res.json({ jobs })
     return
   } catch (error) {
@@ -353,15 +297,10 @@ export async function getAllJobs(req: Request, res: Response): Promise<void> {
  * @returns Success confirmation or error response
  */
 export async function cancelJob(req: Request, res: Response): Promise<void> {
-  const jobId = req.params.jobId
-
-  const session = ensureSession(req, res)
-  if (!session) {
-    return
-  }
+  const jobId = String(req.params.jobId)
 
   try {
-    await cancelBulkLoadJob(session, jobId)
+    await cancelBulkLoadJob(jobId)
     res.json({ success: true, message: 'Job cancelled successfully' })
     return
   } catch (error) {
@@ -385,19 +324,13 @@ export async function deleteFileHandler(
   req: Request,
   res: Response
 ): Promise<void> {
-  const { filename } = req.params
-
-  const session = ensureSession(req, res)
-  if (!session) {
-    return
-  }
+  const filename = String(req.params.filename)
 
   try {
-    // Delete the file from the user's imports directory
-    await deleteFile(filename, session.userId)
+    await deleteFile(filename)
 
     // Delete any related jobs from LOAD_LIST if needed
-    await removeBulkLoadJobsForFile(session, filename)
+    await removeBulkLoadJobsForFile(filename)
 
     res.json({ success: true, message: 'File deleted successfully' })
     return

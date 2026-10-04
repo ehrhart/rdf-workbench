@@ -17,7 +17,7 @@ There are some differences between the providers:
 | SELECT result downloads               | JSON, XML, CSV, TSV | JSON, XML, CSV, TSV                          | JSON, XML, CSV, TSV        |
 | CONSTRUCT/DESCRIBE downloads          | Turtle              | Turtle, N-Triples, N-Quads, JSON-LD, RDF/XML | Turtle, N-Triples, RDF/XML |
 | Named graphs and resource exploration | Read-only           | Read/write                                   | Read/write                 |
-| Authentication                        | Local database      | Virtuoso database login                      | Local database             |
+| Authentication                        | Local database      | Local database                               | Local database             |
 | SPARQL Update                         | No                  | Via ISQL                                     | Yes                        |
 | Import/export, graph deletion         | No                  | Yes                                          | Yes                        |
 | Full-text search                      | Yes                 | Yes                                          | No ¹                       |
@@ -97,7 +97,7 @@ services:
       WORKBENCH_URL: http://localhost:3000
       RESOURCE_BASE_URI: https://data.example.org
       WORKBENCH_DB_PATH: /data/workbench.sqlite
-      SESSION_SECRET: replace-with-at-least-32-characters
+      BOOTSTRAP_ADMIN_PASSWORD: replace-with-at-least-12-characters
       VIRTUOSO_ADAPTER_URL: http://virtuoso-adapter:50118
       VIRTUOSO_ADAPTER_TOKEN: replace-with-at-least-32-characters
     ports:
@@ -189,7 +189,7 @@ Common runtime variables:
   authenticate at their own route or action layer regardless. Disabled by
   default.
 
-Local-account providers (QLever and Oxigraph):
+Local-account providers:
 
 - `BOOTSTRAP_ADMIN_USERNAME`
 - `BOOTSTRAP_ADMIN_PASSWORD`
@@ -200,14 +200,13 @@ Oxigraph variables:
 
 Virtuoso frontend variables:
 
-- `SESSION_SECRET` (at least 32 characters)
 - `VIRTUOSO_ADAPTER_URL`
 - `VIRTUOSO_ADAPTER_TOKEN` (at least 32 characters)
 - optional graph export limit and polling variables shown in `.env.example`
 
-Virtuoso adapter variables include the host, ISQL port, DBA credentials, SPARQL
-endpoint, adapter token, import path, upload limit, and session limits. See
-`.env.example` for the complete clean-break schema.
+Virtuoso adapter variables include the host, ISQL port, the service-account
+credentials, adapter token, import path, and upload limit. See `.env.example`
+for the complete clean-break schema.
 
 ## Local development
 

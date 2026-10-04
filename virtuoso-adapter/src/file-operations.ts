@@ -65,18 +65,6 @@ export async function ensureImportsDirectory(): Promise<{
   }
 }
 
-export function userImportsPath(userId: string): string {
-  return path.join(IMPORTS_PATH, userId)
-}
-
-export async function ensureUserImportsDirectory(
-  userId: string
-): Promise<string> {
-  const dir = userImportsPath(userId)
-  await mkdirAsync(dir, { recursive: true })
-  return dir
-}
-
 /**
  * Saves an uploaded file to the imports directory.
  * @param filename Original filename
@@ -122,11 +110,8 @@ function normalizeExtension(extension?: string): string {
   return extension.startsWith('.') ? extension : `.${extension}`
 }
 
-async function ensureUniqueFilename(
-  filename: string,
-  userId: string
-): Promise<string> {
-  if (!(await fileExists(filename, userId))) {
+async function ensureUniqueFilename(filename: string): Promise<string> {
+  if (!(await fileExists(filename))) {
     return filename
   }
 
@@ -135,7 +120,7 @@ async function ensureUniqueFilename(
 
   // Append incremental suffix until an unused filename is found
   // Example: dataset.ttl -> dataset-1.ttl
-  while (await fileExists(`${parsed.name}-${counter}${parsed.ext}`, userId)) {
+  while (await fileExists(`${parsed.name}-${counter}${parsed.ext}`)) {
     counter += 1
   }
 
@@ -147,15 +132,9 @@ async function resolveFilename(options: {
   fallbackBase: string
   fallbackExtension: string
   extensionHint?: string
-  userId: string
 }): Promise<string> {
-  const {
-    desiredName,
-    fallbackBase,
-    fallbackExtension,
-    extensionHint,
-    userId
-  } = options
+  const { desiredName, fallbackBase, fallbackExtension, extensionHint } =
+    options
 
   const normalizedFallbackExt = normalizeExtension(fallbackExtension)
   const normalizedHintExt = normalizeExtension(extensionHint)
@@ -180,16 +159,15 @@ async function resolveFilename(options: {
   }
 
   const candidate = `${base}${extension}`
-  return ensureUniqueFilename(candidate, userId)
+  return ensureUniqueFilename(candidate)
 }
 
 async function writeBufferToImports(
   buffer: Buffer,
-  filename: string,
-  userId: string
+  filename: string
 ): Promise<{ filename: string; size: number; path: string }> {
-  const dir = await ensureUserImportsDirectory(userId)
-  const filePath = path.join(dir, filename)
+  await ensureImportsDirectory()
+  const filePath = path.join(IMPORTS_PATH, filename)
   await writeFileAsync(filePath, buffer)
 
   logger.info('File written to imports folder', {
@@ -208,8 +186,7 @@ async function writeBufferToImports(
 export async function saveRemoteFile(
   sourceUrl: string,
   preferredFilename?: string,
-  extensionHint?: string,
-  userId?: string
+  extensionHint?: string
 ): Promise<{ filename: string; size: number; path: string }> {
   try {
     const controller = new AbortController()
@@ -245,8 +222,7 @@ export async function saveRemoteFile(
       desiredName: preferredFilename,
       fallbackBase,
       fallbackExtension: fallbackExt,
-      extensionHint,
-      userId: userId ?? 'shared'
+      extensionHint
     })
 
     logger.info('Saving remote RDF import', {
@@ -255,7 +231,7 @@ export async function saveRemoteFile(
       size: buffer.length
     })
 
-    return writeBufferToImports(buffer, filename, userId ?? 'shared')
+    return writeBufferToImports(buffer, filename)
   } catch (error) {
     const err = error as Error
     logger.error('Error fetching RDF from URL', {
@@ -269,8 +245,7 @@ export async function saveRemoteFile(
 export async function saveTextSnippet(
   content: string,
   preferredFilename?: string,
-  extensionHint?: string,
-  userId?: string
+  extensionHint?: string
 ): Promise<{ filename: string; size: number; path: string }> {
   const normalizedContent = content.replace(/^(\uFEFF)/, '') // remove UTF-8 BOM if present
   if (normalizedContent.trim().length === 0) {
@@ -284,8 +259,7 @@ export async function saveTextSnippet(
     desiredName: preferredFilename,
     fallbackBase,
     fallbackExtension: '.ttl',
-    extensionHint,
-    userId: userId ?? 'shared'
+    extensionHint
   })
 
   const buffer = Buffer.from(normalizedContent, 'utf-8')
@@ -295,20 +269,16 @@ export async function saveTextSnippet(
     size: buffer.length
   })
 
-  return writeBufferToImports(buffer, filename, userId ?? 'shared')
+  return writeBufferToImports(buffer, filename)
 }
 
 /**
- * Checks if a file exists in the user's imports directory.
+ * Checks if a file exists in the imports directory.
  * @param filename Name of the file to check
- * @param userId Owner of the file
  * @returns True if file exists
  */
-export async function fileExists(
-  filename: string,
-  userId?: string
-): Promise<boolean> {
-  const filePath = path.join(userImportsPath(userId ?? 'shared'), filename)
+export async function fileExists(filename: string): Promise<boolean> {
+  const filePath = path.join(IMPORTS_PATH, filename)
   try {
     await statAsync(filePath)
     return true
@@ -318,15 +288,11 @@ export async function fileExists(
 }
 
 /**
- * Deletes a file from the user's imports directory.
+ * Deletes a file from the imports directory.
  * @param filename Name of the file to delete
- * @param userId Owner of the file
  */
-export async function deleteFile(
-  filename: string,
-  userId?: string
-): Promise<void> {
-  const filePath = path.join(userImportsPath(userId ?? 'shared'), filename)
+export async function deleteFile(filename: string): Promise<void> {
+  const filePath = path.join(IMPORTS_PATH, filename)
 
   try {
     await unlinkAsync(filePath)

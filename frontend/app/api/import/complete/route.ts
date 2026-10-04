@@ -8,7 +8,6 @@ import { type NextRequest, NextResponse } from 'next/server'
 import { requirePrincipal } from '@/lib/api-auth'
 import { isSameOriginMutation, sameOriginError } from '@/lib/same-origin'
 import { getVirtuosoConfig } from '@/providers/virtuoso/config'
-import { getSessionFromRequest } from '@/providers/virtuoso/request-auth'
 
 const UPLOADS_DIR = join(process.cwd(), 'uploads')
 const UPLOAD_TIMEOUT_MS = 10 * 60 * 1000 // 10 minutes timeout for large files
@@ -28,10 +27,6 @@ export async function POST(req: NextRequest) {
   if (auth.response) return auth.response
 
   const adapterUrl = getVirtuosoConfig().VIRTUOSO_ADAPTER_URL
-  const session = await getSessionFromRequest(req)
-  if (!session) {
-    return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
-  }
 
   let filename = ''
 
@@ -46,7 +41,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const filePath = stagedFilePath(session.userId, filename)
+    const filePath = stagedFilePath(auth.principal.id, filename)
 
     // Check if file exists
     try {
@@ -81,7 +76,7 @@ export async function POST(req: NextRequest) {
           method: 'POST',
           headers: {
             ...formData.getHeaders(),
-            Authorization: `Bearer ${session.token}`
+            'X-Adapter-Token': getVirtuosoConfig().VIRTUOSO_ADAPTER_TOKEN
           }
         }
 
@@ -155,7 +150,7 @@ export async function POST(req: NextRequest) {
     // Clean up file on error if we have a filename
     if (filename) {
       try {
-        await unlink(stagedFilePath(session.userId, filename))
+        await unlink(stagedFilePath(auth.principal.id, filename))
       } catch {
         // Ignore cleanup errors
       }

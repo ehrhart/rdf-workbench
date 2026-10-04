@@ -6,7 +6,6 @@ import type { NextRequest } from 'next/server'
 import { requirePrincipal } from '@/lib/api-auth'
 import { isSameOriginMutation, sameOriginError } from '@/lib/same-origin'
 import { getVirtuosoConfig } from '@/providers/virtuoso/config'
-import { getSessionFromRequest } from '@/providers/virtuoso/request-auth'
 
 const EXPORTS_SUBDIRECTORY = 'exports'
 const MAX_FILE_SEGMENTS = 1024
@@ -98,22 +97,27 @@ function buildVirtuosoPrefix(baseName: string): string {
   return `${normalizedBase}/${baseName}`
 }
 
+function adapterHeaders(
+  extra: Record<string, string> = {}
+): Record<string, string> {
+  return {
+    'X-Adapter-Token': getVirtuosoConfig().VIRTUOSO_ADAPTER_TOKEN,
+    ...extra
+  }
+}
+
 async function runVirtuosoDump(
   graph: string,
   procedure: string,
   virtPrefix: string,
-  limit: number,
-  authToken: string
+  limit: number
 ): Promise<void> {
   const query = `${procedure}('${escapeSqlLiteral(graph)}', '${escapeSqlLiteral(virtPrefix)}', ${limit})`
   const response = await fetch(
     `${getVirtuosoConfig().VIRTUOSO_ADAPTER_URL}/api/query/sql`,
     {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${authToken}`
-      },
+      headers: adapterHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({ query })
     }
   )
@@ -128,8 +132,7 @@ async function runVirtuosoDump(
 
 async function listArtifacts(
   basePrefix: string,
-  extensionWithGzip: string,
-  authToken: string
+  extensionWithGzip: string
 ): Promise<BridgeFileEntry[]> {
   const params = new URLSearchParams()
   params.set('subdir', EXPORTS_SUBDIRECTORY)
@@ -139,9 +142,7 @@ async function listArtifacts(
   const response = await fetch(
     `${getVirtuosoConfig().VIRTUOSO_ADAPTER_URL}/api/files?${params.toString()}`,
     {
-      headers: {
-        Authorization: `Bearer ${authToken}`
-      }
+      headers: adapterHeaders()
     }
   )
   if (!response.ok) {
@@ -157,8 +158,7 @@ async function listArtifacts(
 
 async function collectArtifacts(
   basePrefix: string,
-  extension: string,
-  authToken: string
+  extension: string
 ): Promise<BridgeFileEntry[]> {
   const extensionWithGzip = `${extension}.gz`
 
@@ -167,7 +167,7 @@ async function collectArtifacts(
   const pollIntervalMs = config.GRAPH_EXPORT_POLL_INTERVAL_MS ?? 1000
 
   for (let attempt = 0; attempt < pollAttempts; attempt++) {
-    const files = await listArtifacts(basePrefix, extensionWithGzip, authToken)
+    const files = await listArtifacts(basePrefix, extensionWithGzip)
 
     if (files.length > 0) {
       const sorted = [...files].sort((a, b) => a.name.localeCompare(b.name))
@@ -197,8 +197,7 @@ async function collectArtifacts(
 
 async function downloadFileStream(
   relativePath: string,
-  decompress = false,
-  authToken: string
+  decompress = false
 ): Promise<ReadableStream<Uint8Array>> {
   const params = new URLSearchParams()
   params.set('path', relativePath)
@@ -209,9 +208,7 @@ async function downloadFileStream(
   const response = await fetch(
     `${getVirtuosoConfig().VIRTUOSO_ADAPTER_URL}/api/files/download?${params.toString()}`,
     {
-      headers: {
-        Authorization: `Bearer ${authToken}`
-      }
+      headers: adapterHeaders()
     }
   )
   if (!response.ok || !response.body) {
@@ -222,20 +219,14 @@ async function downloadFileStream(
   return response.body
 }
 
-async function cleanupArtifacts(
-  paths: string[],
-  authToken: string
-): Promise<void> {
+async function cleanupArtifacts(paths: string[]): Promise<void> {
   const unique = Array.from(new Set(paths)).filter(Boolean)
   if (unique.length === 0) return
 
   try {
     await fetch(`${getVirtuosoConfig().VIRTUOSO_ADAPTER_URL}/api/files`, {
       method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${authToken}`
-      },
+      headers: adapterHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({ paths: unique })
     })
   } catch (error) {
@@ -244,8 +235,7 @@ async function cleanupArtifacts(
 }
 
 function createSingleGraphStream(
-  artifact: ExportArtifact,
-  authToken: string
+  artifact: ExportArtifact
 ): ReadableStream<Uint8Array> {
   const cleanupTargets = artifact.files.map((file) => file.relativePath)
 
@@ -253,11 +243,7 @@ function createSingleGraphStream(
     async start(controller) {
       try {
         for (const file of artifact.files) {
-          const stream = await downloadFileStream(
-            file.relativePath,
-            true,
-            authToken
-          )
+          const stream = await downloadFileStream(file.relativePath, true)
           const reader = stream.getReader()
 
           while (true) {
@@ -270,7 +256,7 @@ function createSingleGraphStream(
       } catch (error) {
         controller.error(error)
       } finally {
-        await cleanupArtifacts(cleanupTargets, authToken)
+        await cleanupArtifacts(cleanupTargets)
       }
     }
   })
@@ -289,8 +275,7 @@ function appendStreamToArchive(
 }
 
 function createZipStream(
-  artifacts: ExportArtifact[],
-  authToken: string
+  artifacts: ExportArtifact[]
 ): ReadableStream<Uint8Array> {
   const archive = new ZipArchive({ zlib: { level: 9 } })
   const passThrough = new PassThrough()
@@ -314,11 +299,7 @@ function createZipStream(
       for (const artifact of artifacts) {
         let segment = 1
         for (const file of artifact.files) {
-          const remoteStream = await downloadFileStream(
-            file.relativePath,
-            true,
-            authToken
-          )
+          const remoteStream = await downloadFileStream(file.relativePath, true)
           const nodeStream = Readable.fromWeb(
             remoteStream as ReadableStreamWeb<Uint8Array>
           )
@@ -335,7 +316,7 @@ function createZipStream(
       archive.destroy(error as Error)
       passThrough.destroy(error as Error)
     } finally {
-      await cleanupArtifacts(cleanupTargets, authToken)
+      await cleanupArtifacts(cleanupTargets)
     }
   })().catch((error) => {
     passThrough.destroy(error)
@@ -352,12 +333,6 @@ export async function POST(request: NextRequest) {
 
   const defaultFileLengthLimit =
     getVirtuosoConfig().GRAPH_EXPORT_FILE_LIMIT ?? 50_000_000_000
-  const session = await getSessionFromRequest(request)
-  if (!session) {
-    return new Response(JSON.stringify({ error: 'Not authenticated' }), {
-      status: 401
-    })
-  }
 
   try {
     const searchParams = request.nextUrl.searchParams
@@ -417,14 +392,9 @@ export async function POST(request: NextRequest) {
         graphIri,
         formatConfig.procedure,
         virtPrefix,
-        effectiveLimit,
-        session.token
+        effectiveLimit
       )
-      const files = await collectArtifacts(
-        basePrefix,
-        formatConfig.extension,
-        session.token
-      )
+      const files = await collectArtifacts(basePrefix, formatConfig.extension)
 
       if (files.length === 0) {
         throw new Error(`No export artifacts were generated for ${graphIri}`)
@@ -444,7 +414,7 @@ export async function POST(request: NextRequest) {
     )
 
     if (artifacts.length === 1) {
-      const singleBody = createSingleGraphStream(artifacts[0], session.token)
+      const singleBody = createSingleGraphStream(artifacts[0])
       const singleHeaders = new Headers()
       singleHeaders.set('Content-Type', formatConfig.contentType)
       singleHeaders.set(
@@ -454,7 +424,7 @@ export async function POST(request: NextRequest) {
       return new Response(singleBody, { status: 200, headers: singleHeaders })
     }
 
-    const zipBody = createZipStream(artifacts, session.token)
+    const zipBody = createZipStream(artifacts)
     const zipHeaders = new Headers()
     zipHeaders.set('Content-Type', 'application/zip')
     zipHeaders.set(

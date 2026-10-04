@@ -2,7 +2,6 @@ import { type NextRequest, NextResponse } from 'next/server'
 import { hasFeature } from '@/lib/runtime'
 import { getRuntimeConfig } from '@/lib/runtime/config'
 import { isSameOriginMutation, sameOriginError } from '@/lib/same-origin'
-import { getSessionFromRequest } from '@/providers/virtuoso/request-auth'
 
 /**
  * Deletes a graph asynchronously via the Virtuoso adapter.
@@ -15,10 +14,6 @@ export async function DELETE(req: NextRequest) {
   const runtimeConfig = getRuntimeConfig()
   if (runtimeConfig.TRIPLESTORE_PROVIDER !== 'virtuoso') {
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
-  }
-  const session = await getSessionFromRequest(req)
-  if (!session) {
-    return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
   }
 
   try {
@@ -37,7 +32,7 @@ export async function DELETE(req: NextRequest) {
       {
         method: 'DELETE',
         headers: {
-          Authorization: `Bearer ${session.token}`
+          'X-Adapter-Token': runtimeConfig.VIRTUOSO_ADAPTER_TOKEN
         }
       }
     )

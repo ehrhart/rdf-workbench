@@ -2,7 +2,6 @@ import { type NextRequest, NextResponse } from 'next/server'
 import { requirePrincipal } from '@/lib/api-auth'
 import { isSameOriginMutation, sameOriginError } from '@/lib/same-origin'
 import { getVirtuosoConfig } from '@/providers/virtuoso/config'
-import { getSessionFromRequest } from '@/providers/virtuoso/request-auth'
 
 export async function POST(
   request: NextRequest,
@@ -14,10 +13,6 @@ export async function POST(
   if (auth.response) return auth.response
 
   const params = await props.params
-  const session = await getSessionFromRequest(request)
-  if (!session) {
-    return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
-  }
   try {
     // Get jobId from URL path or body
     let jobId: string | undefined = params.jobId
@@ -37,7 +32,7 @@ export async function POST(
       {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${session.token}`
+          'X-Adapter-Token': getVirtuosoConfig().VIRTUOSO_ADAPTER_TOKEN
         }
       }
     )

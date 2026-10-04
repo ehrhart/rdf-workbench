@@ -1,10 +1,10 @@
 import type { Request, Response } from 'express'
-import { getAdminConnection } from '../session-manager'
+import { getConnection } from '../database'
 import type { HealthResponse } from '../types'
 
 export async function healthCheck(_req: Request, res: Response): Promise<void> {
   try {
-    const connection = await getAdminConnection()
+    const connection = await getConnection()
     try {
       await connection.query('SELECT 1 AS test')
     } finally {

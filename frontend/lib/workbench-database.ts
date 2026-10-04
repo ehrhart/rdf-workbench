@@ -244,34 +244,27 @@ async function initialize(): Promise<Database.Database> {
   const db = new Database(config.WORKBENCH_DB_PATH)
   migrate(db)
 
-  if (
-    config.TRIPLESTORE_PROVIDER === 'qlever' ||
-    config.TRIPLESTORE_PROVIDER === 'oxigraph'
-  ) {
-    const userCount = db
-      .prepare('SELECT COUNT(*) AS count FROM users')
-      .get() as {
-      count: number
-    }
-    if (userCount.count === 0) {
-      const now = new Date().toISOString()
-      const passwordHash = await hash(config.BOOTSTRAP_ADMIN_PASSWORD)
-      db.prepare(`
-        INSERT INTO users
-          (id, username, password_hash, role, disabled, created_at, updated_at)
-        VALUES (?, ?, ?, 'admin', 0, ?, ?)
-      `).run(
-        crypto.randomUUID(),
-        config.BOOTSTRAP_ADMIN_USERNAME.trim().toLowerCase(),
-        passwordHash,
-        now,
-        now
-      )
-    }
-    db.prepare('DELETE FROM sessions WHERE expires_at <= ?').run(
-      new Date().toISOString()
+  const userCount = db.prepare('SELECT COUNT(*) AS count FROM users').get() as {
+    count: number
+  }
+  if (userCount.count === 0) {
+    const now = new Date().toISOString()
+    const passwordHash = await hash(config.BOOTSTRAP_ADMIN_PASSWORD)
+    db.prepare(`
+      INSERT INTO users
+        (id, username, password_hash, role, disabled, created_at, updated_at)
+      VALUES (?, ?, ?, 'admin', 0, ?, ?)
+    `).run(
+      crypto.randomUUID(),
+      config.BOOTSTRAP_ADMIN_USERNAME.trim().toLowerCase(),
+      passwordHash,
+      now,
+      now
     )
   }
+  db.prepare('DELETE FROM sessions WHERE expires_at <= ?').run(
+    new Date().toISOString()
+  )
 
   database = db
   return db

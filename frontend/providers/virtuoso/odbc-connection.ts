@@ -2,7 +2,6 @@
 
 import { AuthError, ConnectionError, QueryError } from '@/lib/errors'
 import { getRuntimeConfig } from '@/lib/runtime/config'
-import { deleteSession, getAuthTokenFromCookie } from './session'
 
 export type StatementExecutionStatus = 'success' | 'error'
 
@@ -90,15 +89,8 @@ function normalizeAdapterResponse<T>(
   }
 }
 
-interface ExecuteOptions {
-  useServiceCredentials?: boolean
-  authToken?: string
-  onAuthError?: () => Promise<void>
-}
-
 async function fetchVirtuosoAdapterResponse<T = Record<string, unknown>>(
-  command: string,
-  options: ExecuteOptions = {}
+  command: string
 ): Promise<VirtuosoAdapterResponse<T>> {
   const runtime = getRuntimeConfig()
   if (runtime.TRIPLESTORE_PROVIDER !== 'virtuoso') {
@@ -106,25 +98,14 @@ async function fetchVirtuosoAdapterResponse<T = Record<string, unknown>>(
   }
   const isqlServerUrl = runtime.VIRTUOSO_ADAPTER_URL
 
-  const authToken = options.authToken
-  if (!authToken && !options.useServiceCredentials) {
-    throw new AuthError('Session expired')
-  }
-
   const sendQuery = async (): Promise<Response> => {
     try {
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json'
-      }
-      if (options.useServiceCredentials) {
-        headers['X-Adapter-Token'] = runtime.VIRTUOSO_ADAPTER_TOKEN
-      } else if (authToken) {
-        headers.Authorization = `Bearer ${authToken}`
-      }
-
       return await fetch(`${isqlServerUrl}/api/query/sql`, {
         method: 'POST',
-        headers,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Adapter-Token': runtime.VIRTUOSO_ADAPTER_TOKEN
+        },
         body: JSON.stringify({ query: command })
       })
     } catch (err: unknown) {
@@ -143,10 +124,7 @@ async function fetchVirtuosoAdapterResponse<T = Record<string, unknown>>(
   const res: Response = await sendQuery()
 
   if (res.status === 401) {
-    if (options.onAuthError) {
-      await options.onAuthError()
-    }
-    throw new AuthError('Session expired')
+    throw new AuthError('Virtuoso adapter rejected the service token')
   }
 
   let payload: RawVirtuosoAdapterResponse<T> | null = null
@@ -160,10 +138,6 @@ async function fetchVirtuosoAdapterResponse<T = Record<string, unknown>>(
   }
 
   if (!res.ok) {
-    if (res.status === 401) {
-      throw new AuthError('Session expired')
-    }
-
     const message =
       payload?.error || payload?.message || 'Virtuoso adapter request failed'
     console.error('Virtuoso adapter responded with error:', message)
@@ -179,10 +153,9 @@ async function fetchVirtuosoAdapterResponse<T = Record<string, unknown>>(
 }
 
 export async function executeIsqlCommand<T = unknown>(
-  command: string,
-  options: ExecuteOptions = {}
+  command: string
 ): Promise<T> {
-  const data = await fetchVirtuosoAdapterResponse<T>(command, options)
+  const data = await fetchVirtuosoAdapterResponse<T>(command)
   if (data.hasErrors) {
     const firstError = data.statements?.find(
       (statement) => statement.status === 'error'
@@ -195,37 +168,7 @@ export async function executeIsqlCommand<T = unknown>(
 }
 
 export async function executeIsqlCommandDetailed<T = unknown>(
-  command: string,
-  options: ExecuteOptions = {}
-): Promise<VirtuosoAdapterResponse<T>> {
-  return fetchVirtuosoAdapterResponse<T>(command, options)
-}
-
-/**
- * Convenience wrapper that automatically uses the current user's auth token.
- * Deletes session cookie on 401 errors.
- * Use this from Server Actions.
- */
-export async function executeIsqlWithAuth<T = unknown>(
   command: string
-): Promise<T> {
-  const token = await getAuthTokenFromCookie()
-
-  if (!token) {
-    throw new AuthError('No auth token available')
-  }
-
-  try {
-    return await executeIsqlCommand<T>(command, {
-      authToken: token,
-      onAuthError: async () => {
-        await deleteSession()
-      }
-    })
-  } catch (error) {
-    if (error instanceof AuthError) {
-      await deleteSession()
-    }
-    throw error
-  }
+): Promise<VirtuosoAdapterResponse<T>> {
+  return fetchVirtuosoAdapterResponse<T>(command)
 }

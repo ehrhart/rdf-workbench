@@ -17,6 +17,7 @@ export type FeatureId =
   | 'dereference'
   | 'saved-queries'
   | 'endpoint-monitor'
+  | 'user-admin'
   | 'virtuoso-import'
   | 'virtuoso-export'
   | 'virtuoso-isql'
@@ -25,12 +26,10 @@ export type FeatureId =
   | 'virtuoso-fulltext'
   | 'virtuoso-graph-mutations'
   | 'qlever-namespaces'
-  | 'qlever-user-admin'
   | 'qlever-query-monitor'
   | 'oxigraph-import'
   | 'oxigraph-graph-mutations'
   | 'oxigraph-namespaces'
-  | 'oxigraph-user-admin'
 
 export type SparqlQueryKind =
   | 'select'

@@ -16,9 +16,10 @@ const commonSchema = z.object({
 
 const virtuosoSchema = commonSchema.extend({
   TRIPLESTORE_PROVIDER: z.literal('virtuoso'),
+  BOOTSTRAP_ADMIN_USERNAME: z.string().min(1),
+  BOOTSTRAP_ADMIN_PASSWORD: z.string().min(1),
   VIRTUOSO_ADAPTER_URL: z.string().url(),
   VIRTUOSO_ADAPTER_TOKEN: z.string().min(32),
-  SESSION_SECRET: z.string().min(32),
   VIRTUOSO_EXPORT_BASE_PATH: z.string().optional(),
   GRAPH_EXPORT_FILE_LIMIT: z.coerce.number().int().positive().optional(),
   GRAPH_EXPORT_POLL_INTERVAL_MS: z.coerce.number().int().positive().optional(),

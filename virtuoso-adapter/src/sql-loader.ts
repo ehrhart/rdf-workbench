@@ -1,7 +1,7 @@
 import { promises as fsp } from 'node:fs'
 import path from 'node:path'
+import { getConnection } from './database'
 import { logger } from './logger'
-import { getAdminConnection } from './session-manager'
 
 const SQL_DIR = path.resolve(process.cwd(), 'sql')
 const SQL_EXTENSION = '.sql'
@@ -35,7 +35,7 @@ export async function loadSqlScripts(): Promise<void> {
     return
   }
 
-  const connection = await getAdminConnection()
+  const connection = await getConnection()
 
   try {
     logger.info('Executing SQL scripts')

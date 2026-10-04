@@ -3,10 +3,6 @@ import { requirePrincipal } from '@/lib/api-auth'
 import { AuthError, ConnectionError, QueryError } from '@/lib/errors'
 import { isSameOriginMutation, sameOriginError } from '@/lib/same-origin'
 import { executeIsqlCommandDetailed } from '@/providers/virtuoso/odbc-connection'
-import {
-  deleteSession,
-  getAuthTokenFromCookie
-} from '@/providers/virtuoso/session'
 
 interface IsqlRequestBody {
   query?: string
@@ -19,11 +15,6 @@ export async function POST(request: Request) {
   if (auth.response) return auth.response
 
   try {
-    const token = await getAuthTokenFromCookie()
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
     const body = (await request.json().catch(() => ({}))) as IsqlRequestBody
     const query = typeof body.query === 'string' ? body.query : ''
 
@@ -32,12 +23,7 @@ export async function POST(request: Request) {
     }
 
     const { results, statements, hasErrors, errorMessage } =
-      await executeIsqlCommandDetailed<Record<string, unknown>>(query, {
-        authToken: token,
-        onAuthError: async () => {
-          await deleteSession()
-        }
-      })
+      await executeIsqlCommandDetailed<Record<string, unknown>>(query)
 
     return NextResponse.json(
       { results, statements, hasErrors, errorMessage },
@@ -45,7 +31,6 @@ export async function POST(request: Request) {
     )
   } catch (error) {
     if (error instanceof AuthError) {
-      await deleteSession()
       return NextResponse.json({ error: error.message }, { status: 401 })
     }
 

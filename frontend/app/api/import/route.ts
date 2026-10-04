@@ -2,7 +2,6 @@ import { type NextRequest, NextResponse } from 'next/server'
 import { requirePrincipal } from '@/lib/api-auth'
 import { isSameOriginMutation, sameOriginError } from '@/lib/same-origin'
 import { getVirtuosoConfig } from '@/providers/virtuoso/config'
-import { getSessionFromRequest } from '@/providers/virtuoso/request-auth'
 
 /**
  * NOTE: File uploads now use chunked upload via /api/import/complete
@@ -14,10 +13,6 @@ export async function GET(req: NextRequest) {
   if (auth.response) return auth.response
 
   const apiBaseUrl = getVirtuosoConfig().VIRTUOSO_ADAPTER_URL
-  const session = await getSessionFromRequest(req)
-  if (!session) {
-    return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
-  }
 
   try {
     const { searchParams } = new URL(req.url)
@@ -30,7 +25,7 @@ export async function GET(req: NextRequest) {
 
     const response = await fetch(url, {
       headers: {
-        Authorization: `Bearer ${session.token}`
+        'X-Adapter-Token': getVirtuosoConfig().VIRTUOSO_ADAPTER_TOKEN
       }
     })
 
@@ -60,10 +55,6 @@ export async function DELETE(req: NextRequest) {
   if (auth.response) return auth.response
 
   const apiBaseUrl = getVirtuosoConfig().VIRTUOSO_ADAPTER_URL
-  const session = await getSessionFromRequest(req)
-  if (!session) {
-    return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
-  }
 
   try {
     const { searchParams } = new URL(req.url)
@@ -81,7 +72,7 @@ export async function DELETE(req: NextRequest) {
       {
         method: 'DELETE',
         headers: {
-          Authorization: `Bearer ${session.token}`
+          'X-Adapter-Token': getVirtuosoConfig().VIRTUOSO_ADAPTER_TOKEN
         }
       }
     )

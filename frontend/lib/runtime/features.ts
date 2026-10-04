@@ -14,7 +14,8 @@ const baseFeatures: readonly FeatureId[] = [
   'resource-explorer',
   'dereference',
   'saved-queries',
-  'endpoint-monitor'
+  'endpoint-monitor',
+  'user-admin'
 ]
 
 const providerFeatures: Record<TriplestoreProvider, readonly FeatureId[]> = {
@@ -28,13 +29,12 @@ const providerFeatures: Record<TriplestoreProvider, readonly FeatureId[]> = {
     'virtuoso-fulltext',
     'virtuoso-graph-mutations'
   ],
-  qlever: [...baseFeatures, 'qlever-namespaces', 'qlever-user-admin'],
+  qlever: [...baseFeatures, 'qlever-namespaces'],
   oxigraph: [
     ...baseFeatures,
     'oxigraph-import',
     'oxigraph-graph-mutations',
-    'oxigraph-namespaces',
-    'oxigraph-user-admin'
+    'oxigraph-namespaces'
   ]
 }
 

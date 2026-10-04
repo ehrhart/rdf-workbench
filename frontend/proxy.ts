@@ -4,7 +4,11 @@ import {
   anonymousReadEnabled,
   resolveAccess
 } from '@/config/access'
-import type { FeatureId, TriplestoreProvider } from '@/lib/runtime/contracts'
+import type {
+  FeatureId,
+  Principal,
+  TriplestoreProvider
+} from '@/lib/runtime/contracts'
 import { computeFeatures } from '@/lib/runtime/features'
 import {
   acceptsHtml,
@@ -14,16 +18,6 @@ import {
 } from '@/lib/sparql/negotiation'
 
 type SparqlRouting = 'page' | 'query' | 'not-acceptable'
-
-/**
- * What session validation reports to the proxy about the caller. The role
- * is null when the validation module does not return one (the Virtuoso
- * session payload has no role); `admin` enforcement then stays with the
- * page and action layers, as it does today.
- */
-interface ProxyPrincipal {
-  role: 'admin' | 'user' | null
-}
 
 function providerFromEnv(): TriplestoreProvider | null {
   const value = process.env.TRIPLESTORE_PROVIDER
@@ -64,7 +58,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next()
   }
 
-  const principal = await validateProxySession(provider, request)
+  const principal = await validateProxySession(request)
   if (!principal) {
     return unauthenticatedResponse(request, pathname)
   }
@@ -75,34 +69,15 @@ export async function proxy(request: NextRequest) {
   return NextResponse.next()
 }
 
-/**
- * Session validation for the proxy. Virtuoso keeps its adapter-backed
- * module (it reads the cookie itself); the local providers (qlever,
- * oxigraph) store sha256-hashed tokens in the workbench SQLite database,
- * so the cookie token is validated with a hashed lookup, an expiry check
- * and an enabled-user check instead of the old presence-only cookie
- * test. The proxy runs on the Node.js runtime, where better-sqlite3 is
- * available. Any failure — including a missing or misconfigured database
- * — counts as unauthenticated.
- */
 async function validateProxySession(
-  provider: TriplestoreProvider | null,
   request: NextRequest
-): Promise<ProxyPrincipal | null> {
+): Promise<Principal | null> {
   try {
-    if (provider === 'virtuoso') {
-      const session = await (
-        await import('./providers/virtuoso/session-validation')
-      ).validateSession()
-      return session ? { role: null } : null
-    }
-
     const token = request.cookies.get('session')?.value
     if (!token) return null
 
     const { getLocalPrincipalByToken } = await import('./lib/local-auth')
-    const principal = await getLocalPrincipalByToken(token)
-    return principal ? { role: principal.role } : null
+    return await getLocalPrincipalByToken(token)
   } catch (error) {
     console.error('Proxy session validation failed:', error)
     return null

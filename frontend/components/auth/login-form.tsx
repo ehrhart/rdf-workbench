@@ -19,7 +19,7 @@ export function LoginForm({ redirectUrl }: { redirectUrl?: string }) {
         <Input
           id="username"
           name="username"
-          placeholder="username (e.g. dba)"
+          placeholder="username"
           autoFocus
           autoComplete="username"
           disabled={pending}

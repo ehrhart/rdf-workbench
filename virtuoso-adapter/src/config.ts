@@ -5,10 +5,14 @@ function parseNumber(value: string | undefined, fallback: number): number {
   return Number.isFinite(parsed) ? parsed : fallback
 }
 
-/**
- * Application configuration including server port, Virtuoso connection host info,
- * and in-memory session lifecycle settings.
- */
+function requiredEnv(name: string): string {
+  const value = process.env[name]
+  if (!value) {
+    throw new Error(`${name} is required for the Virtuoso adapter`)
+  }
+  return value
+}
+
 export const config: AppConfig = {
   port: parseNumber(process.env.PORT, 50118),
   adapterToken: process.env.VIRTUOSO_ADAPTER_TOKEN || '',
@@ -16,23 +20,10 @@ export const config: AppConfig = {
     driver: process.env.VIRTUOSO_DRIVER || '/usr/lib/odbc/virtodbc.so',
     host: process.env.VIRTUOSO_HOST || 'localhost',
     port: parseNumber(process.env.VIRTUOSO_ISQL_PORT, 1111),
-    user: process.env.VIRTUOSO_DBA_USER,
-    password: process.env.VIRTUOSO_DBA_PASSWORD,
+    user: requiredEnv('VIRTUOSO_DBA_USER'),
+    password: requiredEnv('VIRTUOSO_DBA_PASSWORD'),
     connectionTimeout: parseNumber(process.env.VIRTUOSO_CONNECTION_TIMEOUT, 30),
     loginTimeout: parseNumber(process.env.VIRTUOSO_LOGIN_TIMEOUT, 10)
-  },
-  session: {
-    ttlMs: Math.max(
-      parseNumber(process.env.VIRTUOSO_ADAPTER_SESSION_TTL_MS, 86_400_000),
-      60_000
-    ),
-    cleanupIntervalMs: Math.max(
-      parseNumber(
-        process.env.VIRTUOSO_ADAPTER_SESSION_CLEANUP_INTERVAL_MS,
-        300_000
-      ),
-      30_000
-    )
   }
 }
 

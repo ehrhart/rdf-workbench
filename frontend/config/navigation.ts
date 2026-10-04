@@ -147,7 +147,7 @@ const navMain: NavItem[] = [
         title: 'Users',
         url: '/admin/users',
         requiredRole: 'admin',
-        requiredFeature: ['qlever-user-admin', 'oxigraph-user-admin']
+        requiredFeature: ['user-admin']
       }
     ]
   }

@@ -2,14 +2,14 @@
 
 import { tryCatch } from '@/lib/result'
 import type { FTIndexStatus, FTRule } from '@/types'
-import { executeIsqlWithAuth } from './odbc-connection'
+import { executeIsqlCommand } from './odbc-connection'
 
 /**
  * Get all full-text indexing rules from DB.DBA.RDF_OBJ_FT_RULES
  */
 export async function getFTRules(): Promise<FTRule[]> {
   const result = await tryCatch(async () =>
-    executeIsqlWithAuth<FTRule[]>(
+    executeIsqlCommand<FTRule[]>(
       'SELECT ROFR_G, ROFR_P, ROFR_REASON FROM DB.DBA.RDF_OBJ_FT_RULES ORDER BY ROFR_REASON, ROFR_G, ROFR_P'
     )
   )
@@ -37,7 +37,7 @@ export async function addFTRule(
   const predicateValue = predicate ? `'${predicate}'` : 'NULL'
 
   const result = await tryCatch(async () =>
-    executeIsqlWithAuth<Array<{ callret: number }>>(
+    executeIsqlCommand<Array<{ callret: number }>>(
       `SELECT DB.DBA.RDF_OBJ_FT_RULE_ADD(${graphValue}, ${predicateValue}, '${reason}') as callret`
     )
   )
@@ -68,7 +68,7 @@ export async function deleteFTRule(
   const predicateValue = predicate ? `'${predicate}'` : 'NULL'
 
   const result = await tryCatch(async () =>
-    executeIsqlWithAuth<Array<{ callret: number }>>(
+    executeIsqlCommand<Array<{ callret: number }>>(
       `SELECT DB.DBA.RDF_OBJ_FT_RULE_DEL(${graphValue}, ${predicateValue}, '${reason}') as callret`
     )
   )
@@ -89,7 +89,7 @@ export async function deleteFTRule(
  */
 export async function rebuildFTIndex(): Promise<{ success: boolean }> {
   const result = await tryCatch(async () =>
-    executeIsqlWithAuth('DB.DBA.VT_INC_INDEX_DB_DBA_RDF_OBJ()')
+    executeIsqlCommand('DB.DBA.VT_INC_INDEX_DB_DBA_RDF_OBJ()')
   )
 
   if (!result.success) {
@@ -113,22 +113,22 @@ export async function setFTBatchMode(
     if (mode === 'auto') {
       // Automatic mode: ON with interval
       const intervalValue = interval || 10
-      await executeIsqlWithAuth(
+      await executeIsqlCommand(
         `DB.DBA.VT_BATCH_UPDATE('DB.DBA.RDF_OBJ', 'ON', ${intervalValue})`
       )
     } else if (mode === 'off') {
       // Real-time mode: OFF
-      await executeIsqlWithAuth(
+      await executeIsqlCommand(
         `DB.DBA.VT_BATCH_UPDATE('DB.DBA.RDF_OBJ', 'OFF', NULL)`
       )
     } else {
       // Manual mode: Set registry to ON, then delete scheduled event
       // First, ensure registry is ON
-      await executeIsqlWithAuth(
+      await executeIsqlCommand(
         `registry_set('DELAY_UPDATE_DB_DBA_RDF_OBJ', 'ON')`
       )
       // Then delete the scheduled event to make it manual
-      await executeIsqlWithAuth(
+      await executeIsqlCommand(
         `DELETE FROM DB.DBA.SYS_SCHEDULED_EVENT WHERE SE_NAME = 'VT_INC_INDEX_DB_DBA_RDF_OBJ()'`
       )
     }
@@ -147,14 +147,14 @@ export async function getFTIndexStatus(): Promise<FTIndexStatus> {
   try {
     // Query registry for the batch mode setting
     // The registry key is DELAY_UPDATE_DB_DBA_RDF_OBJ
-    const registryResults = await executeIsqlWithAuth<Array<{ mode: string }>>(
+    const registryResults = await executeIsqlCommand<Array<{ mode: string }>>(
       "SELECT registry_get('DELAY_UPDATE_DB_DBA_RDF_OBJ') as mode"
     )
 
     const mode = registryResults[0]?.mode
 
     // Check if there's a scheduled event for automatic updates
-    const scheduledResults = await executeIsqlWithAuth<
+    const scheduledResults = await executeIsqlCommand<
       Array<{ SE_INTERVAL: number }>
     >(
       "SELECT SE_INTERVAL FROM DB.DBA.SYS_SCHEDULED_EVENT WHERE SE_NAME = 'VT_INC_INDEX_DB_DBA_RDF_OBJ()'"

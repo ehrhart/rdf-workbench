@@ -23,7 +23,7 @@ export async function createUserAction(input: {
   role: 'admin' | 'user'
 }): Promise<UserActionResult> {
   try {
-    await requireAnyFeature(['qlever-user-admin', 'oxigraph-user-admin'])
+    await requireAnyFeature(['user-admin'])
     await createLocalUser(input)
     revalidatePath('/admin/users')
     return { ok: true, message: `User ${input.username} created` }
@@ -37,7 +37,7 @@ export async function setUserDisabledAction(
   disabled: boolean
 ): Promise<UserActionResult> {
   try {
-    await requireAnyFeature(['qlever-user-admin', 'oxigraph-user-admin'])
+    await requireAnyFeature(['user-admin'])
     await setLocalUserDisabled(userId, disabled)
     revalidatePath('/admin/users')
     return { ok: true, message: disabled ? 'User disabled' : 'User enabled' }
@@ -51,7 +51,7 @@ export async function resetUserPasswordAction(
   password: string
 ): Promise<UserActionResult> {
   try {
-    await requireAnyFeature(['qlever-user-admin', 'oxigraph-user-admin'])
+    await requireAnyFeature(['user-admin'])
     await resetLocalUserPassword(userId, password)
     revalidatePath('/admin/users')
     return { ok: true, message: 'Password reset and active sessions revoked' }

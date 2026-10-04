@@ -49,10 +49,8 @@ function parseStatusOutput(rawQueries: { REPORT: string }[]): ParsedQuery[] {
 export const virtuosoQueryMonitor: QueryMonitorAdapter = {
   async listRunning(caller: Principal | null): Promise<RunningQueryInfo[]> {
     if (!caller) return []
-    const rawQueries = await executeIsqlCommand<{ REPORT: string }[]>(
-      "status('exec')",
-      { useServiceCredentials: true }
-    )
+    const rawQueries =
+      await executeIsqlCommand<{ REPORT: string }[]>("status('exec')")
     return parseStatusOutput(rawQueries).map((query) => {
       const registeredId = findQueryIdByQuery(query.query)
       return {

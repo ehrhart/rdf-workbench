@@ -2,6 +2,7 @@ import 'server-only'
 
 import { buildNavigation } from '@/config/navigation'
 import { dereferenceRepository } from '@/lib/dereference/repository'
+import { localAuthAdapter } from '@/lib/local-auth'
 import { getRuntimeConfig } from '@/lib/runtime/config'
 import type {
   FeatureId,
@@ -10,7 +11,6 @@ import type {
 } from '@/lib/runtime/contracts'
 import { computeFeatures } from '@/lib/runtime/features'
 import { savedQueryRepository } from '@/lib/saved-queries'
-import { virtuosoAuthAdapter } from './auth'
 import {
   addPrefix,
   deletePrefix,
@@ -49,7 +49,7 @@ export const virtuosoRuntime: WorkbenchRuntime = {
   },
   savedQueries: savedQueryRepository,
   dereference: dereferenceRepository,
-  auth: virtuosoAuthAdapter,
+  auth: localAuthAdapter,
   features,
   navigation,
   queryMonitor: virtuosoQueryMonitor,

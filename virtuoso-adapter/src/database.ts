@@ -1,6 +1,6 @@
-import type * as odbc from 'odbc'
+import * as odbc from 'odbc'
+import { config } from './config'
 import { logger } from './logger'
-import type { VirtuosoSession } from './session-manager'
 import type {
   QueryResponse,
   StatementExecutionResult
@@ -9,6 +9,38 @@ import type {
 interface QueryResult {
   rows: Record<string, unknown>[]
   rowCount: number
+}
+
+let pool: odbc.Pool | null = null
+
+function buildConnectionString(): string {
+  const base = `DRIVER=${config.virtuoso.driver};HOST=${config.virtuoso.host};PORT=${config.virtuoso.port}`
+  return `${base};UID=${config.virtuoso.user};PWD=${config.virtuoso.password};CHARSET=UTF-8;`
+}
+
+export async function initPool(): Promise<void> {
+  pool = await odbc.pool({
+    connectionString: buildConnectionString(),
+    connectionTimeout: config.virtuoso.connectionTimeout,
+    loginTimeout: config.virtuoso.loginTimeout
+  })
+}
+
+function getPool(): odbc.Pool {
+  if (!pool) {
+    throw new Error('Connection pool not initialized')
+  }
+  return pool
+}
+
+export async function getConnection(): Promise<odbc.Connection> {
+  return await getPool().connect()
+}
+
+export async function closePool(): Promise<void> {
+  if (!pool) return
+  await pool.close()
+  pool = null
 }
 
 async function runQuery(
@@ -24,10 +56,9 @@ async function runQuery(
 }
 
 async function withConnection<T>(
-  session: VirtuosoSession,
   handler: (connection: odbc.Connection) => Promise<T>
 ): Promise<T> {
-  const connection = await session.pool.connect()
+  const connection = await getPool().connect()
   try {
     return await handler(connection)
   } finally {
@@ -194,8 +225,7 @@ function splitSqlStatements(query: string): string[] {
 
 async function executeStatement(
   connection: odbc.Connection,
-  statement: string,
-  username: string
+  statement: string
 ): Promise<StatementExecutionResult> {
   const normalizedStatement = statement.trim()
   const baseResult: StatementExecutionResult = {
@@ -221,37 +251,28 @@ async function executeStatement(
     logger.error('SQL statement failed', {
       statement: normalizedStatement,
       error: normalized.message,
-      code: normalized.code,
-      user: username
+      code: normalized.code
     })
   }
 
   return baseResult
 }
 
-export async function executeSqlQuery(
-  session: VirtuosoSession,
-  query: string
-): Promise<QueryResponse> {
+export async function executeSqlQuery(query: string): Promise<QueryResponse> {
   const statements = splitSqlStatements(query)
   if (statements.length === 0) {
     throw new Error('No SQL statements to execute')
   }
 
   logger.info('Executing SQL query', {
-    user: session.username,
     statementCount: statements.length,
     query
   })
 
-  const statementResults = await withConnection(session, async (connection) => {
+  const statementResults = await withConnection(async (connection) => {
     const results: StatementExecutionResult[] = []
     for (const statement of statements) {
-      const executionResult = await executeStatement(
-        connection,
-        statement,
-        session.username
-      )
+      const executionResult = await executeStatement(connection, statement)
       results.push(executionResult)
     }
     return results
@@ -274,10 +295,4 @@ export async function executeSqlQuery(
     hasErrors,
     errorMessage: firstError?.errorMessage
   }
-}
-
-export async function getConnection(
-  session: VirtuosoSession
-): Promise<odbc.Connection> {
-  return await session.pool.connect()
 }

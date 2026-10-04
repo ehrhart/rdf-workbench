@@ -19,17 +19,8 @@ export async function sqlQuery(req: Request, res: Response): Promise<void> {
     return
   }
 
-  const session = req.dbSession
-  if (!session) {
-    res.status(401).json({
-      error: 'Unauthorized',
-      message: 'Database session is not available'
-    } as ErrorResponse)
-    return
-  }
-
   try {
-    const result = await executeSqlQuery(session, query)
+    const result = await executeSqlQuery(query)
     res.json(result)
     return
   } catch (error) {

@@ -5,13 +5,6 @@ export const LoginFormSchema = z.object({
   password: z.string().min(1, { message: 'Password is required' })
 })
 
-export interface SessionPayload {
-  userId: string
-  username: string
-  token: string
-  expiresAt: Date
-}
-
 export type LoginFormState =
   | {
       errors?: {

@@ -23,9 +23,7 @@ export async function cfgItemValue(
   const result = await tryCatch(async () => {
     const sqlQuery = `SELECT cfg_item_value(virtuoso_ini_path(), '${section}', '${key}') AS "value"`
 
-    const data = await executeIsqlCommand<{ value: string }[]>(sqlQuery, {
-      useServiceCredentials: true
-    })
+    const data = await executeIsqlCommand<{ value: string }[]>(sqlQuery)
     return data[0]?.value
   })
 

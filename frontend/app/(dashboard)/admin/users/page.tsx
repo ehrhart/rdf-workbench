@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 
 export default async function UsersPage() {
   const runtime = await getWorkbenchRuntime()
-  if (!(await hasAnyFeature(['qlever-user-admin', 'oxigraph-user-admin']))) {
+  if (!(await hasAnyFeature(['user-admin']))) {
     notFound()
   }
 

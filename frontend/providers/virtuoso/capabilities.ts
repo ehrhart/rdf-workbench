@@ -1,6 +1,6 @@
 'use server'
 
-import { AuthError, ConnectionError } from '@/lib/errors'
+import { ConnectionError } from '@/lib/errors'
 import { tryCatch } from '@/lib/result'
 import { getRuntimeConfig } from '@/lib/runtime/config'
 import type {
@@ -9,8 +9,7 @@ import type {
   ResourceSuggestion,
   SparqlBindingValue
 } from '@/types'
-import { executeIsqlCommand, executeIsqlWithAuth } from './odbc-connection'
-import { deleteSession, getAuthTokenFromCookie } from './session'
+import { executeIsqlCommand } from './odbc-connection'
 import { virtuosoSparqlTransport } from './sparql'
 
 const escapeSqlLiteral = (value: string): string => value.replace(/'/g, "''")
@@ -73,7 +72,7 @@ export async function getResourceSuggestions(
 
 // Prefix management
 export async function getPrefixes(): Promise<Record<string, string>> {
-  const result = await executeIsqlWithAuth<
+  const result = await executeIsqlCommand<
     {
       NS_PREFIX: string
       NS_URL: string
@@ -100,7 +99,7 @@ export async function addPrefix(
   const sanitizedPrefix = escapeSqlLiteral(prefix)
   const sanitizedNamespace = escapeSqlLiteral(namespace)
 
-  await executeIsqlWithAuth(
+  await executeIsqlCommand(
     `DB.DBA.XML_SET_NS_DECL('${sanitizedPrefix}', '${sanitizedNamespace}', 2)`
   )
 
@@ -135,11 +134,11 @@ export async function updatePrefix(
   const sanitizedCurrentNamespace = escapeSqlLiteral(currentNamespace)
 
   const result = await tryCatch(async () => {
-    await executeIsqlWithAuth(
+    await executeIsqlCommand(
       `DB.DBA.XML_REMOVE_NS_BY_PREFIX('${sanitizedOldPrefix}', 2)`
     )
 
-    await executeIsqlWithAuth(
+    await executeIsqlCommand(
       `DB.DBA.XML_SET_NS_DECL('${sanitizedNewPrefix}', '${sanitizedNamespace}', 2)`
     )
   })
@@ -147,7 +146,7 @@ export async function updatePrefix(
   if (!result.success) {
     // Rollback: restore the old prefix
     await tryCatch(async () =>
-      executeIsqlWithAuth(
+      executeIsqlCommand(
         `DB.DBA.XML_SET_NS_DECL('${sanitizedOldPrefix}', '${sanitizedCurrentNamespace}', 2)`
       )
     )
@@ -176,7 +175,7 @@ export async function deletePrefix(prefix: string): Promise<void> {
 
   const sanitizedPrefix = escapeSqlLiteral(prefix)
 
-  await executeIsqlWithAuth(
+  await executeIsqlCommand(
     `DB.DBA.XML_REMOVE_NS_BY_PREFIX('${sanitizedPrefix}', 2)`
   )
 }
@@ -191,8 +190,7 @@ export async function getNamedGraphs(): Promise<NamedGraph[]> {
         triples: number
       }[]
     >(
-      'SELECT ID_TO_IRI(g) AS graph, COUNT(*) AS triples FROM DB.DBA.RDF_QUAD GROUP BY g',
-      { useServiceCredentials: true }
+      'SELECT ID_TO_IRI(g) AS graph, COUNT(*) AS triples FROM DB.DBA.RDF_QUAD GROUP BY g'
     )
   )
 
@@ -227,8 +225,7 @@ export async function getGraphTripleCount(uri: string): Promise<number> {
       triples: number
     }[]
   >(
-    `SELECT COUNT(*) AS triples FROM DB.DBA.RDF_QUAD WHERE g = IRI_TO_ID('${sanitizedUri}')`,
-    { useServiceCredentials: true }
+    `SELECT COUNT(*) AS triples FROM DB.DBA.RDF_QUAD WHERE g = IRI_TO_ID('${sanitizedUri}')`
   )
 
   if (!result || !Array.isArray(result)) {
@@ -243,29 +240,15 @@ export async function getGraphTripleCount(uri: string): Promise<number> {
 }
 
 export async function deleteGraph(uri: string): Promise<void> {
-  // Call the Virtuoso adapter directly with proper session handling
-  // The deletion returns immediately (202 Accepted) while the
-  // actual CLEAR GRAPH runs in the background on the server
-  const token = await getAuthTokenFromCookie()
-
-  if (!token) {
-    throw new AuthError('No valid session')
-  }
-
   const response = await fetch(
     `${config().VIRTUOSO_ADAPTER_URL}/api/graphs/${encodeURIComponent(uri)}`,
     {
       method: 'DELETE',
       headers: {
-        Authorization: `Bearer ${token}`
+        'X-Adapter-Token': config().VIRTUOSO_ADAPTER_TOKEN
       }
     }
   )
-
-  if (response.status === 401) {
-    await deleteSession()
-    throw new AuthError('Session expired')
-  }
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({}))
@@ -276,7 +259,7 @@ export async function deleteGraph(uri: string): Promise<void> {
 }
 
 export async function clearRepository(): Promise<void> {
-  await executeIsqlWithAuth('log_enable(3,1); RDF_GLOBAL_RESET()')
+  await executeIsqlCommand('log_enable(3,1); RDF_GLOBAL_RESET()')
 }
 
 export async function getEndpointStats(): Promise<EndpointStats> {

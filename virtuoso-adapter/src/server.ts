@@ -5,9 +5,9 @@ import express, {
   type Response
 } from 'express'
 import { config, IMPORTS_PATH } from './config'
+import { closePool, initPool } from './database'
 import { logger } from './logger'
 import { authenticateRequest } from './middleware/auth'
-import { login, logout } from './routes/auth'
 import {
   deleteSharedFiles,
   downloadSharedFile,
@@ -28,12 +28,6 @@ import {
   uploadSnippet
 } from './routes/import'
 import { sqlQuery } from './routes/query'
-import {
-  adminPool,
-  destroyAllSessions,
-  initAdminPool,
-  startSessionCleanup
-} from './session-manager'
 import { loadSqlScripts } from './sql-loader'
 import type { ErrorResponse } from './types'
 
@@ -81,8 +75,6 @@ const errorHandler = (
 
 // API Routes
 app.get('/health', healthCheck)
-app.post('/api/auth/login', login)
-app.post('/api/auth/logout', logout)
 app.post('/api/query/sql', authenticateRequest, sqlQuery)
 app.post('/api/import/ensure-directory', authenticateRequest, ensureDirectory)
 app.post('/api/import/upload', authenticateRequest, ...uploadFile)
@@ -117,16 +109,13 @@ async function startServer(): Promise<void> {
 
   try {
     await ensureExportsDirectory()
-    await initAdminPool()
-    startSessionCleanup()
-    if (adminPool) {
-      try {
-        await loadSqlScripts()
-      } catch (error) {
-        logger.error('Failed to load SQL scripts on startup', {
-          error: (error as Error).message
-        })
-      }
+    await initPool()
+    try {
+      await loadSqlScripts()
+    } catch (error) {
+      logger.error('Failed to load SQL scripts on startup', {
+        error: (error as Error).message
+      })
     }
   } catch (error) {
     logger.error('Failed to initialize exports directory', {
@@ -143,7 +132,7 @@ async function startServer(): Promise<void> {
 // Handle graceful shutdown
 process.on('SIGINT', async () => {
   logger.info('Shutting down server...')
-  await destroyAllSessions()
+  await closePool()
   process.exit(0)
 })
 

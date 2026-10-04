@@ -1,4 +1,4 @@
-import { executeIsqlWithAuth } from '@/providers/virtuoso/odbc-connection'
+import { executeIsqlCommand } from '@/providers/virtuoso/odbc-connection'
 
 type StatValue = string | number | null
 
@@ -17,7 +17,7 @@ export async function sysStat(
       sqlQuery = `SELECT sys_stat('${id}') AS "${id}"`
     }
 
-    const data = await executeIsqlWithAuth<Record<string, unknown>[]>(sqlQuery)
+    const data = await executeIsqlCommand<Record<string, unknown>[]>(sqlQuery)
     const result = data[0]
     const keys = Object.keys(result)
     const values = Object.values(result)
