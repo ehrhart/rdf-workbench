@@ -41,8 +41,18 @@ export function getAiConfig(): AiConfig | null {
     return null
   }
 
-  cachedConfig = aiConfigSchema.parse(process.env)
-  return cachedConfig
+  const parsed = aiConfigSchema.safeParse(process.env)
+  if (!parsed.success) {
+    console.error(
+      '[ask] AI environment variables are invalid, assistant disabled:',
+      z.prettifyError(parsed.error)
+    )
+    cachedConfig = null
+    return null
+  }
+
+  cachedConfig = parsed.data
+  return parsed.data
 }
 
 export function isAiAskEnabled(): boolean {
