@@ -94,7 +94,9 @@ export async function POST(request: NextRequest) {
         const metadata: AskMessageMetadata = {
           durationMs: Date.now() - startedAt,
           stepCount,
-          budgetReached: stepCount >= aiConfig.AI_MAX_STEPS,
+          budgetReached:
+            part.finishReason === 'tool-calls' &&
+            stepCount >= aiConfig.AI_MAX_STEPS,
           usage: {
             inputTokens: part.totalUsage?.inputTokens,
             outputTokens: part.totalUsage?.outputTokens
