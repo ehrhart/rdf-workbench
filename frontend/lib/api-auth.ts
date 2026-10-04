@@ -1,6 +1,7 @@
 import 'server-only'
 
 import { NextResponse } from 'next/server'
+import { anonymousAskEnabled } from '@/config/access'
 import { getWorkbenchRuntime } from '@/lib/runtime'
 import type { Principal } from '@/lib/runtime/contracts'
 
@@ -50,6 +51,25 @@ export async function requirePrincipal(): Promise<PrincipalGuard> {
   if (resolved.response) return { response: resolved.response }
   if (!resolved.principal) return { response: unauthenticatedResponse() }
   return { principal: resolved.principal }
+}
+
+export type MaybeAnonymousGuard =
+  | { principal: Principal | null; response?: undefined }
+  | { principal?: undefined; response: NextResponse }
+
+/**
+ * Like requirePrincipal, but resolves to a null principal for
+ * unauthenticated callers when the anonymous-ask flag is on. Auth
+ * adapter failures still answer 503: an outage is not the same as an
+ * anonymous caller.
+ */
+export async function requireAskPrincipal(): Promise<MaybeAnonymousGuard> {
+  const resolved = await resolvePrincipal()
+  if (resolved.response) return { response: resolved.response }
+  if (!resolved.principal && !anonymousAskEnabled()) {
+    return { response: unauthenticatedResponse() }
+  }
+  return { principal: resolved.principal ?? null }
 }
 
 /**

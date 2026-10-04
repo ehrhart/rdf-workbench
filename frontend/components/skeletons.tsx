@@ -66,6 +66,21 @@ export function PrefixListSkeleton() {
   )
 }
 
+export function AskConsoleSkeleton() {
+  return (
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex h-12 shrink-0 items-center border-b px-4">
+        <Skeleton className="h-4 w-40" />
+      </div>
+      <div className="mx-auto w-full max-w-3xl space-y-4 px-4 py-6">
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-5/6" />
+        <Skeleton className="h-4 w-2/3" />
+      </div>
+    </div>
+  )
+}
+
 export function QueryConsoleSkeleton() {
   return (
     <div className="space-y-4">

@@ -2,7 +2,7 @@ import 'server-only'
 
 import { notFound, redirect } from 'next/navigation'
 import type { AccessLevel } from '@/config/access'
-import { anonymousReadEnabled } from '@/config/access'
+import { anonymousAskEnabled, anonymousReadEnabled } from '@/config/access'
 import { getRuntimeConfig } from './config'
 import type {
   FeatureId,
@@ -58,7 +58,7 @@ export async function requireAnyFeature(
  * pages: anonymous users are redirected to `/logout` (with an optional
  * `redirect` target, as `/admin/users` hardcodes today) and non-admins
  * opening an `admin` page get a 404. `public` and flag-backed
- * `anonymousRead` pass through.
+ * `anonymousRead`/`anonymousAsk` pass through.
  */
 export async function requirePageAccess(
   access: AccessLevel,
@@ -67,7 +67,8 @@ export async function requirePageAccess(
   const requiresPrincipal =
     access === 'session' ||
     access === 'admin' ||
-    (access === 'anonymousRead' && !anonymousReadEnabled())
+    (access === 'anonymousRead' && !anonymousReadEnabled()) ||
+    (access === 'anonymousAsk' && !anonymousAskEnabled())
   if (!requiresPrincipal) return
 
   const principal = await (await getWorkbenchRuntime()).auth.getPrincipal()

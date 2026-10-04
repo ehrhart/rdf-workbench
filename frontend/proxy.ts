@@ -1,5 +1,9 @@
 import { type NextRequest, NextResponse } from 'next/server'
-import { anonymousReadEnabled, resolveAccess } from '@/config/access'
+import {
+  anonymousAskEnabled,
+  anonymousReadEnabled,
+  resolveAccess
+} from '@/config/access'
 import type { FeatureId, TriplestoreProvider } from '@/lib/runtime/contracts'
 import { computeFeatures } from '@/lib/runtime/features'
 import {
@@ -44,14 +48,19 @@ export async function proxy(request: NextRequest) {
     features: provider
       ? computeFeatures(provider, process.env)
       : new Set<FeatureId>(),
-    anonymousReadEnabled: anonymousReadEnabled()
+    anonymousReadEnabled: anonymousReadEnabled(),
+    anonymousAskEnabled: anonymousAskEnabled()
   })
 
   if (decision.featureMissing) {
     return new NextResponse('Not Found', { status: 404 })
   }
 
-  if (decision.access === 'public' || decision.access === 'anonymousRead') {
+  if (
+    decision.access === 'public' ||
+    decision.access === 'anonymousRead' ||
+    decision.access === 'anonymousAsk'
+  ) {
     return NextResponse.next()
   }
 

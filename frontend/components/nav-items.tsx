@@ -8,12 +8,17 @@ import {
   type LucideIcon,
   NetworkIcon,
   SettingsIcon,
+  SparklesIcon,
   SquareActivityIcon,
   TerminalIcon
 } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
+import {
+  type ChatSessionContextValue,
+  useChatSessionOptional
+} from '@/components/ask/chat-session'
 import {
   Collapsible,
   CollapsibleContent,
@@ -41,11 +46,26 @@ import type { NavIcon, NavItem } from '@/config/navigation'
 const NAV_ICONS: Record<NavIcon, LucideIcon> = {
   activity: SquareActivityIcon,
   braces: BracesIcon,
+  chat: SparklesIcon,
   help: HelpCircleIcon,
   import: ImportIcon,
   network: NetworkIcon,
   settings: SettingsIcon,
   terminal: TerminalIcon
+}
+
+/**
+ * Anonymous chats live at /ask with no conversation id, so clicking Ask
+ * again is a same-URL router no-op that the nav intercepts to reset the
+ * chat.
+ */
+function isAnonymousAskReset(
+  session: ChatSessionContextValue | null,
+  pathname: string
+): session is ChatSessionContextValue {
+  return (
+    session !== null && session.user === null && pathname.startsWith('/ask')
+  )
 }
 
 export function NavItems({
@@ -56,7 +76,16 @@ export function NavItems({
 } & React.ComponentPropsWithoutRef<typeof SidebarGroup>) {
   const pathname = usePathname()
   const { state } = useSidebar()
+  const session = useChatSessionOptional()
   const [openItems, setOpenItems] = useState<Record<string, boolean>>({})
+
+  const handleAskClick = (event: React.MouseEvent) => {
+    if (!isAnonymousAskReset(session, pathname)) {
+      return
+    }
+    event.preventDefault()
+    session.newChat()
+  }
 
   return (
     <SidebarGroup {...props}>
@@ -88,6 +117,7 @@ export function NavItems({
                       href={item.url ?? '#'}
                       target={item.target}
                       rel={item.rel}
+                      onClick={item.url === '/ask' ? handleAskClick : undefined}
                     >
                       {ItemIcon && <ItemIcon />}
                       <span className="group-data-[collapsible=icon]:hidden">

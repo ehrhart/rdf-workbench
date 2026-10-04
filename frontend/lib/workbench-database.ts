@@ -120,6 +120,99 @@ function migrate(db: Database.Database): void {
     })()
   }
 
+  if (current.version < 5) {
+    db.transaction(() => {
+      db.exec(`
+        CREATE TABLE dataset_profiles (
+          id TEXT PRIMARY KEY,
+          provider TEXT NOT NULL,
+          endpoint TEXT NOT NULL,
+          built_at TEXT NOT NULL,
+          triple_count INTEGER,
+          prefixes TEXT NOT NULL DEFAULT '{}',
+          graphs TEXT NOT NULL DEFAULT '[]'
+        );
+
+        CREATE TABLE profile_classes (
+          profile_id TEXT NOT NULL REFERENCES dataset_profiles(id) ON DELETE CASCADE,
+          position INTEGER NOT NULL,
+          iri TEXT NOT NULL,
+          label TEXT,
+          instance_count INTEGER NOT NULL
+        );
+        CREATE INDEX profile_classes_profile_idx ON profile_classes(profile_id);
+
+        CREATE TABLE profile_properties (
+          profile_id TEXT NOT NULL REFERENCES dataset_profiles(id) ON DELETE CASCADE,
+          class_iri TEXT NOT NULL,
+          iri TEXT NOT NULL,
+          usage_count INTEGER NOT NULL,
+          object_types TEXT NOT NULL,
+          samples TEXT NOT NULL
+        );
+        CREATE INDEX profile_properties_profile_idx ON profile_properties(profile_id);
+      `)
+      db.prepare(
+        'INSERT INTO schema_migrations (version, applied_at) VALUES (5, ?)'
+      ).run(new Date().toISOString())
+    })()
+  }
+
+  if (current.version < 6) {
+    db.transaction(() => {
+      db.exec(`
+        CREATE TABLE conversations (
+          id TEXT PRIMARY KEY,
+          owner_id TEXT NOT NULL,
+          title TEXT NOT NULL,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL
+        );
+        CREATE INDEX conversations_owner_idx ON conversations(owner_id, updated_at DESC);
+
+        CREATE TABLE conversation_messages (
+          conversation_id TEXT NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+          position INTEGER NOT NULL,
+          message TEXT NOT NULL,
+          PRIMARY KEY (conversation_id, position)
+        );
+      `)
+      db.prepare(
+        'INSERT INTO schema_migrations (version, applied_at) VALUES (6, ?)'
+      ).run(new Date().toISOString())
+    })()
+  }
+
+  if (current.version < 7) {
+    db.transaction(() => {
+      db.exec(`
+        CREATE TABLE ai_settings (
+          id INTEGER PRIMARY KEY CHECK (id = 1),
+          example_questions TEXT NOT NULL DEFAULT '[]',
+          custom_instruction TEXT NOT NULL DEFAULT '',
+          updated_at TEXT NOT NULL
+        );
+      `)
+      db.prepare(
+        'INSERT INTO ai_settings (id, example_questions, custom_instruction, updated_at) VALUES (1, ?, ?, ?)'
+      ).run('[]', '', new Date().toISOString())
+      db.prepare(
+        'INSERT INTO schema_migrations (version, applied_at) VALUES (7, ?)'
+      ).run(new Date().toISOString())
+    })()
+  }
+
+  if (current.version < 8) {
+    db.transaction(() => {
+      db.exec(`
+        ALTER TABLE ai_settings ADD COLUMN graph_knowledge TEXT NOT NULL DEFAULT '';
+      `)
+      db.prepare(
+        'INSERT INTO schema_migrations (version, applied_at) VALUES (8, ?)'
+      ).run(new Date().toISOString())
+    })()
+  }
+
   const prefixCount = db
     .prepare('SELECT COUNT(*) AS count FROM prefixes')
     .get() as {

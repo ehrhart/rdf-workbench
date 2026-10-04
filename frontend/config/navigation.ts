@@ -1,9 +1,10 @@
-import { resolveBaseAccess } from '@/config/access'
+import { anonymousAskEnabled, resolveBaseAccess } from '@/config/access'
 import type { FeatureId, TriplestoreProvider } from '@/lib/runtime/contracts'
 
 export type NavIcon =
   | 'activity'
   | 'braces'
+  | 'chat'
   | 'help'
   | 'import'
   | 'network'
@@ -83,6 +84,12 @@ const navMain: NavItem[] = [
     icon: 'braces'
   },
   {
+    title: 'Ask',
+    url: '/ask',
+    icon: 'chat',
+    requiredFeature: 'ai-ask'
+  },
+  {
     title: 'ISQL Console',
     url: '/isql',
     icon: 'terminal',
@@ -129,6 +136,12 @@ const navMain: NavItem[] = [
         title: 'Saved Queries',
         url: '/admin/saved-queries',
         requiredRole: 'admin'
+      },
+      {
+        title: 'AI',
+        url: '/admin/ai',
+        requiredRole: 'admin',
+        requiredFeature: 'ai-ask'
       },
       {
         title: 'Users',
@@ -191,6 +204,9 @@ function isVisible(item: NavItem, user: NavUser | null): boolean {
   if (item.url) {
     const baseAccess = resolveBaseAccess(item.url)
     if ((baseAccess === 'session' || baseAccess === 'admin') && !user) {
+      return false
+    }
+    if (baseAccess === 'anonymousAsk' && !user && !anonymousAskEnabled()) {
       return false
     }
   }
