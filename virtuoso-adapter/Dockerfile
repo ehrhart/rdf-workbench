@@ -32,16 +32,17 @@ RUN set -e; \
     fi
 
 # Copy package files first to leverage Docker cache
-COPY package.json package-lock.json ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
 # Install dependencies
-RUN npm ci
+RUN corepack enable && corepack prepare pnpm@11.21.0 --activate && \
+    pnpm install --frozen-lockfile
 
 # Copy the rest of the project files
 COPY . .
 
 # Build TypeScript code
-RUN npm run build
+RUN pnpm build
 
 # Expose the specified port
 EXPOSE 50118
@@ -50,4 +51,4 @@ EXPOSE 50118
 ENV NODE_ENV=production
 
 # Start the application
-CMD ["npm", "start"]
+CMD ["node", "dist/server.js"]

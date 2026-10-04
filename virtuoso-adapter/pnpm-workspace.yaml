@@ -1,0 +1,2 @@
+allowBuilds:
+  odbc@https://codeload.github.com/ehrhart/node-odbc/tar.gz/ac483c5ec762ba704f9c3d3722ae982a33d62104: true
