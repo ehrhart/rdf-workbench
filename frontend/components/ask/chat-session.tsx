@@ -77,6 +77,7 @@ export function ChatSessionProvider({
   const [conversations, setConversations] = useState<ConversationDto[]>([])
   const [conversationsLoading, setConversationsLoading] = useState(false)
   const persistingRef = useRef(false)
+  const latestQueuedSnapshotRef = useRef<UIMessage[] | null>(null)
   const pendingScrollRef = useRef(false)
   const conversationIdRef = useRef<string | null>(null)
   const suppressCreateRef = useRef(false)
@@ -117,10 +118,7 @@ export function ChatSessionProvider({
     void refreshConversations()
   }, [refreshConversations, user])
 
-  const persistConversation = async (finishedMessages: UIMessage[]) => {
-    if (!user) return
-    if (persistingRef.current) return
-    persistingRef.current = true
+  const persistConversationMessages = async (finishedMessages: UIMessage[]) => {
     try {
       let id = conversationIdRef.current
       if (!id && suppressCreateRef.current) {
@@ -194,6 +192,23 @@ export function ChatSessionProvider({
         '[ask] conversation persistence failed:',
         error instanceof Error ? error.message : error
       )
+    }
+  }
+
+  const persistConversation = async (finishedMessages: UIMessage[]) => {
+    if (!user) return
+    if (persistingRef.current) {
+      latestQueuedSnapshotRef.current = finishedMessages
+      return
+    }
+    persistingRef.current = true
+    try {
+      let batch: UIMessage[] | null = finishedMessages
+      while (batch) {
+        latestQueuedSnapshotRef.current = null
+        await persistConversationMessages(batch)
+        batch = latestQueuedSnapshotRef.current
+      }
     } finally {
       persistingRef.current = false
     }
