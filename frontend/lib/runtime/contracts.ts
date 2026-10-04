@@ -142,6 +142,7 @@ export interface EndpointOverview {
   healthy: boolean
   name: string
   provider: TriplestoreProvider
+  totalTriples: number | null
   stats: Record<string, string | number | boolean | null>
   settings?: Record<string, string | number | boolean | null>
 }

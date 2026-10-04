@@ -239,16 +239,10 @@ async function readTotalTriples(): Promise<number | null> {
   const runtime = await getWorkbenchRuntime()
   try {
     const overview = await runtime.getEndpointOverview()
-    const total = overview.stats.totalTriples
-    if (typeof total === 'number') return total
-    if (typeof total === 'string') {
-      const parsed = Number(total)
-      return Number.isFinite(parsed) ? parsed : null
-    }
+    return overview.totalTriples
   } catch {
     return null
   }
-  return null
 }
 
 async function mapWithConcurrency<T, R>(

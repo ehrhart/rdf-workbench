@@ -38,6 +38,10 @@ export async function getQleverEndpointOverview(): Promise<EndpointOverview> {
     healthy: ping.ok,
     name: String(stats['name-index'] || 'QLever endpoint'),
     provider: 'qlever',
+    totalTriples:
+      typeof stats['num-triples-normal'] === 'number'
+        ? stats['num-triples-normal']
+        : null,
     stats,
     settings
   }

@@ -25,9 +25,8 @@ async function StatsSection() {
   ])
   const stats = {
     totalTriples:
-      typeof overview?.stats['num-triples-normal'] === 'number'
-        ? overview.stats['num-triples-normal']
-        : graphs.reduce((sum, graph) => sum + graph.tripleCount, 0),
+      overview?.totalTriples ??
+      graphs.reduce((sum, graph) => sum + graph.tripleCount, 0),
     namedGraphs: graphs.length
   }
   const isUnavailable = overview === null || overview.healthy === false

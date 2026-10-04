@@ -71,6 +71,7 @@ export const virtuosoRuntime: WorkbenchRuntime = {
       healthy: adapter,
       name: 'Virtuoso',
       provider: 'virtuoso',
+      totalTriples: stats.totalTriples,
       stats: {
         'total-triples': stats.totalTriples,
         'named-graphs': stats.namedGraphs

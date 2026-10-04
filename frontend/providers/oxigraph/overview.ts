@@ -20,6 +20,7 @@ export async function getOxigraphEndpointOverview(): Promise<EndpointOverview> {
     healthy: true,
     name: 'Oxigraph',
     provider: 'oxigraph',
+    totalTriples,
     stats: {
       'num-triples-normal': totalTriples,
       'named-graphs': graphs.length
