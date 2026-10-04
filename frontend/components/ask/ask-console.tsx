@@ -928,7 +928,6 @@ export function AskConsole({
   initialProfileSummary,
   initialExampleQuestions
 }: AskConsoleProps) {
-  const [profileSummary, setProfileSummary] = useState(initialProfileSummary)
   const [input, setInput] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const { scrollRef, contentRef, isAtBottom, scrollToBottom } =
@@ -1117,7 +1116,7 @@ export function AskConsole({
       </div>
       <div className="mx-auto w-full max-w-3xl shrink-0 px-4 pb-4">
         <div className="mb-1.5 flex items-center">
-          <DatasetChip summary={profileSummary} onRebuilt={setProfileSummary} />
+          <DatasetChip summary={initialProfileSummary} />
         </div>
         <div className="flex items-end gap-2">
           <Textarea
