@@ -27,6 +27,7 @@ const MAX_TITLE_LENGTH = 120
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 export const MAX_CONVERSATION_MESSAGES = 200
+const MAX_MESSAGES_JSON_LENGTH = 4_000_000
 const MESSAGE_ROLES = new Set(['user', 'assistant', 'system'])
 
 const CONVERSATION_SELECT = `
@@ -152,6 +153,22 @@ export async function replaceMessages(
     )
   }
 
+  let serializedMessages: string[]
+  try {
+    serializedMessages = messages.map((message) => JSON.stringify(message))
+  } catch {
+    throw new QueryError('Messages must be JSON-serializable')
+  }
+  const totalLength = serializedMessages.reduce(
+    (total, serialized) => total + serialized.length,
+    0
+  )
+  if (totalLength > MAX_MESSAGES_JSON_LENGTH) {
+    throw new QueryError(
+      `Messages must total at most ${MAX_MESSAGES_JSON_LENGTH} characters`
+    )
+  }
+
   const db = await getWorkbenchDatabase()
   return db.transaction(() => {
     const owned = db
@@ -165,8 +182,8 @@ export async function replaceMessages(
     const insert = db.prepare(
       'INSERT INTO conversation_messages (conversation_id, position, message) VALUES (?, ?, ?)'
     )
-    messages.forEach((message, position) => {
-      insert.run(id, position, JSON.stringify(message))
+    serializedMessages.forEach((serialized, position) => {
+      insert.run(id, position, serialized)
     })
     db.prepare('UPDATE conversations SET updated_at = ? WHERE id = ?').run(
       new Date().toISOString(),

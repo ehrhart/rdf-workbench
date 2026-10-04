@@ -78,6 +78,7 @@ export function ChatSessionProvider({
   const [conversationsLoading, setConversationsLoading] = useState(false)
   const persistingRef = useRef(false)
   const latestQueuedSnapshotRef = useRef<UIMessage[] | null>(null)
+  const persistErrorNotifiedRef = useRef<string | null>(null)
   const pendingScrollRef = useRef(false)
   const conversationIdRef = useRef<string | null>(null)
   const suppressCreateRef = useRef(false)
@@ -91,6 +92,7 @@ export function ChatSessionProvider({
   // they can run after the state has already changed.
   const applyConversationId = useCallback((id: string | null) => {
     conversationIdRef.current = id
+    persistErrorNotifiedRef.current = null
     setConversationId(id)
   }, [])
 
@@ -184,6 +186,15 @@ export function ChatSessionProvider({
         }
       }
       if (saved.status === 401) {
+        return
+      }
+      if (!saved.ok) {
+        if (persistErrorNotifiedRef.current !== id) {
+          persistErrorNotifiedRef.current = id
+          toast.error(
+            'This conversation could not be saved. New messages will not be stored.'
+          )
+        }
         return
       }
       void refreshConversations()
