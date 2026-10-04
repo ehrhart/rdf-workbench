@@ -10,10 +10,17 @@ import type { FeatureId } from '@/lib/runtime/contracts'
  * - `public`: reachable without a session, flag or no flag.
  * - `anonymousRead`: reachable without a session while
  *   `ALLOW_ANONYMOUS_READ` is set; requires a session otherwise.
+ * - `anonymousAsk`: reachable without a session while
+ *   `ALLOW_ANONYMOUS_ASK` is set; requires a session otherwise.
  * - `session`: requires an authenticated principal (any role).
  * - `admin`: requires an authenticated principal with the admin role.
  */
-export type AccessLevel = 'public' | 'anonymousRead' | 'session' | 'admin'
+export type AccessLevel =
+  | 'public'
+  | 'anonymousRead'
+  | 'anonymousAsk'
+  | 'session'
+  | 'admin'
 
 export interface AccessRule {
   /**
@@ -52,15 +59,14 @@ export const ACCESS_RULES: AccessRule[] = [
   // handled at the endpoint layer, not in this list.
   { pattern: '/api/sparql', access: 'public' },
 
-  // Ask spends the deployment's LLM budget, so it requires a session even
-  // under the anonymous-read flag.
-  { pattern: '/api/ask', access: 'session' },
-  { pattern: '/ask', access: 'session' },
+  // Ask spends the deployment's LLM budget: ALLOW_ANONYMOUS_ASK lets
+  // anonymous visitors chat, otherwise a session is required. Anonymous
+  // chats are not saved, so /api/conversations stays session-only; the
+  // profile rebuild stays admin-gated in-route.
+  { pattern: '/api/ask', access: 'anonymousAsk' },
+  { pattern: '/ask', access: 'anonymousAsk' },
   { pattern: '/api/conversations', access: 'session' },
 
-  // The import and export APIs talk to the Virtuoso adapter only, so they
-  // gate on the virtuoso feature and 404 elsewhere before the handler can
-  // touch virtuoso config.
   { pattern: '/api/isql', access: 'session', feature: 'virtuoso-isql' },
   { pattern: '/api/import', access: 'session', feature: 'virtuoso-import' },
   { pattern: '/api/export', access: 'session', feature: 'virtuoso-export' },
@@ -113,6 +119,11 @@ export function anonymousReadEnabled(): boolean {
   return value === '1' || value?.toLowerCase() === 'true'
 }
 
+export function anonymousAskEnabled(): boolean {
+  const value = process.env.ALLOW_ANONYMOUS_ASK
+  return value === '1' || value?.toLowerCase() === 'true'
+}
+
 /**
  * Raw access level of the first matching rule, without applying the
  * anonymous-read flag or resolving features. Used by sidebar visibility,
@@ -129,6 +140,7 @@ export function resolveBaseAccess(pathname: string): AccessLevel {
 export interface AccessOptions {
   features: ReadonlySet<FeatureId>
   anonymousReadEnabled: boolean
+  anonymousAskEnabled: boolean
 }
 
 export interface AccessDecision {
@@ -140,11 +152,12 @@ export interface AccessDecision {
 /**
  * Resolves the access decision for a pathname against the manifest.
  * Returns the first matching rule's level; `anonymousRead` becomes
- * `session` when the anonymous-read flag is off; unlisted paths return
- * `session` (anything unknown is treated as session-protected). Callers
- * enforce the decision: `public` passes, `session`/`admin` require a
- * principal (plus the admin role for `admin`), and `featureMissing`
- * means the route should 404.
+ * `session` when the anonymous-read flag is off, and `anonymousAsk`
+ * becomes `session` the same way when the anonymous-ask flag is off;
+ * unlisted paths return `session` (fail closed). Callers enforce the
+ * decision: `public` passes, `session`/`admin` require a principal
+ * (plus the admin role for `admin`), and `featureMissing` means the
+ * route should 404.
  */
 export function resolveAccess(
   pathname: string,
@@ -159,7 +172,8 @@ export function resolveAccess(
   }
 
   const access: AccessLevel =
-    rule.access === 'anonymousRead' && !options.anonymousReadEnabled
+    (rule.access === 'anonymousRead' && !options.anonymousReadEnabled) ||
+    (rule.access === 'anonymousAsk' && !options.anonymousAskEnabled)
       ? 'session'
       : rule.access
   const featureMissing = rule.feature

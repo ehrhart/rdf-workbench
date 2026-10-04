@@ -6,23 +6,8 @@ import {
   renameConversation
 } from '@/lib/ai/conversation-store'
 import { requirePrincipal } from '@/lib/api-auth'
-import { QueryError } from '@/lib/errors'
 import { isSameOriginMutation, sameOriginError } from '@/lib/same-origin'
-
-const notFound = () =>
-  NextResponse.json({ error: 'Conversation not found' }, { status: 404 })
-
-const errorResponse = (error: unknown) => {
-  if (error instanceof QueryError) {
-    return NextResponse.json({ error: error.message }, { status: 400 })
-  }
-
-  console.error('Unexpected conversation API error:', error)
-  return NextResponse.json(
-    { error: 'Unexpected server error while handling the conversation' },
-    { status: 500 }
-  )
-}
+import { errorResponse, notFound } from '../shared'
 
 export async function GET(
   _request: Request,
@@ -39,7 +24,7 @@ export async function GET(
     const messages = await getMessages(id, principal.id)
     return NextResponse.json({ conversation, messages })
   } catch (error) {
-    return errorResponse(error)
+    return errorResponse('conversation', error)
   }
 }
 
@@ -63,7 +48,7 @@ export async function PATCH(
     if (!conversation) return notFound()
     return NextResponse.json({ conversation })
   } catch (error) {
-    return errorResponse(error)
+    return errorResponse('conversation', error)
   }
 }
 
@@ -82,6 +67,6 @@ export async function DELETE(
     if (!deleted) return notFound()
     return NextResponse.json({ ok: true })
   } catch (error) {
-    return errorResponse(error)
+    return errorResponse('conversation', error)
   }
 }

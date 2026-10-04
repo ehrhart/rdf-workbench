@@ -319,9 +319,8 @@ body {
   stroke-dashoffset: 0;
 }
 
-/* Chat prose: typography plugin palette mapped to the design tokens, so
-   both themes follow the app's own colors instead of prose defaults. */
 .chat-prose {
+  max-width: none;
   --tw-prose-body: var(--foreground);
   --tw-prose-headings: var(--foreground);
   --tw-prose-lead: var(--muted-foreground);

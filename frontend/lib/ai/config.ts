@@ -7,7 +7,7 @@ const aiConfigSchema = z.object({
   AI_BASE_URL: z.string().url(),
   AI_API_KEY: z.string().min(1),
   AI_MODEL: z.string().min(1),
-  AI_MAX_STEPS: z.coerce.number().int().min(2).max(20).default(10),
+  AI_MAX_STEPS: z.coerce.number().int().min(2).max(20).default(20),
   AI_QUERY_TIMEOUT_MS: z.coerce
     .number()
     .int()
@@ -30,8 +30,8 @@ export type AiConfig = z.infer<typeof aiConfigSchema>
 let cachedConfig: AiConfig | null | undefined
 
 /**
- * Parsed on demand so deployments without AI settings keep working and the
- * Next.js build never embeds the key.
+ * Parsed on demand so deployments without AI settings keep working and
+ * the Next.js build never embeds the key.
  */
 export function getAiConfig(): AiConfig | null {
   if (cachedConfig !== undefined) return cachedConfig

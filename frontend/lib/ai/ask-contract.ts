@@ -1,6 +1,6 @@
 /**
- * Client-facing DTOs for the ask feature. Shared between the server tools,
- * the API routes, and the chat UI so none of them need to import
+ * Client-facing DTOs for the ask feature. Shared by the server tools, the
+ * API routes, and the chat UI so none of them have to import
  * server-only modules.
  */
 
@@ -19,7 +19,7 @@ export interface QuerySuccessOutput {
   rowCount?: number
   truncated?: boolean
   boolean?: boolean
-  /** Wall time of the triplestore round trip in milliseconds. */
+  /** Wall time of the triplestore request in milliseconds. */
   durationMs?: number
   /** True when validation capped the query's LIMIT to the configured maximum. */
   limitEnforced?: boolean
@@ -49,7 +49,6 @@ export interface ProfileResponseDto {
   profile: ProfileSummaryDto | null
   text?: string
   systemPrompt?: string
-  exampleQuestions?: string[]
 }
 
 /** Metadata attached to the streamed assistant message. */

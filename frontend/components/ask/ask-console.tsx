@@ -1,7 +1,6 @@
 'use client'
 
-import { useChat } from '@ai-sdk/react'
-import { DefaultChatTransport, type ToolUIPart, type UIMessage } from 'ai'
+import type { ToolUIPart, UIMessage } from 'ai'
 import {
   AlertTriangleIcon,
   CheckIcon,
@@ -9,21 +8,25 @@ import {
   ChevronRightIcon,
   ClipboardCopyIcon,
   CopyIcon,
-  DatabaseIcon,
   ExternalLinkIcon,
-  HistoryIcon,
   LoaderIcon,
   PencilIcon,
-  PlusIcon,
   RefreshCwIcon,
   SaveIcon,
   SearchIcon,
   TableIcon,
-  TrashIcon,
   XIcon
 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
+import { useStickToBottom } from 'use-stick-to-bottom'
+import { ChatHeader } from '@/components/ask/chat-header'
+import {
+  isTextPart,
+  messageText,
+  useChatSession
+} from '@/components/ask/chat-session'
+import { DatasetChip } from '@/components/ask/dataset-chip'
 import { MarkdownText } from '@/components/ask/markdown-text'
 import { diffQueryLines } from '@/components/ask/query-diff'
 import {
@@ -36,20 +39,14 @@ import {
   CollapsibleContent,
   CollapsibleTrigger
 } from '@/components/ui/collapsible'
-import { Input } from '@/components/ui/input'
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle
-} from '@/components/ui/sheet'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger
+} from '@/components/ui/tooltip'
 import type {
   AskMessageMetadata,
-  ConversationDto,
-  ProfileResponseDto,
   ProfileSummaryDto,
   QuerySuccessOutput,
   RunQueryOutput,
@@ -59,24 +56,13 @@ import { cn } from '@/lib/utils'
 
 interface AskConsoleProps {
   initialProfileSummary: ProfileSummaryDto | null
+  initialExampleQuestions: string[]
 }
-
-const FALLBACK_EXAMPLE_QUESTIONS = [
-  'How many distinct resources does each class have?',
-  'Which properties connect the main classes?',
-  'List 10 resources with their labels.'
-]
 
 const RESULT_ROW_PREVIEW_COUNT = 8
 const DIFF_LINE_LIMIT = 12
 
 type ChatPart = UIMessage['parts'][number]
-
-function isTextPart(
-  part: ChatPart
-): part is Extract<ChatPart, { type: 'text' }> {
-  return part.type === 'text'
-}
 
 function isReasoningPart(
   part: ChatPart
@@ -151,14 +137,6 @@ function splitSparqlBlocks(text: string): TextBlock[] {
   return blocks
 }
 
-function formatTimestamp(iso: string): string {
-  try {
-    return `${new Date(iso).toISOString().slice(0, 16).replace('T', ' ')} UTC`
-  } catch {
-    return iso
-  }
-}
-
 function compactCount(value: number): string {
   if (value >= 1_000_000) {
     const millions = value / 1_000_000
@@ -186,13 +164,6 @@ function buildCsv(
     )
   }
   return lines.join('\n')
-}
-
-function messageText(message: UIMessage): string {
-  return message.parts
-    .filter(isTextPart)
-    .map((part) => part.text)
-    .join('\n')
 }
 
 function HighlightedQueryBlock({
@@ -295,8 +266,9 @@ function ResultTable({ output }: { output: QuerySuccessOutput }) {
             </tr>
           </thead>
           <tbody>
-            {visibleRows.map((row) => (
-              <tr key={JSON.stringify(row)} className="border-t">
+            {visibleRows.map((row, rowIndex) => (
+              // biome-ignore lint/suspicious/noArrayIndexKey: positional result rows may legitimately duplicate and never reorder
+              <tr key={rowIndex} className="border-t">
                 {variables.map((variable) => {
                   const text = row[variable] ?? ''
                   const link = links?.[text]
@@ -410,6 +382,28 @@ function QueryBlock({
   )
 }
 
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false)
+  return (
+    <Button
+      variant="ghost"
+      size="icon-xs"
+      onClick={async () => {
+        try {
+          await navigator.clipboard.writeText(text)
+          setCopied(true)
+          setTimeout(() => setCopied(false), 1500)
+        } catch {
+          toast.error('Failed to copy message')
+        }
+      }}
+    >
+      {copied ? <CheckIcon /> : <CopyIcon />}
+      <span className="sr-only">Copy message</span>
+    </Button>
+  )
+}
+
 function SearchEntitiesCard({ part }: { part: ToolUIPart }) {
   const output = asSearchOutput(part)
   if (!output) return null
@@ -470,16 +464,26 @@ function RunQueryCard({
             <CheckIcon className="size-3.5" />
             {success.kind === 'boolean'
               ? `ASK → ${String(success.boolean)}`
-              : `${success.rowCount ?? 0} rows${success.truncated ? ' (truncated)' : ''}`}
+              : `${success.rowCount ?? 0} ${
+                  (success.rowCount ?? 0) === 1 ? 'row' : 'rows'
+                }${success.truncated ? ' (truncated)' : ''}`}
           </span>
         )}
         {success && typeof success.durationMs === 'number' && (
           <span>· {success.durationMs}ms</span>
         )}
         {success?.limitEnforced && (
-          <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] tracking-wide uppercase">
-            LIMIT enforced
-          </span>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="cursor-help rounded-full bg-muted px-1.5 py-0.5 text-[10px] tracking-wide uppercase">
+                LIMIT enforced
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>
+              The query had no LIMIT or asked for more rows than allowed, so the
+              tool capped it automatically.
+            </TooltipContent>
+          </Tooltip>
         )}
         {output && !output.ok && (
           <span className="flex items-center gap-1 text-destructive">
@@ -610,10 +614,8 @@ type AssistantItem =
     }
 
 /**
- * Flattens an assistant message into renderable items with stable,
- * content-independent keys (occurrence counters and toolCallIds, never array
- * indices). Also tracks the most recent failed query so a successful retry
- * can render a repair diff.
+ * Keys stay content-independent (occurrence counters and toolCallIds, never
+ * array indices) so they survive streaming updates.
  */
 function buildAssistantItems(message: UIMessage): AssistantItem[] {
   const items: AssistantItem[] = []
@@ -671,32 +673,17 @@ function buildAssistantItems(message: UIMessage): AssistantItem[] {
       const output = asQueryOutput(toolPart)
       if (output && !output.ok) {
         failedQuery = output.query ?? asQueryInput(toolPart) ?? null
-        items.push({
-          kind: 'tool-query',
-          key: toolPart.toolCallId,
-          part: toolPart,
-          previousFailedQuery: null
-        })
-      } else if (output?.ok) {
-        items.push({
-          kind: 'tool-query',
-          key: toolPart.toolCallId,
-          part: toolPart,
-          previousFailedQuery: failedQuery
-        })
-        failedQuery = null
-      } else {
-        items.push({
-          kind: 'tool-query',
-          key: toolPart.toolCallId,
-          part: toolPart,
-          previousFailedQuery: null
-        })
       }
+      items.push({
+        kind: 'tool-query',
+        key: toolPart.toolCallId,
+        part: toolPart,
+        previousFailedQuery: output?.ok ? failedQuery : null
+      })
+      if (output?.ok) failedQuery = null
     }
   }
 
-  // The Save button attaches to the message's final fenced query.
   for (let index = items.length - 1; index >= 0; index -= 1) {
     const item = items[index]
     if (item.kind === 'query') {
@@ -708,7 +695,6 @@ function buildAssistantItems(message: UIMessage): AssistantItem[] {
   return items
 }
 
-/** Footer segments: "9.2s · 5 steps · ↑1.2k ↓0.8k · 2 queries, 1 entity search". */
 function buildFooterSegments(
   parts: ChatPart[],
   metadata: Partial<AskMessageMetadata>
@@ -754,11 +740,15 @@ function buildFooterSegments(
 function AssistantMessageView({
   message,
   isLast,
-  lastUserText
+  lastUserText,
+  streaming,
+  onRegenerate
 }: {
   message: UIMessage
   isLast: boolean
   lastUserText: string
+  streaming: boolean
+  onRegenerate: () => void
 }) {
   const metadata = (message.metadata ?? {}) as Partial<AskMessageMetadata>
   const items = useMemo(() => buildAssistantItems(message), [message])
@@ -770,9 +760,10 @@ function AssistantMessageView({
       ),
     [message]
   )
+  const showActions = !(isLast && streaming)
 
   return (
-    <div className="space-y-2.5">
+    <div className="group space-y-2.5">
       {items.map((item) => {
         switch (item.kind) {
           case 'reasoning':
@@ -822,207 +813,138 @@ function AssistantMessageView({
           {footerSegments.join(' · ')}
         </p>
       )}
+      {showActions && (
+        <div className="-ml-1.5 flex items-center gap-0.5 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
+          <CopyButton text={messageText(message)} />
+          {isLast && (
+            <Button variant="ghost" size="icon-xs" onClick={onRegenerate}>
+              <RefreshCwIcon />
+              <span className="sr-only">Regenerate</span>
+            </Button>
+          )}
+        </div>
+      )}
     </div>
   )
 }
 
-function ProfileBar({
-  summary,
-  onRebuilt
+function UserMessageView({
+  message,
+  isLast,
+  streaming,
+  onRegenerate,
+  onEditSubmit
 }: {
-  summary: ProfileSummaryDto
-  onRebuilt: (summary: ProfileSummaryDto) => void
+  message: UIMessage
+  isLast: boolean
+  streaming: boolean
+  onRegenerate: () => void
+  onEditSubmit: (message: UIMessage, text: string) => void
 }) {
-  const [rebuilding, setRebuilding] = useState(false)
-  const [sheetOpen, setSheetOpen] = useState(false)
-  const [full, setFull] = useState<ProfileResponseDto | null>(null)
-  const [loadingFull, setLoadingFull] = useState(false)
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState('')
 
-  const rebuild = async () => {
-    setRebuilding(true)
-    try {
-      const response = await fetch('/api/ask/profile', { method: 'POST' })
-      const payload = (await response.json()) as ProfileResponseDto & {
-        error?: string
-      }
-      if (!response.ok || payload.error) {
-        throw new Error(payload.error ?? 'Profile rebuild failed')
-      }
-      if (payload.profile) onRebuilt(payload.profile)
-      setFull(null)
-      toast.success('Dataset profile rebuilt')
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : 'Profile rebuild failed'
-      )
-    } finally {
-      setRebuilding(false)
-    }
+  const startEditing = () => {
+    setDraft(messageText(message))
+    setEditing(true)
   }
 
-  const openSheet = (open: boolean) => {
-    setSheetOpen(open)
-    if (open && full === null && !loadingFull) {
-      setLoadingFull(true)
-      fetch('/api/ask/profile?full=1')
-        .then((response) => response.json())
-        .then((payload: ProfileResponseDto) => setFull(payload))
-        .catch(() => {
-          setFull({
-            profile: null,
-            text: '(failed to load profile text)',
-            systemPrompt: '(failed to load system prompt)'
-          })
-        })
-        .finally(() => setLoadingFull(false))
-    }
+  const cancelEditing = () => {
+    setEditing(false)
+    setDraft('')
+  }
+
+  const submitEditing = () => {
+    const text = draft.trim()
+    if (!text) return
+    setEditing(false)
+    setDraft('')
+    onEditSubmit(message, text)
+  }
+
+  if (editing) {
+    return (
+      <div className="flex w-full max-w-[85%] flex-col items-end gap-2">
+        <Textarea
+          autoFocus
+          rows={Math.min(10, Math.max(3, draft.split('\n').length))}
+          value={draft}
+          onChange={(event) => setDraft(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Escape') {
+              event.preventDefault()
+              cancelEditing()
+            }
+            if (event.key === 'Enter' && !event.shiftKey) {
+              event.preventDefault()
+              submitEditing()
+            }
+          }}
+          className="w-full resize-none bg-background text-normal-foreground"
+        />
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={cancelEditing}>
+            Cancel
+          </Button>
+          <Button
+            size="sm"
+            onClick={submitEditing}
+            disabled={draft.trim() === ''}
+          >
+            Send
+          </Button>
+        </div>
+      </div>
+    )
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2 rounded-lg border px-3 py-2 text-sm">
-      <DatabaseIcon className="size-4 text-muted-foreground" />
-      <span className="font-medium">
-        {summary.classCount} classes, {summary.propertyCount} properties
-      </span>
-      <span className="text-xs text-muted-foreground">
-        built {formatTimestamp(summary.builtAt)} · {summary.provider}
-      </span>
-      <div className="ml-auto flex items-center gap-1">
-        <Button variant="outline" size="sm" onClick={() => openSheet(true)}>
-          What the model sees
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          onClick={rebuild}
-          disabled={rebuilding}
-        >
-          {rebuilding ? (
-            <LoaderIcon className="animate-spin" />
-          ) : (
-            <RefreshCwIcon />
+    <div className="group flex justify-end">
+      <div className="relative max-w-[80%]">
+        <div className="rounded-lg bg-primary px-3 py-2 text-sm whitespace-pre-wrap text-primary-foreground">
+          {messageText(message)}
+        </div>
+        <div className="absolute top-0 right-full mr-1.5 flex items-center gap-1 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
+          <CopyButton text={messageText(message)} />
+          {isLast && !streaming && (
+            <>
+              <Button variant="ghost" size="icon-xs" onClick={onRegenerate}>
+                <RefreshCwIcon />
+                <span className="sr-only">Regenerate</span>
+              </Button>
+              <Button variant="ghost" size="icon-xs" onClick={startEditing}>
+                <PencilIcon />
+                <span className="sr-only">Edit</span>
+              </Button>
+            </>
           )}
-          <span className="sr-only">Rebuild profile</span>
-        </Button>
+        </div>
       </div>
-      <Sheet open={sheetOpen} onOpenChange={openSheet}>
-        <SheetContent>
-          <SheetHeader>
-            <SheetTitle>What the model sees</SheetTitle>
-            <SheetDescription>
-              Context sent to the model with every question.
-            </SheetDescription>
-          </SheetHeader>
-          <Tabs
-            defaultValue="profile"
-            className="flex min-h-0 flex-1 flex-col gap-2 px-4 pb-4"
-          >
-            <TabsList>
-              <TabsTrigger value="profile">Dataset profile</TabsTrigger>
-              <TabsTrigger value="prompt">System prompt</TabsTrigger>
-            </TabsList>
-            <TabsContent value="profile">
-              <pre className="max-h-[60vh] overflow-auto rounded-md bg-muted p-2 text-xs whitespace-pre-wrap">
-                {full ? (full.text ?? '(no profile)') : 'Loading…'}
-              </pre>
-            </TabsContent>
-            <TabsContent value="prompt">
-              <pre className="max-h-[60vh] overflow-auto rounded-md bg-muted p-2 text-xs whitespace-pre-wrap">
-                {full ? (full.systemPrompt ?? '(none)') : 'Loading…'}
-              </pre>
-            </TabsContent>
-          </Tabs>
-        </SheetContent>
-      </Sheet>
     </div>
   )
 }
 
-export function AskConsole({ initialProfileSummary }: AskConsoleProps) {
+export function AskConsole({
+  initialProfileSummary,
+  initialExampleQuestions
+}: AskConsoleProps) {
   const [profileSummary, setProfileSummary] = useState(initialProfileSummary)
   const [input, setInput] = useState('')
-  const [exampleQuestions, setExampleQuestions] = useState(
-    FALLBACK_EXAMPLE_QUESTIONS
-  )
-  const scrollRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const [showJumpToLatest, setShowJumpToLatest] = useState(false)
-  const pendingScrollRef = useRef(false)
-
-  const [conversationId, setConversationId] = useState<string | null>(null)
-  const [title, setTitle] = useState('')
-  const [editingTitle, setEditingTitle] = useState(false)
-  const [titleDraft, setTitleDraft] = useState('')
-  const titleInputRef = useRef<HTMLInputElement>(null)
-  const [historyOpen, setHistoryOpen] = useState(false)
-  const [conversations, setConversations] = useState<ConversationDto[]>([])
-  const [conversationsLoading, setConversationsLoading] = useState(false)
-  const [renamingId, setRenamingId] = useState<string | null>(null)
-  const [renameDraft, setRenameDraft] = useState('')
-  const [persistenceUnavailable, setPersistenceUnavailable] = useState(false)
-  const persistingRef = useRef(false)
-
-  const persistConversation = async (finishedMessages: UIMessage[]) => {
-    if (persistingRef.current) return
-    persistingRef.current = true
-    try {
-      let id = conversationId
-      if (!id) {
-        const firstUser = finishedMessages.find(
-          (message) => message.role === 'user'
-        )
-        const firstText = firstUser
-          ? messageText(firstUser).trim().slice(0, 60)
-          : ''
-        const response = await fetch('/api/conversations', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ title: firstText || 'New chat' })
-        })
-        if (response.status === 401) {
-          setPersistenceUnavailable(true)
-          return
-        }
-        if (!response.ok) return
-        const payload = (await response.json()) as {
-          conversation: ConversationDto
-        }
-        id = payload.conversation.id
-        setConversationId(id)
-        setTitle(payload.conversation.title)
-      }
-      const saved = await fetch(`/api/conversations/${id}/messages`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: finishedMessages })
-      })
-      if (saved.status === 401) setPersistenceUnavailable(true)
-    } catch (error) {
-      console.error(
-        '[ask] conversation persistence failed:',
-        error instanceof Error ? error.message : error
-      )
-    } finally {
-      persistingRef.current = false
-    }
-  }
-
+  const { scrollRef, contentRef, isAtBottom, scrollToBottom } =
+    useStickToBottom()
   const {
     messages,
+    status,
+    error,
+    streaming,
     sendMessage,
+    stop,
     regenerate,
     setMessages,
-    status,
-    stop,
-    error
-  } = useChat({
-    transport: new DefaultChatTransport({ api: '/api/ask' }),
-    onFinish: ({ messages: finishedMessages }) => {
-      persistConversation(finishedMessages)
-    }
-  })
+    pendingScrollRef
+  } = useChatSession()
 
-  const streaming = status === 'streaming' || status === 'submitted'
   const lastMessage = messages[messages.length - 1]
 
   const lastUserText = useMemo(() => {
@@ -1042,299 +964,84 @@ export function AskConsole({ initialProfileSummary }: AskConsoleProps) {
     return null
   }, [messages])
 
+  // Focus the composer on page load and whenever the chat resets to
+  // empty (New chat, sidebar Ask); leave it alone on conversation loads.
+  const wasEmptyRef = useRef(false)
   useEffect(() => {
-    let cancelled = false
-    fetch('/api/ask/profile')
-      .then((response) => (response.ok ? response.json() : null))
-      .then((payload: ProfileResponseDto | null) => {
-        const questions = payload?.exampleQuestions
-        if (cancelled || !Array.isArray(questions) || questions.length === 0) {
-          return
-        }
-        setExampleQuestions(questions.slice(0, 3))
-      })
-      .catch(() => null)
-    return () => {
-      cancelled = true
-    }
-  }, [])
+    const isEmpty = messages.length === 0
+    if (isEmpty && !wasEmptyRef.current) textareaRef.current?.focus()
+    wasEmptyRef.current = isEmpty
+  }, [messages])
 
+  // Conversation switches jump straight to the latest message. Following
+  // the stream while it runs is handled by use-stick-to-bottom: it stays
+  // pinned to the bottom on content resize while the reader is there and
+  // unlocks on any user scroll gesture (wheel, touch, scrollbar drag,
+  // keyboard).
+  // biome-ignore lint/correctness/useExhaustiveDependencies: messages is an intentional trigger — the effect must re-run when the switched conversation has finished loading
   useEffect(() => {
-    if (editingTitle) titleInputRef.current?.focus()
-  }, [editingTitle])
-
-  // Keep the pane pinned to the bottom while content streams in, unless the
-  // user has scrolled away to read; then offer the jump pill instead.
-  // biome-ignore lint/correctness/useExhaustiveDependencies: messages and status are intentional triggers, not read values — the effect must re-run on every stream update
-  useEffect(() => {
-    const element = scrollRef.current
-    if (!element) return
-    if (pendingScrollRef.current) {
-      pendingScrollRef.current = false
-      element.scrollTo({ top: element.scrollHeight })
-      return
-    }
-    const distance =
-      element.scrollHeight - element.scrollTop - element.clientHeight
-    if (distance <= 120) {
-      element.scrollTo({ top: element.scrollHeight, behavior: 'smooth' })
-    } else if (distance > 200) {
-      setShowJumpToLatest(true)
-    }
-  }, [messages, status])
+    if (!pendingScrollRef.current) return
+    pendingScrollRef.current = false
+    void scrollToBottom({ animation: 'auto' })
+  }, [messages, pendingScrollRef, scrollToBottom])
 
   const send = () => {
     const text = input.trim()
     if (!text || streaming) return
     setInput('')
+    void scrollToBottom()
     sendMessage({ text })
   }
 
-  const editMessage = (message: UIMessage) => {
+  const editMessage = (message: UIMessage, text: string) => {
     const index = messages.findIndex((item) => item.id === message.id)
     if (index < 0) return
     setMessages(messages.slice(0, index))
-    setInput(messageText(message))
-    textareaRef.current?.focus()
-  }
-
-  const startTitleEdit = () => {
-    setTitleDraft(title)
-    setEditingTitle(true)
-  }
-
-  const commitTitle = async () => {
-    setEditingTitle(false)
-    const next = titleDraft.trim()
-    if (!next || next === title) return
-    setTitle(next)
-    if (!conversationId) return
-    try {
-      const response = await fetch(`/api/conversations/${conversationId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: next })
-      })
-      if (response.status === 401) setPersistenceUnavailable(true)
-      else if (!response.ok) throw new Error('Failed to rename conversation')
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : 'Failed to rename conversation'
-      )
-      setTitle(title)
-    }
-  }
-
-  const newChat = () => {
-    setConversationId(null)
-    setTitle('')
-    setEditingTitle(false)
-    setMessages([])
-  }
-
-  const openHistorySheet = (open: boolean) => {
-    setHistoryOpen(open)
-    if (!open) return
-    setConversationsLoading(true)
-    fetch('/api/conversations')
-      .then(async (response) => {
-        if (response.status === 401) {
-          setPersistenceUnavailable(true)
-          setHistoryOpen(false)
-          return null
-        }
-        if (!response.ok) throw new Error('Failed to load conversations')
-        return (await response.json()) as { conversations: ConversationDto[] }
-      })
-      .then((payload) => {
-        if (payload) setConversations(payload.conversations ?? [])
-      })
-      .catch(() => toast.error('Failed to load conversations'))
-      .finally(() => setConversationsLoading(false))
-  }
-
-  const openConversation = async (id: string) => {
-    try {
-      const response = await fetch(`/api/conversations/${id}`)
-      if (response.status === 401) {
-        setPersistenceUnavailable(true)
-        setHistoryOpen(false)
-        return
-      }
-      if (!response.ok) throw new Error('Failed to load conversation')
-      const payload = (await response.json()) as {
-        conversation: ConversationDto
-        messages: UIMessage[]
-      }
-      pendingScrollRef.current = true
-      setMessages((payload.messages ?? []) as UIMessage[])
-      setConversationId(payload.conversation.id)
-      setTitle(payload.conversation.title)
-      setEditingTitle(false)
-      setHistoryOpen(false)
-    } catch (loadError) {
-      toast.error(
-        loadError instanceof Error
-          ? loadError.message
-          : 'Failed to load conversation'
-      )
-    }
-  }
-
-  const startRename = (conversation: ConversationDto) => {
-    setRenamingId(conversation.id)
-    setRenameDraft(conversation.title)
-  }
-
-  const commitRename = async () => {
-    const id = renamingId
-    setRenamingId(null)
-    if (!id) return
-    const next = renameDraft.trim()
-    const current = conversations.find((conversation) => conversation.id === id)
-    if (!next || !current || next === current.title) return
-    setConversations((list) =>
-      list.map((conversation) =>
-        conversation.id === id ? { ...conversation, title: next } : conversation
-      )
-    )
-    if (id === conversationId) setTitle(next)
-    try {
-      const response = await fetch(`/api/conversations/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: next })
-      })
-      if (response.status === 401) setPersistenceUnavailable(true)
-      else if (!response.ok) throw new Error('Failed to rename conversation')
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : 'Failed to rename conversation'
-      )
-      setConversations((list) =>
-        list.map((conversation) =>
-          conversation.id === id
-            ? { ...conversation, title: current.title }
-            : conversation
-        )
-      )
-    }
-  }
-
-  const deleteConversation = async (id: string) => {
-    if (!window.confirm('Delete this conversation?')) return
-    try {
-      const response = await fetch(`/api/conversations/${id}`, {
-        method: 'DELETE'
-      })
-      if (response.status === 401) {
-        setPersistenceUnavailable(true)
-        return
-      }
-      if (!response.ok) throw new Error('Failed to delete conversation')
-      setConversations((list) =>
-        list.filter((conversation) => conversation.id !== id)
-      )
-      if (conversationId === id) {
-        setConversationId(null)
-        setTitle('')
-        setMessages([])
-      }
-      toast.success('Conversation deleted')
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : 'Failed to delete conversation'
-      )
-    }
+    void scrollToBottom()
+    sendMessage({ text })
   }
 
   const toolCallCount =
     lastMessage?.role === 'assistant'
       ? lastMessage.parts.filter((part) => asToolPart(part) !== null).length
       : 0
+  // "Working" means a tool call is actually running — not the thinking
+  // gaps between calls, which the Thinking block's spinner already covers.
+  const toolRunning =
+    lastMessage?.role === 'assistant' &&
+    lastMessage.parts.some((part) => {
+      const toolPart = asToolPart(part)
+      return (
+        toolPart !== null &&
+        toolPart.state !== 'output-available' &&
+        toolPart.state !== 'output-error'
+      )
+    })
 
   return (
-    <div className="flex h-[calc(100vh-12rem)] flex-col gap-4">
-      {profileSummary && (
-        <ProfileBar summary={profileSummary} onRebuilt={setProfileSummary} />
-      )}
-
-      <p className="text-xs text-muted-foreground">
-        {profileSummary
-          ? `Read-only queries against ${profileSummary.endpoint}`
-          : 'Queries run read-only against the configured SPARQL endpoint.'}
-      </p>
-
-      <div className="mx-auto flex w-full max-w-3xl min-h-0 flex-1 flex-col gap-4">
-        {!streaming && !persistenceUnavailable && (
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => openHistorySheet(true)}
-            >
-              <HistoryIcon /> History
-            </Button>
-            {editingTitle ? (
-              <Input
-                ref={titleInputRef}
-                value={titleDraft}
-                onChange={(event) => setTitleDraft(event.target.value)}
-                onBlur={commitTitle}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter') {
-                    commitTitle()
-                  }
-                  if (event.key === 'Escape') {
-                    setTitleDraft(title)
-                    setEditingTitle(false)
-                  }
-                }}
-                aria-label="Conversation title"
-                className="h-7 min-w-0 flex-1 text-sm"
-              />
-            ) : (
-              <button
-                type="button"
-                onClick={startTitleEdit}
-                title={title || 'Add a title'}
-                className="min-w-0 flex-1 truncate rounded-md px-1.5 py-1 text-left text-sm text-muted-foreground hover:bg-muted"
-              >
-                {title || 'Untitled chat'}
-              </button>
-            )}
-            <Button variant="outline" size="sm" onClick={newChat}>
-              <PlusIcon /> New chat
-            </Button>
-          </div>
-        )}
-
-        <div className="relative min-h-0 flex-1">
+    <div className="flex min-h-0 flex-1 flex-col">
+      <ChatHeader />
+      <div className="relative flex min-h-0 flex-1 flex-col">
+        <div
+          ref={scrollRef}
+          className="relative min-h-0 flex-1 overflow-y-auto"
+        >
           <div
-            ref={scrollRef}
-            onScroll={() => {
-              const element = scrollRef.current
-              if (!element) return
-              const distance =
-                element.scrollHeight - element.scrollTop - element.clientHeight
-              setShowJumpToLatest((shown) =>
-                distance > 200 ? true : distance <= 120 ? false : shown
-              )
-            }}
-            className="h-full space-y-4 overflow-y-auto rounded-lg border p-4"
+            ref={contentRef}
+            className="mx-auto w-full max-w-3xl space-y-4 px-4 py-6"
           >
             {messages.length === 0 && (
               <div className="mx-auto flex max-w-md flex-col items-center gap-3 py-16 text-center">
                 <p className="text-sm text-muted-foreground">
-                  Ask anything about this dataset. The assistant resolves
-                  entities, writes SPARQL, and verifies every query.
+                  Ask anything about this Knowledge Graph.
                 </p>
                 <div className="flex w-full flex-col gap-2">
-                  {exampleQuestions.map((question) => (
+                  {initialExampleQuestions.map((question) => (
                     <Button
                       key={question}
                       variant="outline"
                       size="sm"
+                      className="h-auto justify-start sm:h-auto whitespace-normal py-2 text-left"
                       onClick={() => {
                         if (!streaming) sendMessage({ text: question })
                       }}
@@ -1348,33 +1055,14 @@ export function AskConsole({ initialProfileSummary }: AskConsoleProps) {
             {messages.map((message) => {
               if (message.role === 'user') {
                 return (
-                  <div key={message.id} className="group flex justify-end">
-                    <div className="relative max-w-[80%]">
-                      <div className="rounded-lg bg-primary px-3 py-2 text-sm whitespace-pre-wrap text-primary-foreground">
-                        {messageText(message)}
-                      </div>
-                      {message.id === lastUserId && !streaming && (
-                        <div className="absolute top-0 right-full mr-1.5 flex items-center gap-1 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
-                          <Button
-                            variant="ghost"
-                            size="icon-xs"
-                            onClick={() => regenerate()}
-                          >
-                            <RefreshCwIcon />
-                            <span className="sr-only">Regenerate</span>
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon-xs"
-                            onClick={() => editMessage(message)}
-                          >
-                            <PencilIcon />
-                            <span className="sr-only">Edit</span>
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                  <UserMessageView
+                    key={message.id}
+                    message={message}
+                    isLast={message.id === lastUserId}
+                    streaming={streaming}
+                    onRegenerate={regenerate}
+                    onEditSubmit={editMessage}
+                  />
                 )
               }
               return (
@@ -1383,13 +1071,16 @@ export function AskConsole({ initialProfileSummary }: AskConsoleProps) {
                   message={message}
                   isLast={message.id === lastMessage?.id}
                   lastUserText={lastUserText}
+                  streaming={streaming}
+                  onRegenerate={regenerate}
                 />
               )
             })}
-            {status === 'streaming' && lastMessage?.role === 'assistant' && (
+            {status === 'streaming' && toolRunning && (
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <LoaderIcon className="size-3.5 animate-spin" />
-                Working, {toolCallCount} tool call(s)
+                Working, {toolCallCount} tool{' '}
+                {toolCallCount === 1 ? 'call' : 'calls'}
               </div>
             )}
             {error && (
@@ -1410,27 +1101,24 @@ export function AskConsole({ initialProfileSummary }: AskConsoleProps) {
               </div>
             )}
           </div>
-          {showJumpToLatest && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="absolute bottom-3 left-1/2 z-10 -translate-x-1/2 rounded-full shadow-md"
-              onClick={() => {
-                setShowJumpToLatest(false)
-                const element = scrollRef.current
-                if (element) {
-                  element.scrollTo({
-                    top: element.scrollHeight,
-                    behavior: 'smooth'
-                  })
-                }
-              }}
-            >
-              <ChevronDownIcon /> Jump to latest
-            </Button>
-          )}
         </div>
-
+        {!isAtBottom && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="absolute bottom-3 left-1/2 z-10 -translate-x-1/2 rounded-full shadow-md"
+            onClick={() => {
+              void scrollToBottom()
+            }}
+          >
+            <ChevronDownIcon /> Jump to latest
+          </Button>
+        )}
+      </div>
+      <div className="mx-auto w-full max-w-3xl shrink-0 px-4 pb-4">
+        <div className="mb-1.5 flex items-center">
+          <DatasetChip summary={profileSummary} onRebuilt={setProfileSummary} />
+        </div>
         <div className="flex items-end gap-2">
           <Textarea
             ref={textareaRef}
@@ -1465,91 +1153,6 @@ export function AskConsole({ initialProfileSummary }: AskConsoleProps) {
           )}
         </div>
       </div>
-
-      <Sheet open={historyOpen} onOpenChange={openHistorySheet}>
-        <SheetContent side="left" className="w-80 max-w-[85vw]">
-          <SheetHeader>
-            <SheetTitle>Conversation history</SheetTitle>
-            <SheetDescription>Your recent ask sessions.</SheetDescription>
-          </SheetHeader>
-          <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4">
-            {conversationsLoading ? (
-              <p className="text-xs text-muted-foreground">Loading…</p>
-            ) : conversations.length === 0 ? (
-              <p className="text-xs text-muted-foreground">
-                No conversations yet.
-              </p>
-            ) : (
-              <ul className="space-y-1">
-                {conversations.map((conversation) => (
-                  <li
-                    key={conversation.id}
-                    className="flex items-center gap-0.5 rounded-md hover:bg-muted/60"
-                  >
-                    {renamingId === conversation.id ? (
-                      <Input
-                        ref={(element) => {
-                          element?.focus()
-                        }}
-                        value={renameDraft}
-                        onChange={(event) => setRenameDraft(event.target.value)}
-                        onBlur={commitRename}
-                        onKeyDown={(event) => {
-                          if (event.key === 'Enter') {
-                            commitRename()
-                          }
-                          if (event.key === 'Escape') {
-                            setRenameDraft(conversation.title)
-                            setRenamingId(null)
-                          }
-                        }}
-                        aria-label="Conversation name"
-                        className="h-7 min-w-0 flex-1 text-sm"
-                      />
-                    ) : (
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => openConversation(conversation.id)}
-                          className="min-w-0 flex-1 rounded-md px-2 py-1.5 text-left"
-                        >
-                          <span className="block truncate text-sm font-medium">
-                            {conversation.title || 'Untitled chat'}
-                          </span>
-                          <span className="block text-xs text-muted-foreground">
-                            {formatTimestamp(conversation.updatedAt)} ·{' '}
-                            {conversation.messageCount} messages
-                          </span>
-                        </button>
-                        <Button
-                          variant="ghost"
-                          size="icon-xs"
-                          onClick={() => startRename(conversation)}
-                        >
-                          <PencilIcon />
-                          <span className="sr-only">
-                            Rename {conversation.title || 'conversation'}
-                          </span>
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon-xs"
-                          onClick={() => deleteConversation(conversation.id)}
-                        >
-                          <TrashIcon />
-                          <span className="sr-only">
-                            Delete {conversation.title || 'conversation'}
-                          </span>
-                        </Button>
-                      </>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </SheetContent>
-      </Sheet>
     </div>
   )
 }

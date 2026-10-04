@@ -1,4 +1,4 @@
-import { resolveBaseAccess } from '@/config/access'
+import { anonymousAskEnabled, resolveBaseAccess } from '@/config/access'
 import type { FeatureId, TriplestoreProvider } from '@/lib/runtime/contracts'
 
 export type NavIcon =
@@ -138,6 +138,12 @@ const navMain: NavItem[] = [
         requiredRole: 'admin'
       },
       {
+        title: 'AI',
+        url: '/admin/ai',
+        requiredRole: 'admin',
+        requiredFeature: 'ai-ask'
+      },
+      {
         title: 'Users',
         url: '/admin/users',
         requiredRole: 'admin',
@@ -198,6 +204,9 @@ function isVisible(item: NavItem, user: NavUser | null): boolean {
   if (item.url) {
     const baseAccess = resolveBaseAccess(item.url)
     if ((baseAccess === 'session' || baseAccess === 'admin') && !user) {
+      return false
+    }
+    if (baseAccess === 'anonymousAsk' && !user && !anonymousAskEnabled()) {
       return false
     }
   }

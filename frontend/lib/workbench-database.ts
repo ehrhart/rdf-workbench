@@ -183,6 +183,36 @@ function migrate(db: Database.Database): void {
     })()
   }
 
+  if (current.version < 7) {
+    db.transaction(() => {
+      db.exec(`
+        CREATE TABLE ai_settings (
+          id INTEGER PRIMARY KEY CHECK (id = 1),
+          example_questions TEXT NOT NULL DEFAULT '[]',
+          custom_instruction TEXT NOT NULL DEFAULT '',
+          updated_at TEXT NOT NULL
+        );
+      `)
+      db.prepare(
+        'INSERT INTO ai_settings (id, example_questions, custom_instruction, updated_at) VALUES (1, ?, ?, ?)'
+      ).run('[]', '', new Date().toISOString())
+      db.prepare(
+        'INSERT INTO schema_migrations (version, applied_at) VALUES (7, ?)'
+      ).run(new Date().toISOString())
+    })()
+  }
+
+  if (current.version < 8) {
+    db.transaction(() => {
+      db.exec(`
+        ALTER TABLE ai_settings ADD COLUMN graph_knowledge TEXT NOT NULL DEFAULT '';
+      `)
+      db.prepare(
+        'INSERT INTO schema_migrations (version, applied_at) VALUES (8, ?)'
+      ).run(new Date().toISOString())
+    })()
+  }
+
   const prefixCount = db
     .prepare('SELECT COUNT(*) AS count FROM prefixes')
     .get() as {

@@ -3,8 +3,8 @@ import 'server-only'
 const IRI_PATTERN = /^https?:\/\/[^\s<>"{}|^`\\]*$/
 
 /**
- * Returns `iri` unchanged when it is safe to interpolate into a SPARQL
- * `<...>` term; throws otherwise.
+ * Returns `iri` unchanged when it is safe to put into a SPARQL `<...>`
+ * term; throws otherwise.
  */
 export function requireSafeIri(iri: string): string {
   if (!IRI_PATTERN.test(iri)) {

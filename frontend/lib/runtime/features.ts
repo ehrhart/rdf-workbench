@@ -7,9 +7,6 @@ import type { FeatureId, TriplestoreProvider } from './contracts'
  */
 export type FeatureEnv = Record<string, string | undefined>
 
-/**
- * Features every provider exposes unconditionally.
- */
 const baseFeatures: readonly FeatureId[] = [
   'dashboard',
   'sparql',
@@ -20,9 +17,6 @@ const baseFeatures: readonly FeatureId[] = [
   'endpoint-monitor'
 ]
 
-/**
- * The provider-specific feature lists per provider.
- */
 const providerFeatures: Record<TriplestoreProvider, readonly FeatureId[]> = {
   virtuoso: [
     ...baseFeatures,
@@ -72,7 +66,7 @@ export function computeFeatures(
 
 /**
  * Whether the AI settings are configured. Shared with lib/ai/config.ts so
- * the feature set and the ask routes cannot drift apart.
+ * the feature set and the ask routes stay consistent.
  */
 export function isAiConfigured(env: FeatureEnv): boolean {
   return (
@@ -82,7 +76,6 @@ export function isAiConfigured(env: FeatureEnv): boolean {
   )
 }
 
-/** Boolean(value?.trim()) semantics. */
 function hasNonBlank(value: string | undefined): boolean {
   return value !== undefined && value.trim() !== ''
 }

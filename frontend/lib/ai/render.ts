@@ -39,14 +39,14 @@ export function shrinkSample(
 }
 
 export interface RenderProfileOptions {
-  /** Soft budget for the rendered text; longer profiles degrade gracefully. */
+  /** Soft budget for the rendered text; longer profiles shrink to fit. */
   maxChars?: number
 }
 
 /**
- * Renders the profile to compact text for the model, degrading in steps
- * when over budget: drop samples, then drop object types, then counts
- * only. The shape stays parseable at every level.
+ * Renders the profile to compact text for the model. When the text is
+ * over budget it shrinks in steps: drop samples, drop object types, and
+ * finally keep counts only. The shape stays parseable at every level.
  */
 export function renderProfileText(
   profile: DatasetProfile,

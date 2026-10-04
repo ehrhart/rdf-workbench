@@ -6,13 +6,14 @@ import {
   type UIMessage
 } from 'ai'
 import { type NextRequest, NextResponse } from 'next/server'
+import { getAiSettings } from '@/lib/ai/ai-settings'
 import type { AskMessageMetadata } from '@/lib/ai/ask-contract'
 import { createAskTools } from '@/lib/ai/ask-tools'
 import { getAiConfig } from '@/lib/ai/config'
 import { loadOrBuildProfile, withLivePrefixes } from '@/lib/ai/profile-store'
 import { buildSystemPrompt } from '@/lib/ai/prompt'
 import { renderProfileText } from '@/lib/ai/render'
-import { requirePrincipal } from '@/lib/api-auth'
+import { requireAskPrincipal } from '@/lib/api-auth'
 import { getWorkbenchRuntime } from '@/lib/runtime'
 import { computeFeatures } from '@/lib/runtime/features'
 import { isSameOriginMutation, sameOriginError } from '@/lib/same-origin'
@@ -27,7 +28,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
   }
 
-  const auth = await requirePrincipal()
+  const auth = await requireAskPrincipal()
   if (auth.response) return auth.response
 
   const aiConfig = getAiConfig()
@@ -52,12 +53,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'No messages provided' }, { status: 400 })
   }
 
-  const profile = await withLivePrefixes(await loadOrBuildProfile())
+  const [profile, settings] = await Promise.all([
+    loadOrBuildProfile().then((loaded) => withLivePrefixes(loaded)),
+    getAiSettings()
+  ])
   const profileText = profile ? renderProfileText(profile) : null
   const system = buildSystemPrompt({
     profile,
     profileText,
-    provider: runtime.provider
+    provider: runtime.provider,
+    customInstruction: settings.customInstruction,
+    graphKnowledge: settings.graphKnowledge
   })
 
   const provider = createOpenAICompatible({

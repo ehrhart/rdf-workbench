@@ -202,9 +202,9 @@ export async function loadStoredProfile(): Promise<DatasetProfile | null> {
 let buildingProfile: Promise<DatasetProfile | null> | undefined
 
 /**
- * Prefixes always come from the live prefix table (Namespaces-page edits
- * must reach the prompt); only the introspected vocabulary is the
- * build-time snapshot.
+ * Prefixes always come from the live prefix table (edits on the
+ * Namespaces page must reach the prompt); only the introspected
+ * vocabulary is a build-time snapshot.
  */
 export async function withLivePrefixes(
   profile: DatasetProfile | null

@@ -27,8 +27,8 @@ export interface HighlightedQuery {
 
 /**
  * Highlights SPARQL with the fixed github-dark theme.
- * Returns null when shiki cannot load or the grammar fails, so callers can
- * fall back to plain text rendering.
+ * Returns null when shiki cannot load or the grammar fails, so callers
+ * can fall back to rendering the plain text.
  */
 export async function highlightSparql(
   query: string

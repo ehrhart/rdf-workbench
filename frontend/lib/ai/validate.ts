@@ -134,7 +134,7 @@ function walkPatterns(patterns: unknown, state: WalkState): void {
 
 /**
  * Mutates the parsed AST to cap LIMIT, then re-serializes, so the
- * executed query is always the sanitized form.
+ * query that runs is always the sanitized form.
  */
 export function validateSparqlQuery(
   input: string,

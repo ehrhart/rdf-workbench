@@ -4,23 +4,8 @@ import {
   replaceMessages
 } from '@/lib/ai/conversation-store'
 import { requirePrincipal } from '@/lib/api-auth'
-import { QueryError } from '@/lib/errors'
 import { isSameOriginMutation, sameOriginError } from '@/lib/same-origin'
-
-const notFound = () =>
-  NextResponse.json({ error: 'Conversation not found' }, { status: 404 })
-
-const errorResponse = (error: unknown) => {
-  if (error instanceof QueryError) {
-    return NextResponse.json({ error: error.message }, { status: 400 })
-  }
-
-  console.error('Unexpected conversation messages API error:', error)
-  return NextResponse.json(
-    { error: 'Unexpected server error while handling conversation messages' },
-    { status: 500 }
-  )
-}
+import { errorResponse, notFound } from '../../shared'
 
 export async function PUT(
   request: Request,
@@ -56,6 +41,6 @@ export async function PUT(
     if (messageCount === null) return notFound()
     return NextResponse.json({ ok: true, messageCount })
   } catch (error) {
-    return errorResponse(error)
+    return errorResponse('conversation messages', error)
   }
 }

@@ -24,6 +24,8 @@ export interface ConversationRow {
 
 const DEFAULT_TITLE = 'New chat'
 const MAX_TITLE_LENGTH = 120
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 export const MAX_CONVERSATION_MESSAGES = 200
 const MESSAGE_ROLES = new Set(['user', 'assistant', 'system'])
 
@@ -79,10 +81,13 @@ export async function listConversations(
 
 export async function createConversation(
   ownerId: string,
-  title?: string
+  title?: string,
+  options?: { id?: string }
 ): Promise<ConversationRow> {
   const db = await getWorkbenchDatabase()
-  const id = crypto.randomUUID()
+  const requested = options?.id
+  const id =
+    requested && UUID_PATTERN.test(requested) ? requested : crypto.randomUUID()
   const now = new Date().toISOString()
   db.prepare(
     `
