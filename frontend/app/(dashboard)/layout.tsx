@@ -2,6 +2,7 @@ import type React from 'react'
 import { AppSidebar } from '@/components/app-sidebar'
 import { SiteHeader } from '@/components/site-header'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
+import { getVisibleNavItems } from '@/config/navigation'
 import { getWorkbenchRuntime } from '@/lib/runtime'
 import { getWorkbenchName } from '@/lib/runtime/config'
 import { getUpdateInfo } from '@/lib/update-check'
@@ -37,8 +38,11 @@ export default async function DashboardLayout({
         variant="floating"
         user={user}
         updateInfo={updateInfo}
-        navMainItems={runtime.navigation.navMain}
-        navSecondaryItems={runtime.navigation.navSecondary}
+        navMainItems={getVisibleNavItems(runtime.navigation.navMain, user)}
+        navSecondaryItems={getVisibleNavItems(
+          runtime.navigation.navSecondary,
+          user
+        )}
         appName={getWorkbenchName()}
       />
       <SidebarInset>

@@ -3,6 +3,7 @@ import { PassThrough, Readable } from 'node:stream'
 import type { ReadableStream as ReadableStreamWeb } from 'node:stream/web'
 import { type Archiver, ZipArchive } from 'archiver'
 import type { NextRequest } from 'next/server'
+import { requirePrincipal } from '@/lib/api-auth'
 import { isSameOriginMutation, sameOriginError } from '@/lib/same-origin'
 import { getVirtuosoConfig } from '@/providers/virtuoso/config'
 import { getSessionFromRequest } from '@/providers/virtuoso/request-auth'
@@ -345,6 +346,10 @@ function createZipStream(
 
 export async function POST(request: NextRequest) {
   if (!isSameOriginMutation(request)) return sameOriginError()
+
+  const auth = await requirePrincipal()
+  if (auth.response) return auth.response
+
   const defaultFileLengthLimit =
     getVirtuosoConfig().GRAPH_EXPORT_FILE_LIMIT ?? 50_000_000_000
   const session = await getSessionFromRequest(request)

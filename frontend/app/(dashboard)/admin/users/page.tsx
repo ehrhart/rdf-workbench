@@ -1,10 +1,14 @@
 import type { Metadata } from 'next'
-import { notFound, redirect } from 'next/navigation'
+import { notFound } from 'next/navigation'
 import { UserManager } from '@/components/admin/user-manager'
 import { DashboardHeader } from '@/components/dashboard/header'
 import { DashboardShell } from '@/components/dashboard/shell'
 import { listLocalUsers } from '@/lib/local-auth'
-import { getWorkbenchRuntime, hasAnyFeature } from '@/lib/runtime'
+import {
+  getWorkbenchRuntime,
+  hasAnyFeature,
+  requirePageAccess
+} from '@/lib/runtime'
 
 export const metadata: Metadata = {
   title: 'User Administration',
@@ -17,9 +21,9 @@ export default async function UsersPage() {
     notFound()
   }
 
-  const administrator = await runtime.auth.getPrincipal()
-  if (!administrator) redirect('/logout?redirect=/admin/users')
-  if (administrator.role !== 'admin') notFound()
+  await requirePageAccess('admin', '/admin/users')
+  const principal = await runtime.auth.getPrincipal()
+  if (!principal) notFound()
   const users = await listLocalUsers()
 
   return (
@@ -28,7 +32,7 @@ export default async function UsersPage() {
         heading="User Administration"
         text="Manage local RDF Workbench accounts and access."
       />
-      <UserManager users={users} currentUserId={administrator.id} />
+      <UserManager users={users} currentUserId={principal.id} />
     </DashboardShell>
   )
 }

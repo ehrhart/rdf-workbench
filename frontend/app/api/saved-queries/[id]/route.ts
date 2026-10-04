@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server'
+import { anonymousReadEnabled } from '@/config/access'
+import { requirePrincipal, resolveOptionalViewer } from '@/lib/api-auth'
 import { AuthError, ConnectionError, QueryError } from '@/lib/errors'
 import { getWorkbenchRuntime } from '@/lib/runtime'
 import { isSameOriginMutation, sameOriginError } from '@/lib/same-origin'
@@ -30,15 +32,14 @@ const errorResponse = (error: unknown, hasSession: boolean) => {
   )
 }
 
-export async function GET(
-  _request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+async function getSavedQuery(
+  id: string,
+  viewerId: string | null,
+  hasSession: boolean
+): Promise<NextResponse> {
   try {
     const runtime = await getWorkbenchRuntime()
-    const session = await runtime.auth.getPrincipal()
-    const { id } = await params
-    const saved = await runtime.savedQueries.get(id, session?.id ?? null)
+    const saved = await runtime.savedQueries.get(id, viewerId)
 
     if (!saved) {
       return NextResponse.json(
@@ -49,8 +50,25 @@ export async function GET(
 
     return NextResponse.json(saved)
   } catch (error) {
-    return errorResponse(error, false)
+    return errorResponse(error, hasSession)
   }
+}
+
+export async function GET(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  if (!anonymousReadEnabled()) {
+    const auth = await requirePrincipal()
+    if (auth.response) return auth.response
+    const { id } = await params
+    return getSavedQuery(id, auth.principal.id, true)
+  }
+
+  const viewer = await resolveOptionalViewer()
+  if (viewer.response) return viewer.response
+  const { id } = await params
+  return getSavedQuery(id, viewer.viewerId, false)
 }
 
 export async function PATCH(

@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server'
+import { anonymousReadEnabled } from '@/config/access'
+import { requirePrincipal, resolveOptionalViewer } from '@/lib/api-auth'
 import { AuthError, ConnectionError, QueryError } from '@/lib/errors'
 import { getWorkbenchRuntime } from '@/lib/runtime'
 import { isSameOriginMutation, sameOriginError } from '@/lib/same-origin'
@@ -30,15 +32,29 @@ const errorResponse = (error: unknown, hasSession: boolean) => {
   )
 }
 
-export async function GET() {
+async function listSavedQueries(
+  viewerId: string | null,
+  hasSession: boolean
+): Promise<NextResponse> {
   try {
     const runtime = await getWorkbenchRuntime()
-    const session = await runtime.auth.getPrincipal()
-    const items = await runtime.savedQueries.list(session?.id ?? null)
+    const items = await runtime.savedQueries.list(viewerId)
     return NextResponse.json({ items })
   } catch (error) {
-    return errorResponse(error, false)
+    return errorResponse(error, hasSession)
   }
+}
+
+export async function GET() {
+  if (!anonymousReadEnabled()) {
+    const auth = await requirePrincipal()
+    if (auth.response) return auth.response
+    return listSavedQueries(auth.principal.id, true)
+  }
+
+  const viewer = await resolveOptionalViewer()
+  if (viewer.response) return viewer.response
+  return listSavedQueries(viewer.viewerId, false)
 }
 
 export async function POST(request: Request) {

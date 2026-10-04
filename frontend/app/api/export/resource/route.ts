@@ -4,13 +4,19 @@ import {
   RESOURCE_ROLES,
   type ResourceRole
 } from '@/components/resource-manager/types'
+import { requirePrincipal } from '@/lib/api-auth'
 import { getWorkbenchRuntime } from '@/lib/runtime'
+import { isSameOriginMutation, sameOriginError } from '@/lib/same-origin'
 import {
   buildBlankNodeFilterClause,
   buildRoleFilterClause
 } from '@/lib/sparql/resource-filters'
 
 export async function POST(request: NextRequest) {
+  if (!isSameOriginMutation(request)) return sameOriginError()
+  const auth = await requirePrincipal()
+  if (auth.response) return auth.response
+
   try {
     const runtime = await getWorkbenchRuntime()
     const supportedFormats = runtime.sparql.getDownloadFormats('construct')

@@ -5,6 +5,7 @@ import https from 'node:https'
 import { join } from 'node:path'
 import FormData from 'form-data'
 import { type NextRequest, NextResponse } from 'next/server'
+import { requirePrincipal } from '@/lib/api-auth'
 import { isSameOriginMutation, sameOriginError } from '@/lib/same-origin'
 import { getVirtuosoConfig } from '@/providers/virtuoso/config'
 import { getSessionFromRequest } from '@/providers/virtuoso/request-auth'
@@ -22,6 +23,10 @@ function stagedFilePath(userId: string, filename: string): string {
  */
 export async function POST(req: NextRequest) {
   if (!isSameOriginMutation(req)) return sameOriginError()
+
+  const auth = await requirePrincipal()
+  if (auth.response) return auth.response
+
   const adapterUrl = getVirtuosoConfig().VIRTUOSO_ADAPTER_URL
   const session = await getSessionFromRequest(req)
   if (!session) {

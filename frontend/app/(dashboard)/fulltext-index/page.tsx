@@ -5,6 +5,7 @@ import { DashboardHeader } from '@/components/dashboard/header'
 import { DashboardShell } from '@/components/dashboard/shell'
 import { FullTextIndexManager } from '@/components/fulltext/fulltext-index-manager'
 import { Skeleton } from '@/components/ui/skeleton'
+import { requirePageAccess } from '@/lib/runtime'
 import { getFTRules } from '@/providers/virtuoso/fulltext'
 
 export const metadata: Metadata = {
@@ -27,7 +28,8 @@ function FullTextIndexSkeleton() {
   )
 }
 
-export default function FullTextIndexPage() {
+export default async function FullTextIndexPage() {
+  await requirePageAccess('session')
   return (
     <DashboardShell>
       <DashboardHeader heading="Full-Text Index Management" />

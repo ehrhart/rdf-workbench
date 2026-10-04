@@ -1,7 +1,8 @@
 import ResourceManager from '@/components/resource-manager'
-import { getWorkbenchRuntime } from '@/lib/runtime'
+import { getWorkbenchRuntime, requirePageAccess } from '@/lib/runtime'
 
 export default async function ResourcePage() {
+  await requirePageAccess('anonymousRead')
   const runtime = await getWorkbenchRuntime()
   const fileTypes = runtime.sparql
     .getDownloadFormats('construct')

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { requirePrincipal } from '@/lib/api-auth'
 import { AuthError, ConnectionError, QueryError } from '@/lib/errors'
 import { isSameOriginMutation, sameOriginError } from '@/lib/same-origin'
 import { executeIsqlCommandDetailed } from '@/providers/virtuoso/odbc-connection'
@@ -13,6 +14,10 @@ interface IsqlRequestBody {
 
 export async function POST(request: Request) {
   if (!isSameOriginMutation(request)) return sameOriginError()
+
+  const auth = await requirePrincipal()
+  if (auth.response) return auth.response
+
   try {
     const token = await getAuthTokenFromCookie()
     if (!token) {

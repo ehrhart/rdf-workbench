@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from 'next/server'
+import { requirePrincipal } from '@/lib/api-auth'
 import { isSameOriginMutation, sameOriginError } from '@/lib/same-origin'
 import { getVirtuosoConfig } from '@/providers/virtuoso/config'
 import { getSessionFromRequest } from '@/providers/virtuoso/request-auth'
@@ -9,6 +10,9 @@ import { getSessionFromRequest } from '@/providers/virtuoso/request-auth'
  */
 
 export async function GET(req: NextRequest) {
+  const auth = await requirePrincipal()
+  if (auth.response) return auth.response
+
   const apiBaseUrl = getVirtuosoConfig().VIRTUOSO_ADAPTER_URL
   const session = await getSessionFromRequest(req)
   if (!session) {
@@ -51,6 +55,10 @@ export async function GET(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   if (!isSameOriginMutation(req)) return sameOriginError()
+
+  const auth = await requirePrincipal()
+  if (auth.response) return auth.response
+
   const apiBaseUrl = getVirtuosoConfig().VIRTUOSO_ADAPTER_URL
   const session = await getSessionFromRequest(req)
   if (!session) {

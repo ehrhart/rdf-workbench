@@ -17,6 +17,7 @@ export type FeatureId =
   | 'saved-queries'
   | 'endpoint-monitor'
   | 'virtuoso-import'
+  | 'virtuoso-export'
   | 'virtuoso-isql'
   | 'virtuoso-query-monitor'
   | 'virtuoso-namespaces'

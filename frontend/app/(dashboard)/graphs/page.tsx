@@ -5,7 +5,7 @@ import { DashboardHeader } from '@/components/dashboard/header'
 import { DashboardShell } from '@/components/dashboard/shell'
 import { GraphManager } from '@/components/graphs/graph-manager'
 import { GraphListSkeleton } from '@/components/skeletons'
-import { getWorkbenchRuntime } from '@/lib/runtime'
+import { getWorkbenchRuntime, requirePageAccess } from '@/lib/runtime'
 
 export const metadata: Metadata = {
   title: 'Named Graphs',
@@ -36,7 +36,8 @@ async function GraphsContent() {
   )
 }
 
-export default function GraphsPage() {
+export default async function GraphsPage() {
+  await requirePageAccess('anonymousRead')
   return (
     <DashboardShell>
       <DashboardHeader heading="Named Graphs" />

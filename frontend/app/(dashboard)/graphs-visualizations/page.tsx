@@ -3,6 +3,7 @@ import GraphVisualization from '@/components/dashboard/graph-visualization'
 import { DashboardHeader } from '@/components/dashboard/header'
 import { DashboardShell } from '@/components/dashboard/shell'
 import { ResourceAutocomplete } from '@/components/resource-autocomplete'
+import { requirePageAccess } from '@/lib/runtime'
 
 export const metadata: Metadata = {
   title: 'Graphs Visualizations',
@@ -14,6 +15,7 @@ export default async function VisualizationPage({
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
+  await requirePageAccess('anonymousRead')
   const uri = (await searchParams).uri?.toString() || ''
 
   return (
