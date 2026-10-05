@@ -1,7 +1,7 @@
 'use client'
 
 import { LinkIcon, LoaderIcon, ShareIcon, UnlinkIcon } from 'lucide-react'
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { useChatSession } from '@/components/ask/chat-session'
 import { HeaderPortal } from '@/components/ask/header-portal'
@@ -37,12 +37,7 @@ export function ChatShareButton() {
   const [stopping, setStopping] = useState(false)
   const [open, setOpen] = useState(false)
 
-  if (!user || !conversationId) return null
-
-  const stale = share !== null && messages.length > share.messageCount
-  const busy = creating || updating || stopping
-
-  const loadShare = async () => {
+  const loadShare = useCallback(async () => {
     try {
       const response = await fetch(`/api/conversations/${conversationId}/share`)
       if (response.status === 404) {
@@ -57,7 +52,22 @@ export function ChatShareButton() {
     } finally {
       setLoaded(true)
     }
-  }
+  }, [conversationId])
+
+  // The button reflects share state without opening the popover (the
+  // staleness dot), so the status loads for the conversation up front and
+  // reloads on conversation switches.
+  useEffect(() => {
+    if (!user || !conversationId) return
+    setShare(null)
+    setLoaded(false)
+    void loadShare()
+  }, [conversationId, loadShare, user])
+
+  if (!user || !conversationId) return null
+
+  const stale = share !== null && messages.length > share.messageCount
+  const busy = creating || updating || stopping
 
   const copyShareLink = async (info: ShareInfo) => {
     try {
@@ -129,28 +139,20 @@ export function ChatShareButton() {
     }
   }
 
-  const handleOpenChange = (next: boolean) => {
-    setOpen(next)
-    if (!next) return
-    setShare(null)
-    setLoaded(false)
-    setCreating(false)
-    setUpdating(false)
-    setStopping(false)
-    void loadShare()
-  }
-
   return (
     <HeaderPortal side="right">
-      <Popover open={open} onOpenChange={handleOpenChange}>
+      <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
             type="button"
-            variant="ghost"
-            className="h-8 gap-1.5 rounded-md px-2.5"
+            variant="outline"
+            className="relative h-8 gap-1.5 rounded-md px-2.5"
           >
             <ShareIcon className="size-3.5 text-muted-foreground" />
-            <span className="text-sm font-medium">Share chat</span>
+            <span className="text-sm font-medium">Share</span>
+            {stale && (
+              <span className="absolute -top-1 -right-1 size-2 rounded-full bg-primary ring-2 ring-background" />
+            )}
           </Button>
         </PopoverTrigger>
         <PopoverContent
