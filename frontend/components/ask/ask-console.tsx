@@ -3,6 +3,7 @@
 import type { ToolUIPart, UIMessage } from 'ai'
 import {
   AlertTriangleIcon,
+  ArrowUpIcon,
   CheckIcon,
   ChevronDownIcon,
   ChevronRightIcon,
@@ -14,6 +15,7 @@ import {
   RefreshCwIcon,
   SaveIcon,
   SearchIcon,
+  SquareIcon,
   TableIcon,
   XIcon
 } from 'lucide-react'
@@ -1118,7 +1120,7 @@ export function AskConsole({
         <div className="mb-1.5 flex items-center">
           <DatasetChip summary={initialProfileSummary} />
         </div>
-        <div className="flex items-end gap-2">
+        <div className="rounded-3xl border border-input bg-background p-2 shadow-sm transition-colors focus-within:border-ring">
           <Textarea
             ref={textareaRef}
             value={input}
@@ -1129,27 +1131,33 @@ export function AskConsole({
                 send()
               }
             }}
-            placeholder="Ask about the dataset…"
-            rows={2}
-            className="min-w-0 flex-1 resize-none"
+            placeholder="Ask anything"
+            rows={1}
+            aria-label="Ask anything"
+            className="max-h-52 min-h-10 resize-none border-0 px-2.5 py-2.5 shadow-none focus-visible:ring-0 dark:bg-transparent"
           />
-          {streaming ? (
-            <Button
-              variant="outline"
-              className="shrink-0"
-              onClick={() => stop()}
-            >
-              Stop
-            </Button>
-          ) : (
-            <Button
-              className="shrink-0"
-              onClick={send}
-              disabled={!input.trim()}
-            >
-              Ask
-            </Button>
-          )}
+          <div className="flex items-center justify-end pt-0.5">
+            {streaming ? (
+              <Button
+                size="icon"
+                className="size-9 shrink-0 rounded-full sm:size-9"
+                onClick={() => stop()}
+              >
+                <SquareIcon className="size-3 fill-current" />
+                <span className="sr-only">Stop generating</span>
+              </Button>
+            ) : (
+              <Button
+                size="icon"
+                className="size-9 shrink-0 rounded-full sm:size-9"
+                onClick={send}
+                disabled={!input.trim()}
+              >
+                <ArrowUpIcon />
+                <span className="sr-only">Send message</span>
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     </div>
