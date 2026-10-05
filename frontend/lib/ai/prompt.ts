@@ -1,5 +1,7 @@
 import 'server-only'
 
+import { format } from 'date-fns'
+
 import type { DatasetProfile } from '@/lib/ai/dataset-profile'
 import type { TriplestoreProvider } from '@/lib/runtime/contracts'
 
@@ -40,6 +42,8 @@ export function buildSystemPrompt(context: PromptContext): string {
   parts.push(
     'You answer questions about the RDF dataset behind a SPARQL endpoint by writing and running SPARQL queries. You are working inside RDF Workbench, a tool for exploring triplestores.'
   )
+  parts.push('')
+  parts.push(`Today's date is ${format(new Date(), 'EEEE, MMMM d, yyyy')}.`)
   parts.push('')
   parts.push('Hard rules:')
   parts.push(
