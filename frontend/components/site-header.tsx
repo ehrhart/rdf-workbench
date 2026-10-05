@@ -1,4 +1,7 @@
-import { SITE_HEADER_LEFT_ID } from '@/components/ask/header-portal'
+import {
+  SITE_HEADER_LEFT_ID,
+  SITE_HEADER_RIGHT_ID
+} from '@/components/ask/header-portal'
 import { SidebarTrigger } from '@/components/ui/sidebar'
 import { QueryActivity } from './dashboard/query-activity'
 import { UserAccountNav } from './dashboard/user-account-nav'
@@ -17,6 +20,10 @@ export function SiteHeader({
           className="flex min-w-0 items-center gap-1.5"
         />
         <div className="ml-auto flex items-center gap-2">
+          <div
+            id={SITE_HEADER_RIGHT_ID}
+            className="flex items-center gap-1.5"
+          />
           <div className="flex items-center gap-3">
             <QueryActivity />
             <UserAccountNav user={user} />

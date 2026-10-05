@@ -28,6 +28,7 @@ import {
   messageText,
   useChatSession
 } from '@/components/ask/chat-session'
+import { ChatShareButton } from '@/components/ask/chat-share'
 import { DatasetChip } from '@/components/ask/dataset-chip'
 import { MarkdownText } from '@/components/ask/markdown-text'
 import { diffQueryLines } from '@/components/ask/query-diff'
@@ -321,11 +322,13 @@ function ResultTable({ output }: { output: QuerySuccessOutput }) {
 function QueryBlock({
   query,
   showSave = false,
-  lastUserText
+  lastUserText,
+  readOnly = false
 }: {
   query: string
   showSave?: boolean
   lastUserText: string
+  readOnly?: boolean
 }) {
   const [saved, setSaved] = useState(false)
 
@@ -365,19 +368,28 @@ function QueryBlock({
         <Button variant="outline" size="sm" onClick={copy}>
           <CopyIcon /> Copy
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            window.location.href = `/sparql?query=${encodeURIComponent(query)}`
-          }}
-        >
-          <ExternalLinkIcon /> Open in console
-        </Button>
-        {showSave && (
-          <Button variant="outline" size="sm" onClick={save} disabled={saved}>
-            <SaveIcon /> {saved ? 'Saved' : 'Save query'}
-          </Button>
+        {!readOnly && (
+          <>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                window.location.href = `/sparql?query=${encodeURIComponent(query)}`
+              }}
+            >
+              <ExternalLinkIcon /> Open in console
+            </Button>
+            {showSave && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={save}
+                disabled={saved}
+              >
+                <SaveIcon /> {saved ? 'Saved' : 'Save query'}
+              </Button>
+            )}
+          </>
         )}
       </div>
     </div>
@@ -739,18 +751,20 @@ function buildFooterSegments(
   return segments
 }
 
-function AssistantMessageView({
+export function AssistantMessageView({
   message,
   isLast,
   lastUserText,
   streaming,
-  onRegenerate
+  onRegenerate,
+  readOnly = false
 }: {
   message: UIMessage
   isLast: boolean
   lastUserText: string
   streaming: boolean
   onRegenerate: () => void
+  readOnly?: boolean
 }) {
   const metadata = (message.metadata ?? {}) as Partial<AskMessageMetadata>
   const items = useMemo(() => buildAssistantItems(message), [message])
@@ -783,8 +797,9 @@ function AssistantMessageView({
               <QueryBlock
                 key={item.key}
                 query={item.content}
-                showSave={item.isFinalQuery && isLast}
+                showSave={item.isFinalQuery && isLast && !readOnly}
                 lastUserText={lastUserText}
+                readOnly={readOnly}
               />
             )
           case 'tool-search':
@@ -818,7 +833,7 @@ function AssistantMessageView({
       {showActions && (
         <div className="-ml-1.5 flex items-center gap-0.5 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
           <CopyButton text={messageText(message)} />
-          {isLast && (
+          {isLast && !readOnly && (
             <Button variant="ghost" size="icon-xs" onClick={onRegenerate}>
               <RefreshCwIcon />
               <span className="sr-only">Regenerate</span>
@@ -830,18 +845,20 @@ function AssistantMessageView({
   )
 }
 
-function UserMessageView({
+export function UserMessageView({
   message,
   isLast,
   streaming,
   onRegenerate,
-  onEditSubmit
+  onEditSubmit,
+  readOnly = false
 }: {
   message: UIMessage
   isLast: boolean
   streaming: boolean
   onRegenerate: () => void
   onEditSubmit: (message: UIMessage, text: string) => void
+  readOnly?: boolean
 }) {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState('')
@@ -908,7 +925,7 @@ function UserMessageView({
         </div>
         <div className="absolute top-0 right-full mr-1.5 flex items-center gap-1 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
           <CopyButton text={messageText(message)} />
-          {isLast && !streaming && (
+          {isLast && !streaming && !readOnly && (
             <>
               <Button variant="ghost" size="icon-xs" onClick={onRegenerate}>
                 <RefreshCwIcon />
@@ -1022,6 +1039,7 @@ export function AskConsole({
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <ChatHeader />
+      <ChatShareButton />
       <div className="relative flex min-h-0 flex-1 flex-col">
         <div
           ref={scrollRef}
