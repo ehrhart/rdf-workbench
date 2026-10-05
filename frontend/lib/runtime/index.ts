@@ -2,7 +2,11 @@ import 'server-only'
 
 import { notFound, redirect } from 'next/navigation'
 import type { AccessLevel } from '@/config/access'
-import { anonymousAskEnabled, anonymousReadEnabled } from '@/config/access'
+import {
+  anonymousAskEnabled,
+  anonymousReadEnabled,
+  PASSWORD_CHANGE_PATH
+} from '@/config/access'
 import { getRuntimeConfig } from './config'
 import type {
   FeatureId,
@@ -75,5 +79,10 @@ export async function requirePageAccess(
   if (!principal) {
     redirect(redirectPath ? `/logout?redirect=${redirectPath}` : '/logout')
   }
+  // No page guard is satisfiable while a password change is owed. The
+  // change-password page does not call this guard — it would catch
+  // exactly the one principal that must proceed — and guards its
+  // principal inline instead.
+  if (principal.mustChangePassword) redirect(PASSWORD_CHANGE_PATH)
   if (access === 'admin' && principal.role !== 'admin') notFound()
 }

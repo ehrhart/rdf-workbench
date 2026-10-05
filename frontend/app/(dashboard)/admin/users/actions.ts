@@ -2,6 +2,8 @@
 
 import { revalidatePath } from 'next/cache'
 import {
+  type CreateUserInput,
+  type CreateUserReceipt,
   createLocalUser,
   resetLocalUserPassword,
   setLocalUserDisabled,
@@ -14,20 +16,34 @@ export interface UserActionResult {
   message: string
 }
 
+export type CreateUserActionResult =
+  | { ok: true; mode: 'manual'; message: string }
+  | { ok: true; mode: 'temporary'; message: string; oneTimePassword: string }
+  | { ok: false; message: string }
+
 function messageFrom(error: unknown): string {
   return error instanceof Error ? error.message : 'The operation failed'
 }
 
-export async function createUserAction(input: {
-  username: string
-  password: string
-  role: 'admin' | 'user'
-}): Promise<UserActionResult> {
+export async function createUserAction(
+  input: CreateUserInput
+): Promise<CreateUserActionResult> {
   try {
     await requireAnyFeature(['user-admin'])
-    await createLocalUser(input)
+    const receipt: CreateUserReceipt = await createLocalUser(input)
     revalidatePath('/admin/users')
-    return { ok: true, message: `User ${input.username} created` }
+    return receipt.mode === 'temporary'
+      ? {
+          ok: true,
+          mode: 'temporary',
+          message: `User ${input.username} created`,
+          oneTimePassword: receipt.oneTimePassword
+        }
+      : {
+          ok: true,
+          mode: 'manual',
+          message: `User ${input.username} created`
+        }
   } catch (error) {
     return { ok: false, message: messageFrom(error) }
   }
@@ -67,15 +83,22 @@ export async function setUserRoleAction(
   }
 }
 
+export type ResetUserPasswordActionResult =
+  | { ok: true; message: string; oneTimePassword: string }
+  | { ok: false; message: string }
+
 export async function resetUserPasswordAction(
-  userId: string,
-  password: string
-): Promise<UserActionResult> {
+  userId: string
+): Promise<ResetUserPasswordActionResult> {
   try {
     await requireAnyFeature(['user-admin'])
-    await resetLocalUserPassword(userId, password)
+    const oneTimePassword = await resetLocalUserPassword(userId)
     revalidatePath('/admin/users')
-    return { ok: true, message: 'Password reset and active sessions revoked' }
+    return {
+      ok: true,
+      message: 'Password reset and active sessions revoked',
+      oneTimePassword
+    }
   } catch (error) {
     return { ok: false, message: messageFrom(error) }
   }

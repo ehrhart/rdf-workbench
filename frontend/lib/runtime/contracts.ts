@@ -96,6 +96,13 @@ export interface Principal {
   id: string
   username: string
   role: 'admin' | 'user'
+  /**
+   * True while the account owes a password change at first login.
+   * Required, not optional: `asPrincipal` in local-auth is the only
+   * constructor (all three providers share localAuthAdapter), so every
+   * principal must answer it.
+   */
+  mustChangePassword: boolean
 }
 
 export interface SavedQueryRepository {

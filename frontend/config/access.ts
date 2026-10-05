@@ -41,6 +41,35 @@ export interface AccessRule {
   feature?: FeatureId
 }
 
+export const PASSWORD_CHANGE_PATH = '/change-password'
+
+/**
+ * Paths a principal that owes a password change may still request: the
+ * change surface itself (its page render and its server-action POST
+ * share the path) and logout. Everything else — public and
+ * anonymous-read paths included — is denied for flagged sessions, so a
+ * flagged user gets strictly less than an anonymous visitor. Exact
+ * matching: the proxy gate is the only consumer, and no other file
+ * re-declares these paths.
+ */
+const PASSWORD_CHANGE_ALLOWED: readonly string[] = [
+  PASSWORD_CHANGE_PATH,
+  '/logout'
+]
+
+export function isPasswordChangeAllowed(pathname: string): boolean {
+  return PASSWORD_CHANGE_ALLOWED.includes(pathname)
+}
+
+/**
+ * Accepts only same-origin relative paths ("/x", never "//x" or an
+ * absolute URL); anything else collapses to "/". Consumed by the login
+ * action and the change-password flow.
+ */
+export function safeInternalRedirect(value: string | null | undefined): string {
+  return value?.startsWith('/') && !value.startsWith('//') ? value : '/'
+}
+
 /**
  * Every page and API route under `app/`, enumerated from the file tree.
  * First matching pattern wins: specific patterns are listed before broad
@@ -54,6 +83,7 @@ export const ACCESS_RULES: AccessRule[] = [
   { pattern: '/login', access: 'public' },
   { pattern: '/logout', access: 'public' },
   { pattern: '/health', access: 'public' },
+  { pattern: '/change-password', access: 'session' },
 
   // Read access is intentionally left open here; mutation protection is
   // handled at the endpoint layer, not in this list.

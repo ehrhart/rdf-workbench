@@ -13,6 +13,19 @@ export function unauthenticatedResponse(): NextResponse {
   )
 }
 
+/**
+ * 403 for a valid session that still owes a password change. The copy
+ * must not contain "unauthorized" or "Session expired": the dashboard
+ * error boundary treats those as an auth failure and redirects to
+ * /logout.
+ */
+export function passwordChangeRequiredResponse(): NextResponse {
+  return NextResponse.json(
+    { error: 'Password change required' },
+    { status: 403 }
+  )
+}
+
 /** 503 for an auth adapter or session store failure. */
 export function serviceUnavailableResponse(): NextResponse {
   return NextResponse.json(
@@ -50,6 +63,9 @@ export async function requirePrincipal(): Promise<PrincipalGuard> {
   const resolved = await resolvePrincipal()
   if (resolved.response) return { response: resolved.response }
   if (!resolved.principal) return { response: unauthenticatedResponse() }
+  if (resolved.principal.mustChangePassword) {
+    return { response: passwordChangeRequiredResponse() }
+  }
   return { principal: resolved.principal }
 }
 
@@ -66,10 +82,15 @@ export type MaybeAnonymousGuard =
 export async function requireAskPrincipal(): Promise<MaybeAnonymousGuard> {
   const resolved = await resolvePrincipal()
   if (resolved.response) return { response: resolved.response }
-  if (!resolved.principal && !anonymousAskEnabled()) {
+  // A flagged principal holds no session privileges on this surface:
+  // degrade to anonymous, matching the surface's own anonymous semantics.
+  const principal = resolved.principal?.mustChangePassword
+    ? null
+    : (resolved.principal ?? null)
+  if (!principal && !anonymousAskEnabled()) {
     return { response: unauthenticatedResponse() }
   }
-  return { principal: resolved.principal ?? null }
+  return { principal }
 }
 
 /**
@@ -79,7 +100,11 @@ export async function requireAskPrincipal(): Promise<MaybeAnonymousGuard> {
 export async function resolveOptionalViewer(): Promise<OptionalViewerGuard> {
   const resolved = await resolvePrincipal()
   if (resolved.response) return { response: resolved.response }
-  return { viewerId: resolved.principal?.id ?? null }
+  const viewerId =
+    resolved.principal && !resolved.principal.mustChangePassword
+      ? resolved.principal.id
+      : null
+  return { viewerId }
 }
 
 async function resolvePrincipal(): Promise<

@@ -2,6 +2,8 @@ import { type NextRequest, NextResponse } from 'next/server'
 import {
   anonymousAskEnabled,
   anonymousReadEnabled,
+  isPasswordChangeAllowed,
+  PASSWORD_CHANGE_PATH,
   resolveAccess
 } from '@/config/access'
 import type {
@@ -31,11 +33,22 @@ export async function proxy(request: NextRequest) {
   const provider = providerFromEnv()
 
   const routing = classifySparqlRequest(request)
-  if (routing === 'query') {
-    return NextResponse.rewrite(new URL('/api/sparql/query', request.url))
-  }
   if (routing === 'not-acceptable') {
     return new NextResponse('Not Acceptable', { status: 406 })
+  }
+
+  // The session is resolved on EVERY cookie-bearing request — public
+  // paths included. The must-change gate must run before both the SPARQL
+  // rewrite and the public fast path: each would otherwise return before
+  // any access check, letting a flagged session through.
+  const principal = await validateProxySession(request)
+
+  if (principal?.mustChangePassword && !isPasswordChangeAllowed(pathname)) {
+    return passwordChangeRequiredResponse(request, pathname)
+  }
+
+  if (routing === 'query') {
+    return NextResponse.rewrite(new URL('/api/sparql/query', request.url))
   }
 
   const decision = resolveAccess(pathname, {
@@ -58,7 +71,6 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next()
   }
 
-  const principal = await validateProxySession(request)
   if (!principal) {
     return unauthenticatedResponse(request, pathname)
   }
@@ -99,6 +111,25 @@ async function unauthenticatedResponse(
 
   response.cookies.delete('session')
   return response
+}
+
+async function passwordChangeRequiredResponse(
+  request: NextRequest,
+  pathname: string
+): Promise<NextResponse> {
+  if (pathname.startsWith('/api/')) {
+    const { passwordChangeRequiredResponse: json } = await import(
+      './lib/api-auth'
+    )
+    return json()
+  }
+
+  // The session cookie is kept — unlike unauthenticatedResponse — because
+  // the session is valid; deleting it would lock the user out of the
+  // change surface itself.
+  const changeUrl = new URL(PASSWORD_CHANGE_PATH, request.url)
+  changeUrl.searchParams.set('redirect', pathname)
+  return NextResponse.redirect(changeUrl)
 }
 
 function adminDeniedResponse(pathname: string): NextResponse {

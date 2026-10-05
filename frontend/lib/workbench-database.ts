@@ -233,6 +233,18 @@ function migrate(db: Database.Database): void {
     })()
   }
 
+  if (current.version < 10) {
+    db.transaction(() => {
+      db.exec(`
+        ALTER TABLE users ADD COLUMN must_change_password
+          INTEGER NOT NULL DEFAULT 0 CHECK (must_change_password IN (0, 1));
+      `)
+      db.prepare(
+        'INSERT INTO schema_migrations (version, applied_at) VALUES (10, ?)'
+      ).run(new Date().toISOString())
+    })()
+  }
+
   const prefixCount = db
     .prepare('SELECT COUNT(*) AS count FROM prefixes')
     .get() as {
