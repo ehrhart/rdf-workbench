@@ -56,7 +56,7 @@ function normalizeTitle(title: string | undefined | null): string {
   return trimmed || DEFAULT_TITLE
 }
 
-function isStorableMessage(value: unknown): boolean {
+export function isStorableMessage(value: unknown): boolean {
   if (typeof value !== 'object' || value === null) return false
   const message = value as { id?: unknown; role?: unknown }
   return (

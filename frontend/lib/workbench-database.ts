@@ -213,6 +213,26 @@ function migrate(db: Database.Database): void {
     })()
   }
 
+  if (current.version < 9) {
+    db.transaction(() => {
+      db.exec(`
+        CREATE TABLE conversation_shares (
+          id TEXT PRIMARY KEY,
+          conversation_id TEXT NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+          title TEXT NOT NULL,
+          messages TEXT NOT NULL,
+          message_count INTEGER NOT NULL,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL
+        );
+        CREATE UNIQUE INDEX conversation_shares_conversation_idx ON conversation_shares(conversation_id);
+      `)
+      db.prepare(
+        'INSERT INTO schema_migrations (version, applied_at) VALUES (9, ?)'
+      ).run(new Date().toISOString())
+    })()
+  }
+
   const prefixCount = db
     .prepare('SELECT COUNT(*) AS count FROM prefixes')
     .get() as {
