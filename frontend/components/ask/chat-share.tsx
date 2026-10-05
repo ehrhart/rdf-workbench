@@ -157,6 +157,7 @@ export function ChatShareButton() {
         </PopoverTrigger>
         <PopoverContent
           align="end"
+          onOpenAutoFocus={(event) => event.preventDefault()}
           aria-busy={updating || undefined}
           className={cn(
             updating && 'pointer-events-none select-none opacity-60'
