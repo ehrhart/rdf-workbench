@@ -32,10 +32,13 @@ jobs:
         working-directory: virtuoso-adapter
     steps:
       - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.21.0
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-          cache-dependency-path: virtuoso-adapter/package-lock.json
-      - run: npm ci
-      - run: npm run build
+          cache: pnpm
+          cache-dependency-path: virtuoso-adapter/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
