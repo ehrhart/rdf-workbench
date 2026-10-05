@@ -151,7 +151,7 @@ export function ChatShareButton() {
             <ShareIcon className="size-3.5 text-muted-foreground" />
             <span className="text-sm font-medium">Share</span>
             {stale && (
-              <span className="absolute -top-1 -right-1 size-2 rounded-full bg-primary ring-2 ring-background" />
+              <span className="absolute -top-1 -right-1 size-2 rounded-full bg-stale ring-2 ring-background" />
             )}
           </Button>
         </PopoverTrigger>
