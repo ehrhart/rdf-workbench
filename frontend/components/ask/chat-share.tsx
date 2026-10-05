@@ -1,18 +1,19 @@
 'use client'
 
-import { LoaderIcon, ShareIcon } from 'lucide-react'
+import { LinkIcon, LoaderIcon, ShareIcon, UnlinkIcon } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { useChatSession } from '@/components/ask/chat-session'
 import { HeaderPortal } from '@/components/ask/header-portal'
 import { Button } from '@/components/ui/button'
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogTitle
-} from '@/components/ui/dialog'
+  Popover,
+  PopoverContent,
+  PopoverDescription,
+  PopoverHeader,
+  PopoverTitle,
+  PopoverTrigger
+} from '@/components/ui/popover'
 import {
   Tooltip,
   TooltipContent,
@@ -141,30 +142,27 @@ export function ChatShareButton() {
 
   return (
     <HeaderPortal side="right">
-      <Tooltip>
-        <TooltipTrigger asChild>
+      <Popover open={open} onOpenChange={handleOpenChange}>
+        <PopoverTrigger asChild>
           <Button
+            type="button"
             variant="ghost"
-            size="icon-xs"
-            onClick={() => handleOpenChange(true)}
+            className="h-8 gap-1.5 rounded-md px-2.5"
           >
-            <ShareIcon />
-            <span className="sr-only">Share chat</span>
+            <ShareIcon className="size-3.5 text-muted-foreground" />
+            <span className="text-sm font-medium">Share chat</span>
           </Button>
-        </TooltipTrigger>
-        <TooltipContent>Share chat</TooltipContent>
-      </Tooltip>
-      <Dialog open={open} onOpenChange={handleOpenChange}>
-        <DialogContent>
-          <DialogTitle>Share chat</DialogTitle>
-          <div
-            aria-busy={updating || undefined}
-            className={cn(
-              'grid gap-4',
-              updating && 'pointer-events-none select-none opacity-60'
-            )}
-          >
-            <DialogDescription>
+        </PopoverTrigger>
+        <PopoverContent
+          align="end"
+          aria-busy={updating || undefined}
+          className={cn(
+            updating && 'pointer-events-none select-none opacity-60'
+          )}
+        >
+          <PopoverHeader>
+            <PopoverTitle>Share chat</PopoverTitle>
+            <PopoverDescription>
               {share === null || !stale ? (
                 'Only messages up until now will be shared'
               ) : (
@@ -186,38 +184,46 @@ export function ChatShareButton() {
                   </Tooltip>
                 </>
               )}
-            </DialogDescription>
-            <p className="text-xs text-muted-foreground">
-              Don't share personal information or third-party content without
-              permission
-            </p>
-            <DialogFooter>
-              {share && (
-                <Button
-                  variant="destructive"
-                  onClick={() => void stopSharing()}
-                  disabled={busy}
-                >
-                  Stop sharing
-                </Button>
-              )}
+            </PopoverDescription>
+          </PopoverHeader>
+          <p className="text-xs text-muted-foreground">
+            Don't share personal information or third-party content without
+            permission
+          </p>
+          <div className="flex items-center justify-end gap-2">
+            {share && (
               <Button
-                onClick={() => {
-                  if (share) void copyShareLink(share)
-                  else void createShare()
-                }}
-                disabled={!loaded || busy}
+                variant="destructive"
+                size="sm"
+                onClick={() => void stopSharing()}
+                disabled={busy}
               >
-                {creating ? (
+                {stopping ? (
                   <LoaderIcon className="animate-spin" />
                 ) : (
-                  'Copy link'
+                  <UnlinkIcon />
                 )}
+                Stop sharing
               </Button>
-            </DialogFooter>
+            )}
+            <Button
+              size="sm"
+              onClick={() => {
+                if (share) void copyShareLink(share)
+                else void createShare()
+              }}
+              disabled={!loaded || busy}
+            >
+              {creating ? (
+                <LoaderIcon className="animate-spin" />
+              ) : (
+                <LinkIcon />
+              )}
+              Copy link
+            </Button>
           </div>
-        </DialogContent>
-      </Dialog>
+        </PopoverContent>
+      </Popover>
     </HeaderPortal>
   )
 }
