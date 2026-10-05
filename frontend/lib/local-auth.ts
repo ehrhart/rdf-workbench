@@ -266,6 +266,39 @@ export async function setLocalUserDisabled(
   })()
 }
 
+export async function setLocalUserRole(
+  userId: string,
+  role: Principal['role']
+): Promise<void> {
+  await requireLocalAdmin()
+  if (role !== 'admin' && role !== 'user') {
+    throw new QueryError('Invalid role')
+  }
+  const db = await getWorkbenchDatabase()
+  const target = db
+    .prepare('SELECT id, role, disabled FROM users WHERE id = ?')
+    .get(userId) as Pick<UserRow, 'id' | 'role' | 'disabled'> | undefined
+  if (!target) throw new QueryError('User not found')
+
+  if (role === 'user' && target.role === 'admin' && !target.disabled) {
+    const activeAdmins = db
+      .prepare(
+        "SELECT COUNT(*) AS count FROM users WHERE role = 'admin' AND disabled = 0"
+      )
+      .get() as { count: number }
+    if (activeAdmins.count <= 1) {
+      throw new QueryError('The final active administrator cannot be demoted')
+    }
+  }
+
+  // Sessions are not revoked: the role is read fresh from the users table on
+  // every request, so the change applies on the user's next request.
+  const result = db
+    .prepare('UPDATE users SET role = ?, updated_at = ? WHERE id = ?')
+    .run(role, new Date().toISOString(), userId)
+  if (result.changes === 0) throw new QueryError('User not found')
+}
+
 export async function resetLocalUserPassword(
   userId: string,
   password: string

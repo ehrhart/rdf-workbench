@@ -7,7 +7,8 @@ import { toast } from 'sonner'
 import {
   createUserAction,
   resetUserPasswordAction,
-  setUserDisabledAction
+  setUserDisabledAction,
+  setUserRoleAction
 } from '@/app/(dashboard)/admin/users/actions'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -58,6 +59,15 @@ export function UserManager({ users, currentUserId }: UserManagerProps) {
   async function toggleUser(user: LocalUser) {
     setPending(user.id)
     const result = await setUserDisabledAction(user.id, !user.disabled)
+    setPending(null)
+    if (!result.ok) return toast.error(result.message)
+    toast.success(result.message)
+    router.refresh()
+  }
+
+  async function changeRole(user: LocalUser, role: 'admin' | 'user') {
+    setPending(user.id)
+    const result = await setUserRoleAction(user.id, role)
     setPending(null)
     if (!result.ok) return toast.error(result.message)
     toast.success(result.message)
@@ -145,7 +155,23 @@ export function UserManager({ users, currentUserId }: UserManagerProps) {
                       {user.username}
                       {user.id === currentUserId ? ' (you)' : ''}
                     </TableCell>
-                    <TableCell className="capitalize">{user.role}</TableCell>
+                    <TableCell className="capitalize">
+                      <select
+                        value={user.role}
+                        className="h-9 rounded-md border bg-transparent px-3 text-sm"
+                        aria-label={`Role for ${user.username}`}
+                        disabled={pending !== null}
+                        onChange={(event) =>
+                          changeRole(
+                            user,
+                            event.target.value === 'admin' ? 'admin' : 'user'
+                          )
+                        }
+                      >
+                        <option value="user">User</option>
+                        <option value="admin">Administrator</option>
+                      </select>
+                    </TableCell>
                     <TableCell>
                       <Badge
                         variant={user.disabled ? 'destructive' : 'secondary'}

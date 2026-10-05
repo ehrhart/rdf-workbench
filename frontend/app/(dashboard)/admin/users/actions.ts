@@ -4,7 +4,8 @@ import { revalidatePath } from 'next/cache'
 import {
   createLocalUser,
   resetLocalUserPassword,
-  setLocalUserDisabled
+  setLocalUserDisabled,
+  setLocalUserRole
 } from '@/lib/local-auth'
 import { requireAnyFeature } from '@/lib/runtime'
 
@@ -41,6 +42,26 @@ export async function setUserDisabledAction(
     await setLocalUserDisabled(userId, disabled)
     revalidatePath('/admin/users')
     return { ok: true, message: disabled ? 'User disabled' : 'User enabled' }
+  } catch (error) {
+    return { ok: false, message: messageFrom(error) }
+  }
+}
+
+export async function setUserRoleAction(
+  userId: string,
+  role: 'admin' | 'user'
+): Promise<UserActionResult> {
+  try {
+    await requireAnyFeature(['user-admin'])
+    await setLocalUserRole(userId, role)
+    revalidatePath('/admin/users')
+    return {
+      ok: true,
+      message:
+        role === 'admin'
+          ? 'User promoted to administrator'
+          : 'User changed to standard user'
+    }
   } catch (error) {
     return { ok: false, message: messageFrom(error) }
   }
