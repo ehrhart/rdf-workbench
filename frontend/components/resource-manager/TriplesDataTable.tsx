@@ -273,6 +273,9 @@ export const TriplesDataTable = memo(function TriplesDataTable({
 
   const handleCellKeyDown = useCallback(
     (event: KeyboardEvent<HTMLDivElement>, cellId: string) => {
+      if (event.target !== event.currentTarget) {
+        return
+      }
       if (event.key === 'Enter' || event.key === ' ') {
         event.preventDefault()
         toggleCellExpansion(cellId)
