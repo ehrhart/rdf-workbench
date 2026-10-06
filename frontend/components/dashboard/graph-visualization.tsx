@@ -22,6 +22,7 @@ import {
   TooltipTrigger
 } from '@/components/ui/tooltip'
 import { executeQuery } from '@/lib/triplestore'
+import { shortenUri } from '@/lib/utils'
 import type { SparqlBindingValue } from '@/types'
 import NodeInfoPanel from './node-info-panel'
 
@@ -111,11 +112,6 @@ function useTypeColors() {
 }
 
 // Helper functions
-const shortenUri = (uri: string): string => {
-  const parts = uri.split(/[/#]/)
-  return parts[parts.length - 1]
-}
-
 const formatPredicate = (predicate: string) => {
   return shortenUri(predicate)
 }
