@@ -247,56 +247,35 @@ const BindingsResultsTable = ({
 
   const handleCellClick = useCallback(
     (event: MouseEvent<HTMLDivElement>, cellId: string) => {
-      if (!compactView) return
+      const selection = window.getSelection()
+      if (selection && !selection.isCollapsed) {
+        return
+      }
 
       const target = event.target as HTMLElement
-      const currentTarget = event.currentTarget as HTMLElement
-      const linkElement = target.closest('a[href]')
-      const isTruncated =
-        currentTarget.scrollWidth > currentTarget.offsetWidth ||
-        currentTarget.scrollHeight > currentTarget.offsetHeight
-
-      if (linkElement) {
-        if (isTruncated) {
-          event.preventDefault()
-          event.stopPropagation()
-          toggleCellExpansion(cellId)
-        }
+      const interactive = target.closest(
+        'a[href], button, input, textarea, [role="button"], [role="link"]'
+      )
+      if (interactive && interactive !== event.currentTarget) {
         return
       }
 
-      if (
-        target.closest(
-          'button, input, textarea, [role="button"], [role="link"]'
-        )
-      ) {
-        return
-      }
-
-      if (isTruncated) {
-        toggleCellExpansion(cellId)
-      }
+      toggleCellExpansion(cellId)
     },
-    [compactView, toggleCellExpansion]
+    [toggleCellExpansion]
   )
 
   const handleCellKeyDown = useCallback(
     (event: KeyboardEvent<HTMLDivElement>, cellId: string) => {
-      if (!compactView) return
-
+      if (event.target !== event.currentTarget) {
+        return
+      }
       if (event.key === 'Enter' || event.key === ' ') {
-        const currentTarget = event.currentTarget as HTMLElement
-        const isTruncated =
-          currentTarget.scrollWidth > currentTarget.offsetWidth ||
-          currentTarget.scrollHeight > currentTarget.offsetHeight
-
-        if (isTruncated) {
-          event.preventDefault()
-          toggleCellExpansion(cellId)
-        }
+        event.preventDefault()
+        toggleCellExpansion(cellId)
       }
     },
-    [compactView, toggleCellExpansion]
+    [toggleCellExpansion]
   )
 
   const handlePaginationChange = useCallback(
@@ -976,6 +955,7 @@ const BindingsResultsTable = ({
                       data-column-id={cell.column.id}
                     >
                       {compactView ? (
+                        // biome-ignore lint/a11y/useSemanticElements: cell renders interactive links, so a native button is not valid here
                         <div
                           className={cn(
                             'relative block max-w-full cursor-pointer',
@@ -984,9 +964,9 @@ const BindingsResultsTable = ({
                               'whitespace-normal wrap-break-word': isExpanded
                             }
                           )}
-                          role="switch"
+                          role="button"
                           tabIndex={0}
-                          aria-checked={isExpanded}
+                          aria-expanded={isExpanded}
                           onClick={(event) => handleCellClick(event, cellId)}
                           onKeyDown={(event) =>
                             handleCellKeyDown(event, cellId)
