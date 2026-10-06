@@ -3,18 +3,8 @@ import 'server-only'
 import { format } from 'date-fns'
 
 import type { DatasetProfile } from '@/lib/ai/dataset-profile'
+import { DIALECT_NOTES } from '@/lib/ai/dialect'
 import type { TriplestoreProvider } from '@/lib/runtime/contracts'
-
-const DIALECT_NOTES: Record<TriplestoreProvider, string> = {
-  qlever:
-    'Engine: QLever. Full SPARQL 1.1 SELECT support and fast aggregation. SPARQL. Full-text search uses ql:contains-word / ql:contains-entity, but prefer the search_entities tool instead.',
-  virtuoso:
-    'Engine: Virtuoso. SPARQL 1.1 with Virtuoso extensions. Full-text search is available via `?o bif:contains "term"`, but prefer the search_entities tool instead.',
-  oxigraph:
-    'Engine: Oxigraph. Strict SPARQL 1.1. No full-text search support; resolve entities with the search_entities tool, or probe a plausible canonical IRI as a constant in a triple pattern. FILTER with STRSTARTS/CONTAINS is a last resort for small or pre-filtered sets.'
-}
-
-export { DIALECT_NOTES }
 
 export function buildPrefixBlock(prefixes: Record<string, string>): string {
   return Object.entries(prefixes)

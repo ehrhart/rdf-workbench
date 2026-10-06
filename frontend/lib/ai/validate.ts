@@ -2,6 +2,7 @@ import 'server-only'
 
 import { Generator, Parser } from 'sparqljs'
 import type { DatasetProfile } from '@/lib/ai/dataset-profile'
+import { engineNamespacesFor } from '@/lib/ai/dialect'
 
 const RDF_TYPE = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type'
 
@@ -207,19 +208,27 @@ export function validateSparqlQuery(
       knownPredicates.add(property.iri)
     }
 
+    const engineNamespaces = profile
+      ? engineNamespacesFor(profile.provider)
+      : []
+
     for (const predicate of state.predicates) {
-      if (!knownPredicates.has(predicate)) {
-        const suggestions = suggestIris(predicate, knownPredicates)
-        issues.push(
-          `Predicate <${predicate}> is not used in this dataset.${
-            suggestions.length > 0
-              ? ` Known predicates with a similar name: ${suggestions
-                  .map((iri) => `<${iri}>`)
-                  .join(', ')}.`
-              : ' Use only predicates listed in the dataset profile.'
-          }`
-        )
+      if (
+        knownPredicates.has(predicate) ||
+        engineNamespaces.some((namespace) => predicate.startsWith(namespace))
+      ) {
+        continue
       }
+      const suggestions = suggestIris(predicate, knownPredicates)
+      issues.push(
+        `Predicate <${predicate}> is not used in this dataset.${
+          suggestions.length > 0
+            ? ` Known predicates with a similar name: ${suggestions
+                .map((iri) => `<${iri}>`)
+                .join(', ')}.`
+            : ' Use only predicates listed in the dataset profile.'
+        }`
+      )
     }
     for (const cls of state.classes) {
       if (!knownClasses.has(cls)) {
