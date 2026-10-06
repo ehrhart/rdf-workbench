@@ -208,17 +208,17 @@ function ResultsTriples({ results }: { results: SparqlQueryResult }) {
           <TableBody>
             {keyedPageRows.map(({ row, key }) => (
               <TableRow key={key}>
-                <TableCell className="min-w-0 align-top">
+                <TableCell className="group min-w-0 align-top">
                   <div className="whitespace-normal wrap-break-word">
                     {renderBindingValue(row.subject)}
                   </div>
                 </TableCell>
-                <TableCell className="min-w-0 align-top">
+                <TableCell className="group min-w-0 align-top">
                   <div className="whitespace-normal wrap-break-word">
                     {renderBindingValue(row.predicate)}
                   </div>
                 </TableCell>
-                <TableCell className="min-w-0 align-top">
+                <TableCell className="group min-w-0 align-top">
                   <div className="whitespace-normal wrap-break-word">
                     {renderBindingValue(row.object)}
                   </div>

@@ -94,7 +94,6 @@ export const createColumns = (
     id: variable,
     accessorKey: variable,
     minSize: 60,
-    // maxSize: 720,
     meta: {
       isGrow: true
     },
@@ -213,12 +212,12 @@ const CopyableCell = ({
   }
 
   return (
-    <div className="relative pr-5 group">
+    <div className="group">
       {children}
       <Button
-        variant="secondary"
-        size="icon-sm"
-        className="absolute top-0 right-0 size-5 p-0 bg-primary-foreground transition-all duration-200 opacity-0 group-hover:opacity-100 hover:opacity-100 hover:scale-105"
+        variant="ghost"
+        size="icon-xs"
+        className="ml-1 align-middle text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
         onClick={handleCopy}
         title={
           copyStatus === 'success'

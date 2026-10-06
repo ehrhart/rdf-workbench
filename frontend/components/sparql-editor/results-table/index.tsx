@@ -54,11 +54,7 @@ import {
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { cn } from '@/lib/utils'
-import type {
-  SparqlBindingsResult,
-  SparqlBindingValue,
-  SparqlQueryResult
-} from '@/types'
+import type { SparqlBindingsResult, SparqlQueryResult } from '@/types'
 import {
   InputGroup,
   InputGroupIcon,
@@ -935,8 +931,6 @@ const BindingsResultsTable = ({
                 {row.getVisibleCells().map((cell) => {
                   const cellId = cell.id
                   const isExpanded = expandedCells[cellId]
-                  const cellValue = cell.getValue() as SparqlBindingValue | null
-                  const isUriCell = cellValue?.type === 'uri'
                   const cellContent = flexRender(
                     cell.column.columnDef.cell,
                     cell.getContext()
@@ -945,10 +939,7 @@ const BindingsResultsTable = ({
                   return (
                     <div
                       key={cell.id}
-                      className={cn(
-                        'border-r border-border last:border-r-0 p-2 shrink-0 text-sm',
-                        isUriCell && 'group'
-                      )}
+                      className="border-r border-border last:border-r-0 p-2 shrink-0 text-sm group"
                       style={{
                         width: `${cell.column.getSize()}px`
                       }}
