@@ -24,7 +24,15 @@ import {
   SearchIcon,
   XIcon
 } from 'lucide-react'
-import { memo, useEffect, useMemo, useState } from 'react'
+import {
+  type KeyboardEvent,
+  type MouseEvent,
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState
+} from 'react'
 import { ColumnFilterDropdown } from '@/components/tables/ColumnFilterDropdown'
 import {
   customFilterFn,
@@ -39,6 +47,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
+import { Label } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
@@ -47,6 +56,7 @@ import {
   SelectValue
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Switch } from '@/components/ui/switch'
 import { cn } from '@/lib/utils'
 import { InputGroup, InputGroupIcon, InputGroupInput } from '../ui/input-group'
 import { DEFAULT_PAGE_SIZE, PAGE_SIZES } from './constants'
@@ -71,6 +81,7 @@ const createColumns = (): ColumnDef<Triple>[] => [
   },
   {
     id: 'subject',
+    size: 240,
     header: ({ column }) => (
       <div className="-ml-2 flex items-center space-x-1">
         <Button
@@ -98,6 +109,7 @@ const createColumns = (): ColumnDef<Triple>[] => [
   },
   {
     id: 'predicate',
+    size: 240,
     header: ({ column }) => (
       <div className="-ml-2 flex items-center space-x-1">
         <Button
@@ -125,6 +137,7 @@ const createColumns = (): ColumnDef<Triple>[] => [
   },
   {
     id: 'object',
+    size: 320,
     header: ({ column }) => (
       <div className="-ml-2 flex items-center space-x-1">
         <Button
@@ -152,6 +165,7 @@ const createColumns = (): ColumnDef<Triple>[] => [
   },
   {
     id: 'context',
+    size: 200,
     header: ({ column }) => (
       <div className="-ml-2 flex items-center space-x-1">
         <Button
@@ -203,7 +217,10 @@ export const TriplesDataTable = memo(function TriplesDataTable({
     pageSize: DEFAULT_PAGE_SIZE
   })
   const [rowSelection, setRowSelection] = useState({})
-  const [enableTextWrap, setEnableTextWrap] = useState<boolean>(true)
+  const [expandedCells, setExpandedCells] = useState<Record<string, boolean>>(
+    {}
+  )
+  const [compactView, setCompactView] = useState(false)
 
   const columns = useMemo(() => createColumns(), [])
 
@@ -219,7 +236,55 @@ export const TriplesDataTable = memo(function TriplesDataTable({
     setGlobalFilter('')
     setColumnFilters([])
     setSorting([])
+    setExpandedCells({})
   }, [resourceInfo?.uri, resourceInfo?.role])
+
+  const toggleCellExpansion = useCallback((cellId: string) => {
+    setExpandedCells((previous) => {
+      const nextState = { ...previous }
+      if (nextState[cellId]) {
+        delete nextState[cellId]
+      } else {
+        nextState[cellId] = true
+      }
+      return nextState
+    })
+  }, [])
+
+  const handleCellClick = useCallback(
+    (event: MouseEvent<HTMLDivElement>, cellId: string) => {
+      const selection = window.getSelection()
+      if (selection && !selection.isCollapsed) {
+        return
+      }
+
+      const target = event.target as HTMLElement
+      const interactive = target.closest(
+        'a[href], button, input, textarea, [role="button"], [role="link"]'
+      )
+      if (interactive && interactive !== event.currentTarget) {
+        return
+      }
+
+      toggleCellExpansion(cellId)
+    },
+    [toggleCellExpansion]
+  )
+
+  const handleCellKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLDivElement>, cellId: string) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault()
+        toggleCellExpansion(cellId)
+      }
+    },
+    [toggleCellExpansion]
+  )
+
+  const handleCompactViewChange = useCallback((checked: boolean) => {
+    setCompactView(checked)
+    setExpandedCells({})
+  }, [])
 
   const table = useReactTable<Triple>({
     data: triples,
@@ -253,6 +318,10 @@ export const TriplesDataTable = memo(function TriplesDataTable({
   const isLoading = status === 'loading'
   const { rows } = table.getRowModel()
   const visibleColumns = table.getVisibleLeafColumns()
+  const totalVisibleSize = visibleColumns.reduce(
+    (total, column) => total + column.getSize(),
+    0
+  )
   const skeletonRowIds = useMemo(
     () =>
       Array.from(
@@ -314,25 +383,22 @@ export const TriplesDataTable = memo(function TriplesDataTable({
                 ))}
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setEnableTextWrap((prev) => !prev)}
-            aria-pressed={enableTextWrap}
-          >
-            {enableTextWrap ? 'Disable Wrap' : 'Enable Wrap'}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Switch
+              id="triples-compact-view-toggle"
+              checked={compactView}
+              onCheckedChange={handleCompactViewChange}
+            />
+            <Label htmlFor="triples-compact-view-toggle" className="text-sm">
+              Compact view
+            </Label>
+          </div>
         </div>
       </div>
 
       {/* Table */}
       <div className="overflow-x-auto rounded-md border">
-        <table
-          className={cn('w-full caption-bottom border-collapse text-sm', {
-            'wrap-anywhere': enableTextWrap,
-            'whitespace-nowrap': !enableTextWrap
-          })}
-        >
+        <table className="w-full table-fixed caption-bottom border-collapse text-sm">
           <thead className="[&_tr]:border-b">
             {table.getHeaderGroups().map((headerGroup) => (
               <tr
@@ -345,8 +411,7 @@ export const TriplesDataTable = memo(function TriplesDataTable({
                     colSpan={header.colSpan}
                     className="text-muted-foreground h-12 px-4 text-left align-middle font-medium [&:has([role=checkbox])]:pr-0"
                     style={{
-                      width:
-                        header.getSize() !== 150 ? header.getSize() : undefined
+                      width: `${(header.getSize() / totalVisibleSize) * 100}%`
                     }}
                   >
                     {!header.isPlaceholder &&
@@ -384,14 +449,51 @@ export const TriplesDataTable = memo(function TriplesDataTable({
                   className="hover:bg-muted/50 data-[state=selected]:bg-muted border-b transition-colors"
                   data-state={row.getIsSelected() && 'selected'}
                 >
-                  {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id} className="p-4 align-top">
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </td>
-                  ))}
+                  {row.getVisibleCells().map((cell) => {
+                    const isIndexCell = cell.column.id === 'index'
+                    const isExpanded = expandedCells[cell.id]
+
+                    return (
+                      <td key={cell.id} className="p-4 align-top">
+                        {isIndexCell ? (
+                          flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )
+                        ) : compactView ? (
+                          // biome-ignore lint/a11y/useSemanticElements: cell renders interactive links, so a native button is not valid here
+                          <div
+                            className={cn(
+                              'relative block max-w-full cursor-pointer',
+                              {
+                                truncate: !isExpanded,
+                                'whitespace-normal wrap-break-word': isExpanded
+                              }
+                            )}
+                            role="button"
+                            tabIndex={0}
+                            aria-expanded={isExpanded}
+                            onClick={(event) => handleCellClick(event, cell.id)}
+                            onKeyDown={(event) =>
+                              handleCellKeyDown(event, cell.id)
+                            }
+                          >
+                            {flexRender(
+                              cell.column.columnDef.cell,
+                              cell.getContext()
+                            )}
+                          </div>
+                        ) : (
+                          <div className="whitespace-normal wrap-break-word">
+                            {flexRender(
+                              cell.column.columnDef.cell,
+                              cell.getContext()
+                            )}
+                          </div>
+                        )}
+                      </td>
+                    )
+                  })}
                 </tr>
               ))
             ) : (

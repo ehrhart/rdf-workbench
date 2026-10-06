@@ -24,17 +24,15 @@ export const ResourceLink = memo(function ResourceLink({
     return <span className="text-gray-500 italic">{value}</span>
   }
 
-  let suffix = ''
-  if (datatype) {
-    suffix = ` (^^${datatype})`
-  } else if (language) {
-    suffix = ` @${language}`
-  }
-
   return (
     <span className="literal" title={value}>
-      {suffix && <span className="text-xs text-gray-500">{suffix}</span>}
-      {`"${value}"`}
+      {`"${value}"`}{' '}
+      {datatype && (
+        <span className="text-muted-foreground text-xs">{`^^${datatype}`}</span>
+      )}
+      {language && (
+        <span className="text-muted-foreground text-xs">{`@${language}`}</span>
+      )}
     </span>
   )
 })

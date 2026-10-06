@@ -10,6 +10,7 @@ import {
   XIcon
 } from 'lucide-react'
 import { useCallback, useState } from 'react'
+import { shortenUri } from '@/lib/utils'
 import type { SparqlBindingValue } from '../../../types'
 import { ColumnFilterDropdown } from '../../tables/ColumnFilterDropdown'
 import { FilterContent } from '../../tables/FilterContent'
@@ -272,9 +273,4 @@ export function renderBindingValue(value: SparqlBindingValue | null) {
     default:
       return <CopyableCell value={value.value}>{value.value}</CopyableCell>
   }
-}
-
-export function shortenUri(uri: string) {
-  const match = uri.match(/[/#]([^/#]+)$/)
-  return match ? match[1] : uri
 }

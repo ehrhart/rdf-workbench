@@ -36,3 +36,8 @@ export const formatDuration = (duration: number) => {
 
   return `${duration} ms`
 }
+
+export function shortenUri(uri: string) {
+  const match = uri.match(/[/#]([^/#]+)$/)
+  return match ? match[1] : uri
+}
