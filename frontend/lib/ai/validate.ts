@@ -2,7 +2,7 @@ import 'server-only'
 
 import { Generator, Parser } from 'sparqljs'
 import type { DatasetProfile } from '@/lib/ai/dataset-profile'
-import { engineNamespacesFor } from '@/lib/ai/dialect'
+import { dialectFor, engineNamespacesFor } from '@/lib/ai/dialect'
 
 const RDF_TYPE = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type'
 
@@ -38,7 +38,14 @@ export interface ValidateOptions {
   checkVocabulary: boolean
 }
 
-const parser = new Parser()
+type SparqlParser = InstanceType<typeof Parser>
+
+function parserFor(profile: DatasetProfile | null): SparqlParser {
+  return new Parser({
+    prefixes: profile ? dialectFor(profile.provider).parserPrefixes : {}
+  })
+}
+
 const generator = new Generator()
 
 type IriTerm = { termType: string; value: string }
@@ -144,9 +151,9 @@ export function validateSparqlQuery(
 ): ValidationResult {
   const issues: string[] = []
 
-  let ast: ReturnType<typeof parser.parse>
+  let ast: ReturnType<SparqlParser['parse']>
   try {
-    ast = parser.parse(input)
+    ast = parserFor(profile).parse(input)
   } catch (error) {
     return {
       ok: false,
@@ -261,6 +268,16 @@ export function validateSparqlQuery(
   } catch {
     issues.push('The query could not be re-serialized after validation.')
     return { ok: issues.length === 0, issues }
+  }
+
+  // The parser learned these shorthands from the dialect, but engines such
+  // as Virtuoso reserve them and reject any query that declares them.
+  if (profile) {
+    for (const [prefix, iri] of Object.entries(
+      dialectFor(profile.provider).parserPrefixes
+    )) {
+      query = query.split(`PREFIX ${prefix}: <${iri}>\n`).join('')
+    }
   }
 
   return { ok: issues.length === 0, query, issues, limitEnforced }
