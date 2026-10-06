@@ -1,4 +1,5 @@
 import { Fragment, memo } from 'react'
+import { CopyToClipboardButton } from '@/components/prefixes/copy-to-clipboard-button'
 import type { ResourceInfo } from './types'
 
 export const ResourceHeader = memo(function ResourceHeader({
@@ -34,6 +35,14 @@ export const ResourceHeader = memo(function ResourceHeader({
         >
           {uri}
         </a>
+        <CopyToClipboardButton
+          textToCopy={uri}
+          size="icon-xs"
+          className="ml-1 align-middle"
+          tooltipText="Copy source URI"
+          successMessage="Source URI copied to clipboard"
+          errorMessage="Failed to copy source URI"
+        />
       </p>
       {type.length > 0 && (
         <p>
@@ -42,10 +51,18 @@ export const ResourceHeader = memo(function ResourceHeader({
             <Fragment key={t}>
               <a
                 href={`/resource?uri=${encodeURIComponent(t)}`}
-                className="text-blue-600 hover:underline"
+                className="break-all text-blue-600 hover:underline"
               >
                 {t}
               </a>
+              <CopyToClipboardButton
+                textToCopy={t}
+                size="icon-xs"
+                className="ml-1 align-middle"
+                tooltipText="Copy type URI"
+                successMessage="Type URI copied to clipboard"
+                errorMessage="Failed to copy type URI"
+              />
               {idx < type.length - 1 ? ', ' : ''}
             </Fragment>
           ))}
