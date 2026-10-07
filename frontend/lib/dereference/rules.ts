@@ -28,7 +28,7 @@ export const RESERVED_PROVIDER_PATHS: Record<
   oxigraph: []
 }
 
-const PATH_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
+const PATH_PATTERN = /^[a-z0-9]+(?:[-_][a-z0-9]+)*$/
 const MAX_PATH_LENGTH = 64
 
 export function reservedPathsFor(provider: TriplestoreProvider): string[] {
@@ -48,7 +48,7 @@ export function validateDereferencePathFormat(rawPath: string): string {
   }
   if (!PATH_PATTERN.test(path)) {
     throw new QueryError(
-      'Path must be a lowercase slug using letters, digits, and hyphens'
+      'Path must be a lowercase slug using letters, digits, hyphens, and underscores'
     )
   }
   return path
@@ -63,4 +63,31 @@ export function validateDereferencePath(
     throw new QueryError(`Path "/${path}" is reserved`)
   }
   return path
+}
+
+export interface ParsedDereferencePaths {
+  paths: string[]
+  skipped: Array<{ entry: string; reason: string }>
+}
+
+const LIST_SEPARATOR = /[\s,]+/
+
+export function parseDereferencePaths(
+  raw: string | undefined,
+  provider: TriplestoreProvider
+): ParsedDereferencePaths {
+  const entries = new Set(raw?.split(LIST_SEPARATOR).filter(Boolean) ?? [])
+  const paths: string[] = []
+  const skipped: Array<{ entry: string; reason: string }> = []
+  for (const entry of entries) {
+    try {
+      paths.push(validateDereferencePath(entry, provider))
+    } catch (error) {
+      skipped.push({
+        entry,
+        reason: error instanceof Error ? error.message : 'Invalid path'
+      })
+    }
+  }
+  return { paths, skipped }
 }

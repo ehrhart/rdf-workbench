@@ -5,6 +5,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { hash } from '@node-rs/argon2'
 import Database from 'better-sqlite3'
+import { parseDereferencePaths } from '@/lib/dereference/rules'
 import { getRuntimeConfig } from '@/lib/runtime/config'
 
 const DEFAULT_PREFIXES: Record<string, string> = {
@@ -275,6 +276,24 @@ async function initialize(): Promise<Database.Database> {
 
   const db = new Database(config.WORKBENCH_DB_PATH)
   migrate(db)
+
+  const { paths, skipped } = parseDereferencePaths(
+    config.DEREFERENCE_PATHS,
+    config.TRIPLESTORE_PROVIDER
+  )
+  for (const { entry, reason } of skipped) {
+    console.warn(`Ignoring dereference path "/${entry}": ${reason}`)
+  }
+  if (paths.length > 0) {
+    const insertPath = db.prepare(`
+      INSERT OR IGNORE INTO dereference_paths (path, created_at, updated_at)
+      VALUES (?, ?, ?)
+    `)
+    const now = new Date().toISOString()
+    db.transaction(() => {
+      for (const path of paths) insertPath.run(path, now, now)
+    })()
+  }
 
   const userCount = db.prepare('SELECT COUNT(*) AS count FROM users').get() as {
     count: number

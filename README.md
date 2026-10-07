@@ -180,6 +180,11 @@ Common runtime variables:
   origin checks.
 - `RESOURCE_BASE_URI`: base IRI of dereferenceable resources. A path configured
   for dereferencing maps `/path/<id>` to `<RESOURCE_BASE_URI>/path/<id>`.
+- `DEREFERENCE_PATHS`: optional list of dereferenceable path segments,
+  separated by commas or whitespace. At startup the workbench inserts each
+  listed path that does not exist yet. Seeding never deletes rows, so paths
+  managed in the admin UI survive restarts. The workbench skips entries the
+  admin UI would reject and logs a warning. Unset or empty disables seeding.
 - `WORKBENCH_DB_PATH`: sqlite database holding workbench-owned data (saved
   queries, dereference paths, prefixes).
 - `ALLOW_ANONYMOUS_READ`: set to `1` or `true` to let logged-out visitors open
