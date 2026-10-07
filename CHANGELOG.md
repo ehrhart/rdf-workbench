@@ -1,5 +1,37 @@
 # Changelog
 
+## [1.4.0](https://github.com/ehrhart/rdf-workbench/compare/v1.3.0...v1.4.0) (2026-10-07)
+
+
+### Features
+
+* **admin:** add dataset profile card to AI settings ([0298bfd](https://github.com/ehrhart/rdf-workbench/commit/0298bfdd35286f5d2afd73c39fe9abce5fcaf67e))
+* **ask:** add conversation share store and API ([f35293f](https://github.com/ehrhart/rdf-workbench/commit/f35293ffd7ff222f4f2b239b8b59a7e9bfde1847))
+* **ask:** add natural-language ask assistant with chat UI and admin AI settings ([#11](https://github.com/ehrhart/rdf-workbench/issues/11)) ([dc867e2](https://github.com/ehrhart/rdf-workbench/commit/dc867e2a646fefabbf325b47ed61316deae378bb))
+* **ask:** add share dialog to started conversations ([d23c2a2](https://github.com/ehrhart/rdf-workbench/commit/d23c2a2fb480e2489acc9ce07e8749bc4e1a0181))
+* **ask:** render shared chats read-only at /share ([2bd8146](https://github.com/ehrhart/rdf-workbench/commit/2bd8146789e5b25b5014bab75235534f554fb8c3))
+* **ask:** share from a popover with labeled icon buttons ([1c0e5ad](https://github.com/ehrhart/rdf-workbench/commit/1c0e5ada4815efa522a03341b14e42fe5b3be78a))
+* **ask:** staleness dot and outline on the share button ([45c7505](https://github.com/ehrhart/rdf-workbench/commit/45c7505834462a50d8452d5a7aece2f938b92af4))
+* **ask:** support Virtuoso full-text with bif:contains ([47753b8](https://github.com/ehrhart/rdf-workbench/commit/47753b8bd260203dcbcceafad4e99a74d1037424))
+* **auth:** let admins change user roles ([42de5ab](https://github.com/ehrhart/rdf-workbench/commit/42de5ab2e1873f5dc814d532078a9619cb6ce93c))
+* **auth:** offer a temporary password when creating users ([2654ee0](https://github.com/ehrhart/rdf-workbench/commit/2654ee0aaac5748008d23772bc34ebfd5a80e34e))
+* **dereference:** seed paths from DEREFERENCE_PATHS ([aa36995](https://github.com/ehrhart/rdf-workbench/commit/aa3699543aa02fc268ce2e20b5240d4b2d3864df))
+* **resource-manager:** add copy buttons for source and type URIs ([b61e843](https://github.com/ehrhart/rdf-workbench/commit/b61e8433cf9aa6cba523dc806c0ff3698ba861f1))
+
+
+### Bug Fixes
+
+* **ask:** allow engine-resolved predicates in AI queries ([be1453d](https://github.com/ehrhart/rdf-workbench/commit/be1453d6f67ed3ac7e264e44a540c489a744e3cd))
+* **ask:** don't open the update tooltip when the share popover opens ([64d3279](https://github.com/ehrhart/rdf-workbench/commit/64d32798f445cb261ddcf6f18293ac4ef81aab0e))
+* **ask:** inject today's date into the system prompt ([6a4a7e6](https://github.com/ehrhart/rdf-workbench/commit/6a4a7e63db2e84aa88d7cd593f86c615cb16d9d7))
+* **ask:** recolor the staleness dot ([0408239](https://github.com/ehrhart/rdf-workbench/commit/0408239dee15e2eeab90b4e0db410fcae8928cf9))
+* **ask:** restyle the composer send button ([af3d40f](https://github.com/ehrhart/rdf-workbench/commit/af3d40f140f8fe605984c764d4340809d8196c0a))
+* **frontend:** track and document .env.example ([4320c64](https://github.com/ehrhart/rdf-workbench/commit/4320c64f9a00687f4ffe4915c2fc7a7368da081c))
+* **resource-manager:** let Enter and Space reach links inside cells ([4097306](https://github.com/ehrhart/rdf-workbench/commit/4097306dc7561488104c7f844e579fbc71c8257c))
+* **resource-manager:** show full literal values in triples table ([61d21c7](https://github.com/ehrhart/rdf-workbench/commit/61d21c7303a361785c43d3ba51fe0e6723f0720a))
+* **runtime:** add typed totalTriples to EndpointOverview ([4f287ff](https://github.com/ehrhart/rdf-workbench/commit/4f287ffa7db2ed5c2af400714e2c67cad08f81c9))
+* **sparql:** inline copy button on cell hover ([abad717](https://github.com/ehrhart/rdf-workbench/commit/abad71719cfd2918d0e072a58b65493a2eb22ea6))
+
 ## [1.3.0](https://github.com/ehrhart/rdf-workbench/compare/v1.2.0...v1.3.0) (2026-10-02)
 
 
