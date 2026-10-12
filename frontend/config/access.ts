@@ -125,7 +125,7 @@ export const ACCESS_RULES: AccessRule[] = [
   { pattern: '/api/properties', access: 'anonymousRead' },
   { pattern: '/api/graphs', access: 'anonymousRead' },
   { pattern: '/api/saved-queries', access: 'anonymousRead' },
-  { pattern: '/[entity]/[id]', access: 'anonymousRead' },
+  { pattern: '/[entity]/[...id]', access: 'anonymousRead' },
   { pattern: '/', access: 'anonymousRead', exact: true }
 ]
 
@@ -133,9 +133,21 @@ function ruleMatches(rule: AccessRule, pathname: string): boolean {
   if (rule.exact) return pathname === rule.pattern
   if (!rule.pattern.includes('[')) return pathname.startsWith(rule.pattern)
 
-  // Dynamic segment: each `[param]` matches exactly one path segment.
+  // Dynamic segment: each `[param]` matches exactly one path segment, and a
+  // trailing `[...param]` catch-all matches one or more remaining segments.
   const patternSegments = rule.pattern.split('/')
   const pathSegments = pathname.split('/')
+  const lastPattern = patternSegments[patternSegments.length - 1]
+  if (lastPattern.startsWith('[...') && lastPattern.endsWith(']')) {
+    if (pathSegments.length < patternSegments.length) return false
+    return patternSegments
+      .slice(0, -1)
+      .every(
+        (segment, index) =>
+          (segment.startsWith('[') && segment.endsWith(']')) ||
+          segment === pathSegments[index]
+      )
+  }
   if (patternSegments.length !== pathSegments.length) return false
   return patternSegments.every(
     (segment, index) =>
