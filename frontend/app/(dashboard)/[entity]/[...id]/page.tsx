@@ -6,7 +6,7 @@ import { getRuntimeConfig } from '@/lib/runtime/config'
 export default async function ResourceDereferencePage({
   params
 }: {
-  params: Promise<{ entity: string; id: string }>
+  params: Promise<{ entity: string; id: string[] }>
 }) {
   await requirePageAccess('anonymousRead')
   const { entity, id } = await params
@@ -16,7 +16,7 @@ export default async function ResourceDereferencePage({
   if (!configuredPaths.some((entry) => entry.path === entity)) notFound()
 
   const { RESOURCE_BASE_URI } = getRuntimeConfig()
-  const resourceUri = `${RESOURCE_BASE_URI.replace(/\/$/, '')}/${entity}/${id}`
+  const resourceUri = `${RESOURCE_BASE_URI.replace(/\/$/, '')}/${entity}/${id.join('/')}`
 
   const fileTypes = runtime.sparql
     .getDownloadFormats('construct')
