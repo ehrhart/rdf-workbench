@@ -28,8 +28,13 @@ export const RESERVED_PROVIDER_PATHS: Record<
   oxigraph: []
 }
 
-const PATH_PATTERN = /^[a-z0-9]+(?:[-_][a-z0-9]+)*$/
 const MAX_PATH_LENGTH = 64
+
+function isServeablePathSegment(segment: string): boolean {
+  if (segment.includes('/') || segment.includes('%') || segment.startsWith('.')) return false
+  if (segment !== segment.toLowerCase()) return false
+  return new URL(`http://x/${segment}`).pathname === `/${segment}`
+}
 
 export function reservedPathsFor(provider: TriplestoreProvider): string[] {
   return [
@@ -46,9 +51,9 @@ export function validateDereferencePathFormat(rawPath: string): string {
   if (path.length > MAX_PATH_LENGTH) {
     throw new QueryError(`Path must be at most ${MAX_PATH_LENGTH} characters`)
   }
-  if (!PATH_PATTERN.test(path)) {
+  if (!isServeablePathSegment(path)) {
     throw new QueryError(
-      'Path must be a lowercase slug using letters, digits, hyphens, and underscores'
+      'Path must be a lowercase URL path segment without separators, dot prefixes, or characters that require percent-encoding'
     )
   }
   return path

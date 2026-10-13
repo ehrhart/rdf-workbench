@@ -139,7 +139,7 @@ export function DereferenceManager({
         <CardHeader>
           <CardTitle>Add a path</CardTitle>
           <CardDescription>
-            A path is a lowercase slug.{' '}
+            A path is a lowercase URL path segment.{' '}
             <span className="font-mono">/person/&lt;id&gt;</span> resolves to
             the resource{' '}
             <span className="font-mono">
