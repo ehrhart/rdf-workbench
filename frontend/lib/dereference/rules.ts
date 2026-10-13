@@ -31,7 +31,8 @@ export const RESERVED_PROVIDER_PATHS: Record<
 const MAX_PATH_LENGTH = 64
 
 function isServeablePathSegment(segment: string): boolean {
-  if (segment.includes('/') || segment.includes('%') || segment.startsWith('.')) return false
+  if (segment.includes('/') || segment.includes('%') || segment.startsWith('.'))
+    return false
   if (segment !== segment.toLowerCase()) return false
   return new URL(`http://x/${segment}`).pathname === `/${segment}`
 }
