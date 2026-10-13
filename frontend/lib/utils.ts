@@ -41,3 +41,29 @@ export function shortenUri(uri: string) {
   const match = uri.match(/[/#]([^/#]+)$/)
   return match ? match[1] : uri
 }
+
+const XSD_NAMESPACE = 'http://www.w3.org/2001/XMLSchema#'
+
+export function prefixedIri(
+  iri: string,
+  prefixes: Record<string, string>
+): string {
+  let bestPrefix: string | null = null
+  let bestNamespace = ''
+  for (const [prefix, namespace] of Object.entries(prefixes)) {
+    if (iri.startsWith(namespace) && namespace.length > bestNamespace.length) {
+      bestPrefix = prefix
+      bestNamespace = namespace
+    }
+  }
+  if (bestPrefix) {
+    const local = iri.slice(bestNamespace.length)
+    if (local.length > 0 && /^[A-Za-z0-9_][A-Za-z0-9_.-]*$/.test(local)) {
+      return `${bestPrefix}:${local}`
+    }
+  }
+  if (iri.startsWith(XSD_NAMESPACE)) {
+    return `xsd:${iri.slice(XSD_NAMESPACE.length)}`
+  }
+  return iri
+}

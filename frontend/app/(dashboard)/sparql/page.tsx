@@ -3,6 +3,7 @@ import { Suspense } from 'react'
 
 import { DashboardHeader } from '@/components/dashboard/header'
 import { DashboardShell } from '@/components/dashboard/shell'
+import { PrefixesProvider } from '@/components/prefixes/prefix-context'
 import { QueryConsole } from '@/components/query/query-console'
 import { QueryConsoleSkeleton } from '@/components/skeletons'
 import { getWorkbenchRuntime, requirePageAccess } from '@/lib/runtime'
@@ -13,7 +14,6 @@ export const metadata: Metadata = {
   description: 'Execute SPARQL queries against the configured RDF endpoint'
 }
 
-// Async component for query console with data
 async function QueryConsoleContent() {
   const runtime = await getWorkbenchRuntime()
   const [prefixes, defaultQuery, session] = await Promise.all([
@@ -33,16 +33,18 @@ async function QueryConsoleContent() {
     : null
 
   return (
-    <QueryConsole
-      prefixes={prefixes}
-      defaultQuery={defaultQuery ?? undefined}
-      user={user}
-      downloadFormats={{
-        select: runtime.sparql.getDownloadFormats('select'),
-        ask: runtime.sparql.getDownloadFormats('ask'),
-        graph: runtime.sparql.getDownloadFormats('construct')
-      }}
-    />
+    <PrefixesProvider prefixes={prefixes}>
+      <QueryConsole
+        prefixes={prefixes}
+        defaultQuery={defaultQuery ?? undefined}
+        user={user}
+        downloadFormats={{
+          select: runtime.sparql.getDownloadFormats('select'),
+          ask: runtime.sparql.getDownloadFormats('ask'),
+          graph: runtime.sparql.getDownloadFormats('construct')
+        }}
+      />
+    </PrefixesProvider>
   )
 }
 

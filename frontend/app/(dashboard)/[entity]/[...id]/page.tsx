@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation'
+import { PrefixesProvider } from '@/components/prefixes/prefix-context'
 import ResourceManager from '@/components/resource-manager'
 import { getWorkbenchRuntime, requirePageAccess } from '@/lib/runtime'
 import { getRuntimeConfig } from '@/lib/runtime/config'
@@ -12,6 +13,7 @@ export default async function ResourceDereferencePage({
   const { entity, id } = await params
 
   const runtime = await getWorkbenchRuntime()
+  const prefixes = await runtime.prefixes.list().catch(() => ({}))
   const configuredPaths = await runtime.dereference.list()
   if (!configuredPaths.some((entry) => entry.path === entity)) notFound()
 
@@ -26,5 +28,9 @@ export default async function ResourceDereferencePage({
       extension: format.extension
     }))
 
-  return <ResourceManager fileTypes={fileTypes} uri={resourceUri} />
+  return (
+    <PrefixesProvider prefixes={prefixes}>
+      <ResourceManager fileTypes={fileTypes} uri={resourceUri} />
+    </PrefixesProvider>
+  )
 }

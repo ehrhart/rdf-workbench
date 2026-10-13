@@ -1,32 +1,7 @@
 import 'server-only'
 
 import type { DatasetProfile } from '@/lib/ai/dataset-profile'
-
-const XSD_NAMESPACE = 'http://www.w3.org/2001/XMLSchema#'
-
-export function shrinkIri(
-  iri: string,
-  prefixes: Record<string, string>
-): string {
-  if (iri.startsWith(XSD_NAMESPACE)) {
-    return `xsd:${iri.slice(XSD_NAMESPACE.length)}`
-  }
-  let bestPrefix: string | null = null
-  let bestNamespace = ''
-  for (const [prefix, namespace] of Object.entries(prefixes)) {
-    if (iri.startsWith(namespace) && namespace.length > bestNamespace.length) {
-      bestPrefix = prefix
-      bestNamespace = namespace
-    }
-  }
-  if (bestPrefix) {
-    const local = iri.slice(bestNamespace.length)
-    if (local.length > 0 && /^[A-Za-z0-9_][A-Za-z0-9_.-]*$/.test(local)) {
-      return `${bestPrefix}:${local}`
-    }
-  }
-  return iri
-}
+import { prefixedIri } from '@/lib/utils'
 
 export function shrinkSample(
   sample: string,
@@ -34,7 +9,7 @@ export function shrinkSample(
 ): string {
   const match = /^<([^>]+)>$/.exec(sample)
   if (!match) return sample
-  const shrunken = shrinkIri(match[1], prefixes)
+  const shrunken = prefixedIri(match[1], prefixes)
   return shrunken === match[1] ? sample : shrunken
 }
 
@@ -102,7 +77,7 @@ function renderAtLevel(
   for (const cls of profile.classes) {
     const label = cls.label ? ` — "${truncate(cls.label, 80)}"` : ''
     lines.push(
-      `- ${shrinkIri(cls.iri, prefixes)} (${cls.instanceCount.toLocaleString('en-US')} instances)${label}`
+      `- ${prefixedIri(cls.iri, prefixes)} (${cls.instanceCount.toLocaleString('en-US')} instances)${label}`
     )
     for (const property of cls.properties) {
       lines.push(renderPropertyLine(property, prefixes, level))
@@ -137,7 +112,7 @@ function renderPropertyLine(
     const targets = level === 'no-object-types' ? [] : property.objectTypes
     if (targets.length > 0) {
       parts.push(
-        `→ ${targets.map((target) => shrinkIri(target.iri, prefixes)).join(', ')}`
+        `→ ${targets.map((target) => prefixedIri(target.iri, prefixes)).join(', ')}`
       )
     }
     if (level === 'full' && property.samples.length > 0) {
@@ -149,7 +124,7 @@ function renderPropertyLine(
     }
   }
   const suffix = parts.length > 0 ? `  ${parts.join('  ')}` : ''
-  return `  - ${shrinkIri(property.iri, prefixes)} ×${property.count.toLocaleString('en-US')}${suffix}`
+  return `  - ${prefixedIri(property.iri, prefixes)} ×${property.count.toLocaleString('en-US')}${suffix}`
 }
 
 function truncate(text: string, maxChars: number): string {

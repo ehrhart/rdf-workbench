@@ -1,4 +1,6 @@
 import { memo } from 'react'
+import { usePrefixes } from '@/components/prefixes/prefix-context'
+import { prefixedIri } from '@/lib/utils'
 import type { RDFNode } from './types'
 
 export const ResourceLink = memo(function ResourceLink({
@@ -7,6 +9,7 @@ export const ResourceLink = memo(function ResourceLink({
   node: RDFNode
 }) {
   const { value, type, datatype, language } = node
+  const prefixes = usePrefixes()
 
   if (type === 'uri') {
     return (
@@ -15,7 +18,7 @@ export const ResourceLink = memo(function ResourceLink({
         title={value}
         className="text-blue-600 hover:underline"
       >
-        {value}
+        {prefixedIri(value, prefixes)}
       </a>
     )
   }
@@ -28,7 +31,9 @@ export const ResourceLink = memo(function ResourceLink({
     <span className="literal" title={value}>
       {`"${value}"`}{' '}
       {datatype && (
-        <span className="text-muted-foreground text-xs">{`^^${datatype}`}</span>
+        <span className="text-muted-foreground text-xs">
+          {`^^${prefixedIri(datatype, prefixes)}`}
+        </span>
       )}
       {language && (
         <span className="text-muted-foreground text-xs">{`@${language}`}</span>

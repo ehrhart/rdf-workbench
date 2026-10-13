@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import { Parser, type Term } from 'n3'
 import { memo, useMemo, useState } from 'react'
+import { usePrefixes } from '@/components/prefixes/prefix-context'
 import { Button } from '@/components/ui/button'
 import {
   Select,
@@ -60,6 +61,7 @@ function termToBinding(term: Term): SparqlBindingValue | null {
 }
 
 function ResultsTriples({ results }: { results: SparqlQueryResult }) {
+  const prefixes = usePrefixes()
   const [pageIndex, setPageIndex] = useState(0)
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
 
@@ -210,17 +212,17 @@ function ResultsTriples({ results }: { results: SparqlQueryResult }) {
               <TableRow key={key}>
                 <TableCell className="group min-w-0 align-top">
                   <div className="whitespace-normal wrap-break-word">
-                    {renderBindingValue(row.subject)}
+                    {renderBindingValue(row.subject, prefixes)}
                   </div>
                 </TableCell>
                 <TableCell className="group min-w-0 align-top">
                   <div className="whitespace-normal wrap-break-word">
-                    {renderBindingValue(row.predicate)}
+                    {renderBindingValue(row.predicate, prefixes)}
                   </div>
                 </TableCell>
                 <TableCell className="group min-w-0 align-top">
                   <div className="whitespace-normal wrap-break-word">
-                    {renderBindingValue(row.object)}
+                    {renderBindingValue(row.object, prefixes)}
                   </div>
                 </TableCell>
               </TableRow>

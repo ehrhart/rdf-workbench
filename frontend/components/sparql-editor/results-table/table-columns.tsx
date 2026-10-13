@@ -10,7 +10,7 @@ import {
   XIcon
 } from 'lucide-react'
 import { useCallback, useState } from 'react'
-import { shortenUri } from '@/lib/utils'
+import { prefixedIri } from '@/lib/utils'
 import type { SparqlBindingValue } from '../../../types'
 import { ColumnFilterDropdown } from '../../tables/ColumnFilterDropdown'
 import { FilterContent } from '../../tables/FilterContent'
@@ -88,7 +88,8 @@ const CombinedHeaderDropdown = ({
 }
 
 export const createColumns = (
-  variables: string[]
+  variables: string[],
+  prefixes: Record<string, string>
 ): ColumnDef<SparqlResultRow>[] => {
   const dataColumns = variables.map<ColumnDef<SparqlResultRow>>((variable) => ({
     id: variable,
@@ -130,7 +131,7 @@ export const createColumns = (
       )
     },
     cell: ({ getValue }) =>
-      renderBindingValue(getValue<SparqlBindingValue | null>()),
+      renderBindingValue(getValue<SparqlBindingValue | null>(), prefixes),
     filterFn: customFilterFn,
     sortingFn: customSortingFn,
     enableResizing: true
@@ -164,15 +165,22 @@ export const createColumns = (
   ]
 }
 
-const UriCell = ({ value }: { value: string }) => {
+const UriCell = ({
+  value,
+  prefixes
+}: {
+  value: string
+  prefixes: Record<string, string>
+}) => {
   return (
     <a
       href={`/resource?uri=${encodeURIComponent(value)}`}
       target="_blank"
       rel="noopener noreferrer"
+      title={value}
       className="text-blue-500 hover:underline"
     >
-      {shortenUri(value)}
+      {prefixedIri(value, prefixes)}
     </a>
   )
 }
@@ -233,14 +241,17 @@ const CopyableCell = ({
   )
 }
 
-export function renderBindingValue(value: SparqlBindingValue | null) {
+export function renderBindingValue(
+  value: SparqlBindingValue | null,
+  prefixes: Record<string, string>
+) {
   if (!value) return ''
 
   switch (value.type) {
     case 'uri':
       return (
         <CopyableCell value={value.value}>
-          <UriCell value={value.value} />
+          <UriCell value={value.value} prefixes={prefixes} />
         </CopyableCell>
       )
     case 'literal':
@@ -262,7 +273,7 @@ export function renderBindingValue(value: SparqlBindingValue | null) {
             <span>
               {value.value}{' '}
               <span className="text-muted-foreground text-xs">
-                ^{shortenUri(value.datatype)}
+                {`^^${prefixedIri(value.datatype, prefixes)}`}
               </span>
             </span>
           </CopyableCell>

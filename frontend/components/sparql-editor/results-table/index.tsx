@@ -36,6 +36,7 @@ import {
   useRef,
   useState
 } from 'react'
+import { usePrefixes } from '@/components/prefixes/prefix-context'
 import { customGlobalFilterFn } from '@/components/tables/filter-fns'
 import { Button } from '@/components/ui/button'
 import {
@@ -87,6 +88,7 @@ const BindingsResultsTable = ({
 }: {
   results: SparqlBindingsResult
 }) => {
+  const prefixes = usePrefixes()
   const variables = useMemo(() => results.variables, [results.variables])
   const bindings = useMemo(() => results.bindings, [results.bindings])
 
@@ -102,7 +104,10 @@ const BindingsResultsTable = ({
     })
   }, [bindings, variables])
 
-  const columns = useMemo(() => createColumns(variables), [variables])
+  const columns = useMemo(
+    () => createColumns(variables, prefixes),
+    [variables, prefixes]
+  )
 
   const [globalFilter, setGlobalFilter] = useState<string>('')
   const [sorting, setSorting] = useState<SortingState>([])

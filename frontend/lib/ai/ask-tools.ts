@@ -8,9 +8,9 @@ import type {
 } from '@/lib/ai/ask-contract'
 import { getAiConfig } from '@/lib/ai/config'
 import type { DatasetProfile } from '@/lib/ai/dataset-profile'
-import { shrinkIri } from '@/lib/ai/render'
 import { validateSparqlQuery } from '@/lib/ai/validate'
 import type { WorkbenchRuntime } from '@/lib/runtime/contracts'
+import { prefixedIri } from '@/lib/utils'
 import type { SparqlBindingValue } from '@/types'
 
 export interface AskToolOutputs {
@@ -49,7 +49,7 @@ function bindingToDisplay(
   value: SparqlBindingValue,
   prefixes: Record<string, string>
 ): string {
-  if (value.type === 'uri') return shrinkIri(value.value, prefixes)
+  if (value.type === 'uri') return prefixedIri(value.value, prefixes)
   if (value.type === 'bnode') return '_:bnode'
   return value.value.slice(0, MAX_CELL_CHARS)
 }
