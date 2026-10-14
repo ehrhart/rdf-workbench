@@ -1,13 +1,18 @@
 import 'server-only'
 
-import type { EndpointOverview } from '@/lib/runtime/contracts'
-import { listOxigraphNamedGraphs } from './graphs'
-import { oxigraphSparqlTransport } from './sparql'
+import type {
+  EndpointOverview,
+  GraphReader,
+  SparqlTransport
+} from '@/lib/runtime/contracts'
 
-export async function getOxigraphEndpointOverview(): Promise<EndpointOverview> {
-  const [graphs, total] = await Promise.all([
-    listOxigraphNamedGraphs(),
-    oxigraphSparqlTransport.execute(
+export async function getOxigraphEndpointOverview(
+  graphs: GraphReader,
+  sparql: SparqlTransport
+): Promise<EndpointOverview> {
+  const [graphList, total] = await Promise.all([
+    graphs.listNamedGraphs(),
+    sparql.execute(
       'SELECT (COUNT(*) AS ?total) WHERE { ?subject ?predicate ?object }'
     )
   ])
@@ -23,7 +28,7 @@ export async function getOxigraphEndpointOverview(): Promise<EndpointOverview> {
     totalTriples,
     stats: {
       'num-triples-normal': totalTriples,
-      'named-graphs': graphs.length
+      'named-graphs': graphList.length
     }
   }
 }

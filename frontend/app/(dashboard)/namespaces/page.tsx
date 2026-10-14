@@ -23,7 +23,8 @@ export default async function NamespacesPage() {
     !(await hasAnyFeature([
       'virtuoso-namespaces',
       'qlever-namespaces',
-      'oxigraph-namespaces'
+      'oxigraph-namespaces',
+      'generic-namespaces'
     ]))
   ) {
     notFound()

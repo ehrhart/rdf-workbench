@@ -6,21 +6,19 @@ triplestores. It currently supports:
 - [QLever](https://github.com/ad-freiburg/qlever)
 - [Virtuoso](https://github.com/openlink/virtuoso-opensource)
 - [Oxigraph](https://github.com/oxigraph/oxigraph)
+- Any SPARQL 1.1-compliant endpoint
 
 ## Feature matrix
 
 There are some differences between the providers:
 
-| Capability                            | QLever              | Virtuoso                                     | Oxigraph                   |
-| ------------------------------------- | ------------------- | -------------------------------------------- | -------------------------- |
-| Public SELECT/ASK                     | Yes                 | Yes                                          | Yes                        |
-| SELECT result downloads               | JSON, XML, CSV, TSV | JSON, XML, CSV, TSV                          | JSON, XML, CSV, TSV        |
-| CONSTRUCT/DESCRIBE downloads          | Turtle              | Turtle, N-Triples, N-Quads, JSON-LD, RDF/XML | Turtle, N-Triples, RDF/XML |
-| Named graphs and resource exploration | Read-only           | Read/write                                   | Read/write                 |
-| Authentication                        | Local database      | Local database                               | Local database             |
-| SPARQL Update                         | No                  | Via ISQL                                     | Yes                        |
-| Import/export, graph deletion         | No                  | Yes                                          | Yes                        |
-| Full-text search                      | Yes                 | Yes                                          | No ¹                       |
+| Capability                            | QLever              | Virtuoso                                     | Oxigraph                   | Generic                       |
+| ------------------------------------- | ------------------- | -------------------------------------------- | -------------------------- | ----------------------------- |
+| Public SELECT                         | Yes                 | Yes                                          | Yes                        | Yes                           |
+| CONSTRUCT/DESCRIBE downloads          | Turtle              | Turtle, N-Triples, N-Quads, JSON-LD, RDF/XML | Turtle, N-Triples, RDF/XML | Turtle, N-Triples, RDF/XML    |
+| SPARQL Update                         | No                  | Yes (via ISQL)                               | Yes                        | Yes                           |
+| Import/export, graph deletion         | No                  | Yes                                          | Yes                        | Import via `LOAD`, no export  |
+| Full-text search                      | Yes                 | Yes                                          | No ¹                       | No                            |
 
 ¹ Oxigraph does not support full-text search (see
 [Oxigraph issue #48](https://github.com/oxigraph/oxigraph/issues/48))
@@ -51,6 +49,16 @@ bootstrap password in `.env`, then run:
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.oxigraph.yml up --build -d
+```
+
+## Quick start: any SPARQL 1.1 endpoint (generic)
+
+Set `TRIPLESTORE_PROVIDER` to `generic` and point `SPARQL_ENDPOINT` at any
+endpoint speaking the SPARQL 1.1 protocol:
+
+```bash
+TRIPLESTORE_PROVIDER=generic
+SPARQL_ENDPOINT=https://data.example.org/sparql
 ```
 
 ## Quick start: published image
@@ -171,7 +179,7 @@ volumes:
 
 Common runtime variables:
 
-- `TRIPLESTORE_PROVIDER`: `qlever`, `virtuoso`, or `oxigraph`.
+- `TRIPLESTORE_PROVIDER`: `qlever`, `virtuoso`, `oxigraph`, or `generic`.
 - `SPARQL_ENDPOINT`: selected provider's HTTP SPARQL endpoint. For Oxigraph,
   point this at the `/sparql` union endpoint (queries and updates).
 - `SPARQL_TIMEOUT_MS`: request timeout in milliseconds.

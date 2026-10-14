@@ -6,7 +6,20 @@ import type {
   SparqlQueryResult
 } from '@/types'
 
-export type TriplestoreProvider = 'virtuoso' | 'qlever' | 'oxigraph'
+export const TRIPLESTORE_PROVIDERS = [
+  'virtuoso',
+  'qlever',
+  'oxigraph',
+  'generic'
+] as const
+
+export type TriplestoreProvider = (typeof TRIPLESTORE_PROVIDERS)[number]
+
+export function isTriplestoreProvider(
+  value: unknown
+): value is TriplestoreProvider {
+  return (TRIPLESTORE_PROVIDERS as readonly string[]).includes(value as string)
+}
 
 export type FeatureId =
   | 'dashboard'
@@ -30,6 +43,9 @@ export type FeatureId =
   | 'oxigraph-import'
   | 'oxigraph-graph-mutations'
   | 'oxigraph-namespaces'
+  | 'generic-namespaces'
+  | 'generic-import'
+  | 'generic-graph-mutations'
 
 export type SparqlQueryKind =
   | 'select'

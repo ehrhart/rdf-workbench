@@ -25,7 +25,8 @@ export const RESERVED_PROVIDER_PATHS: Record<
 > = {
   virtuoso: ['sparql', 'fct', 'conductor', 'DAV', 'describe'],
   qlever: [],
-  oxigraph: []
+  oxigraph: [],
+  generic: []
 }
 
 const MAX_PATH_LENGTH = 64

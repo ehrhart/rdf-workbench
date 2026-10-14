@@ -1,7 +1,12 @@
 import type { Metadata } from 'next'
+import GenericImportManager from '@/components/import/generic-import-manager'
 import OxigraphImportManager from '@/components/import/oxigraph-import-manager'
 import VirtuosoImportManager from '@/components/import/virtuoso-import-manager'
-import { getWorkbenchRuntime, requirePageAccess } from '@/lib/runtime'
+import {
+  getWorkbenchRuntime,
+  requireAnyFeature,
+  requirePageAccess
+} from '@/lib/runtime'
 
 export const metadata: Metadata = {
   title: 'Import',
@@ -10,9 +15,16 @@ export const metadata: Metadata = {
 
 export default async function ImportPage() {
   await requirePageAccess('session')
+  await requireAnyFeature([
+    'virtuoso-import',
+    'oxigraph-import',
+    'generic-import'
+  ])
   const runtime = await getWorkbenchRuntime()
   return runtime.provider === 'virtuoso' ? (
     <VirtuosoImportManager />
+  ) : runtime.provider === 'generic' ? (
+    <GenericImportManager />
   ) : (
     <OxigraphImportManager />
   )

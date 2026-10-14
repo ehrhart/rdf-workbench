@@ -74,12 +74,14 @@ export async function GET() {
     const db = await getWorkbenchDatabase()
     db.prepare('SELECT 1').get()
     if (!endpoint.ok) {
-      throw new Error(`Oxigraph health failure (endpoint ${endpoint.status})`)
+      throw new Error(
+        `${config.TRIPLESTORE_PROVIDER} health failure (endpoint ${endpoint.status})`
+      )
     }
 
     return NextResponse.json({
       status: 'healthy',
-      provider: 'oxigraph',
+      provider: config.TRIPLESTORE_PROVIDER,
       services: { sqlite: 'healthy', endpoint: 'healthy' }
     })
   } catch (error) {

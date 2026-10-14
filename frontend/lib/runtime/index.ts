@@ -25,7 +25,9 @@ const runtimeFactories: Record<
   virtuoso: async () =>
     (await import('@/providers/virtuoso/runtime')).virtuosoRuntime,
   oxigraph: async () =>
-    (await import('@/providers/oxigraph/runtime')).oxigraphRuntime
+    (await import('@/providers/oxigraph/runtime')).oxigraphRuntime,
+  generic: async () =>
+    (await import('@/providers/generic/runtime')).genericRuntime
 }
 
 export async function getWorkbenchRuntime(): Promise<WorkbenchRuntime> {

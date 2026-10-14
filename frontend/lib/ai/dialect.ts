@@ -36,6 +36,11 @@ const DIALECTS: Record<TriplestoreProvider, Dialect> = {
     engineNamespaces: [],
     parserPrefixes: {},
     note: 'Engine: Oxigraph. Strict SPARQL 1.1. No full-text search support; resolve entities with the search_entities tool, or probe a plausible canonical IRI as a constant in a triple pattern. FILTER with STRSTARTS/CONTAINS is a last resort for small or pre-filtered sets.'
+  },
+  generic: {
+    engineNamespaces: [],
+    parserPrefixes: {},
+    note: 'Engine: unknown (generic SPARQL 1.1 endpoint). Only strict SPARQL 1.1 can be assumed: no engine-specific functions, magic predicates, or service extensions. Use the search_entities tool; FILTER with STRSTARTS/CONTAINS is a last resort for small or pre-filtered sets.'
   }
 }
 
@@ -50,5 +55,6 @@ export function engineNamespacesFor(provider: TriplestoreProvider): string[] {
 export const DIALECT_NOTES: Record<TriplestoreProvider, string> = {
   qlever: DIALECTS.qlever.note,
   virtuoso: DIALECTS.virtuoso.note,
-  oxigraph: DIALECTS.oxigraph.note
+  oxigraph: DIALECTS.oxigraph.note,
+  generic: DIALECTS.generic.note
 }

@@ -14,15 +14,19 @@ import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { queryHistoryService } from '@/lib/client/query-history'
-import type { TriplestoreProvider } from '@/lib/runtime/contracts'
 import type { EndpointStats } from '@/types'
 
 interface StatsCardsProps {
   stats: EndpointStats
-  provider: TriplestoreProvider
+  canImport: boolean
+  hasManagedExport: boolean
 }
 
-export function StatsCards({ stats, provider }: StatsCardsProps) {
+export function StatsCards({
+  stats,
+  canImport,
+  hasManagedExport
+}: StatsCardsProps) {
   const [recentQueriesCount, setRecentQueriesCount] = useState(0)
 
   useEffect(() => {
@@ -59,7 +63,7 @@ export function StatsCards({ stats, provider }: StatsCardsProps) {
           </div>
           <p className="text-muted-foreground text-xs">Across all graphs</p>
           <div className="flex flex-wrap items-center gap-2 pt-2">
-            {(provider === 'virtuoso' || provider === 'oxigraph') && (
+            {canImport && (
               <Button asChild variant="ghost" size="sm" className="h-7 text-xs">
                 <Link href="/import">
                   <UploadIcon />
@@ -70,7 +74,7 @@ export function StatsCards({ stats, provider }: StatsCardsProps) {
             <Button asChild variant="ghost" size="sm" className="h-7 text-xs">
               <Link href="/graphs">
                 <DownloadIcon />
-                {provider === 'virtuoso' ? 'Export Data' : 'Browse Data'}
+                {hasManagedExport ? 'Export Data' : 'Browse Data'}
               </Link>
             </Button>
           </div>

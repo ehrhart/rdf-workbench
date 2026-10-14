@@ -13,7 +13,9 @@ export default async function MonitorLayout({
   const principal = await runtime.auth.getPrincipal()
   if (!principal) redirect('/logout?redirect=/monitor')
   if (
-    (runtime.provider === 'qlever' || runtime.provider === 'oxigraph') &&
+    (runtime.provider === 'qlever' ||
+      runtime.provider === 'oxigraph' ||
+      runtime.provider === 'generic') &&
     principal.role !== 'admin'
   ) {
     redirect('/logout?redirect=/monitor')

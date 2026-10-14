@@ -41,25 +41,31 @@ const sparqlDocs: NavItem = {
   rel: 'noopener noreferrer'
 }
 
-const virtuosoDocs: NavItem = {
-  title: 'Virtuoso docs',
-  url: 'https://docs.openlinksw.com/virtuoso/',
-  target: '_blank',
-  rel: 'noopener noreferrer'
-}
-
-const qleverDocs: NavItem = {
-  title: 'QLever docs',
-  url: 'https://docs.qlever.dev/',
-  target: '_blank',
-  rel: 'noopener noreferrer'
-}
-
-const oxigraphDocs: NavItem = {
-  title: 'Oxigraph docs',
-  url: 'https://oxigraph.org/',
-  target: '_blank',
-  rel: 'noopener noreferrer'
+const providerDocs: Record<TriplestoreProvider, NavItem> = {
+  virtuoso: {
+    title: 'Virtuoso docs',
+    url: 'https://docs.openlinksw.com/virtuoso/',
+    target: '_blank',
+    rel: 'noopener noreferrer'
+  },
+  qlever: {
+    title: 'QLever docs',
+    url: 'https://docs.qlever.dev/',
+    target: '_blank',
+    rel: 'noopener noreferrer'
+  },
+  oxigraph: {
+    title: 'Oxigraph docs',
+    url: 'https://oxigraph.org/',
+    target: '_blank',
+    rel: 'noopener noreferrer'
+  },
+  generic: {
+    title: 'SPARQL 1.1 protocol',
+    url: 'https://www.w3.org/TR/sparql11-protocol/',
+    target: '_blank',
+    rel: 'noopener noreferrer'
+  }
 }
 
 const navMain: NavItem[] = [
@@ -67,7 +73,7 @@ const navMain: NavItem[] = [
     title: 'Import',
     url: '/import',
     icon: 'import',
-    requiredFeature: ['virtuoso-import', 'oxigraph-import']
+    requiredFeature: ['virtuoso-import', 'oxigraph-import', 'generic-import']
   },
   {
     title: 'Explore',
@@ -119,7 +125,8 @@ const navMain: NavItem[] = [
         requiredFeature: [
           'qlever-namespaces',
           'virtuoso-namespaces',
-          'oxigraph-namespaces'
+          'oxigraph-namespaces',
+          'generic-namespaces'
         ]
       },
       {
@@ -187,14 +194,7 @@ export function buildNavigation(
       {
         title: 'Help',
         icon: 'help',
-        items: [
-          sparqlDocs,
-          provider === 'virtuoso'
-            ? virtuosoDocs
-            : provider === 'qlever'
-              ? qleverDocs
-              : oxigraphDocs
-        ]
+        items: [sparqlDocs, providerDocs[provider]]
       }
     ]
   }

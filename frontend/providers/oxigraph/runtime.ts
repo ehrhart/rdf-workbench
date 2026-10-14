@@ -7,15 +7,11 @@ import { localPrefixSource } from '@/lib/local-prefixes'
 import type { FeatureId, WorkbenchRuntime } from '@/lib/runtime/contracts'
 import { computeFeatures } from '@/lib/runtime/features'
 import { savedQueryRepository } from '@/lib/saved-queries'
-import {
-  clearRepository,
-  deleteGraph,
-  getGraphTripleCount
-} from './graph-mutations'
-import { oxigraphGraphReader } from './graphs'
+import { createSpecGraphMutations } from '@/providers/spec/graph-mutations'
+import { createSpecGraphReader } from '@/providers/spec/graphs'
+import { createSpecTextSearch } from '@/providers/spec/text-search'
 import { getOxigraphEndpointOverview } from './overview'
 import { oxigraphSparqlTransport } from './sparql'
-import { getResourceSuggestions } from './text-search'
 
 const features: ReadonlySet<FeatureId> = computeFeatures(
   'oxigraph',
@@ -24,18 +20,21 @@ const features: ReadonlySet<FeatureId> = computeFeatures(
 
 const navigation = buildNavigation('oxigraph', features)
 
+const sparql = oxigraphSparqlTransport
+const graphs = createSpecGraphReader(sparql)
+
 export const oxigraphRuntime: WorkbenchRuntime = {
   provider: 'oxigraph',
   label: 'Oxigraph',
-  sparql: oxigraphSparqlTransport,
-  graphs: oxigraphGraphReader,
+  sparql,
+  graphs,
   prefixes: localPrefixSource,
   savedQueries: savedQueryRepository,
   dereference: dereferenceRepository,
   auth: localAuthAdapter,
   features,
   navigation,
-  textSearch: { getResourceSuggestions },
-  graphMutations: { getGraphTripleCount, deleteGraph, clearRepository },
-  getEndpointOverview: getOxigraphEndpointOverview
+  textSearch: createSpecTextSearch(sparql),
+  graphMutations: createSpecGraphMutations(sparql),
+  getEndpointOverview: () => getOxigraphEndpointOverview(graphs, sparql)
 }

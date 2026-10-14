@@ -10,7 +10,11 @@ import { StatsCards } from '@/components/dashboard/stats-cards'
 import { ResourceSearch } from '@/components/resource-search'
 import { StatsCardsSkeleton } from '@/components/skeletons'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { getWorkbenchRuntime, requirePageAccess } from '@/lib/runtime'
+import {
+  getWorkbenchRuntime,
+  hasAnyFeature,
+  requirePageAccess
+} from '@/lib/runtime'
 
 export const metadata: Metadata = {
   title: 'Dashboard',
@@ -19,9 +23,10 @@ export const metadata: Metadata = {
 
 async function StatsSection() {
   const runtime = await getWorkbenchRuntime()
-  const [overview, graphs] = await Promise.all([
+  const [overview, graphs, canImport] = await Promise.all([
     runtime.getEndpointOverview().catch(() => null),
-    runtime.graphs.listNamedGraphs().catch(() => [])
+    runtime.graphs.listNamedGraphs().catch(() => []),
+    hasAnyFeature(['virtuoso-import', 'oxigraph-import', 'generic-import'])
   ])
   const stats = {
     totalTriples:
@@ -44,7 +49,11 @@ async function StatsSection() {
           </AlertDescription>
         </Alert>
       )}
-      <StatsCards stats={stats} provider={runtime.provider} />
+      <StatsCards
+        stats={stats}
+        canImport={canImport}
+        hasManagedExport={runtime.features.has('virtuoso-export')}
+      />
     </>
   )
 }

@@ -35,6 +35,12 @@ const providerFeatures: Record<TriplestoreProvider, readonly FeatureId[]> = {
     'oxigraph-import',
     'oxigraph-graph-mutations',
     'oxigraph-namespaces'
+  ],
+  generic: [
+    ...baseFeatures,
+    'generic-namespaces',
+    'generic-import',
+    'generic-graph-mutations'
   ]
 }
 

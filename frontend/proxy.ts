@@ -11,6 +11,7 @@ import type {
   Principal,
   TriplestoreProvider
 } from '@/lib/runtime/contracts'
+import { isTriplestoreProvider } from '@/lib/runtime/contracts'
 import { computeFeatures } from '@/lib/runtime/features'
 import {
   acceptsHtml,
@@ -23,9 +24,7 @@ type SparqlRouting = 'page' | 'query' | 'not-acceptable'
 
 function providerFromEnv(): TriplestoreProvider | null {
   const value = process.env.TRIPLESTORE_PROVIDER
-  return value === 'virtuoso' || value === 'qlever' || value === 'oxigraph'
-    ? value
-    : null
+  return isTriplestoreProvider(value) ? value : null
 }
 
 export async function proxy(request: NextRequest) {
