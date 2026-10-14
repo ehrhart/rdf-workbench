@@ -175,6 +175,31 @@ volumes:
   oxigraph-data:
 ```
 
+### Generic
+
+Point `SPARQL_ENDPOINT` at your endpoint and set the secrets to real values.
+
+```yaml
+services:
+  workbench:
+    image: ghcr.io/ehrhart/rdf-workbench:latest
+    environment:
+      TRIPLESTORE_PROVIDER: generic
+      SPARQL_ENDPOINT: https://my-triplestore.example/sparql
+      WORKBENCH_URL: http://localhost:3000
+      RESOURCE_BASE_URI: https://data.example.org
+      WORKBENCH_DB_PATH: /data/workbench.sqlite
+      BOOTSTRAP_ADMIN_USERNAME: admin
+      BOOTSTRAP_ADMIN_PASSWORD: replace-with-at-least-12-characters
+    ports:
+      - "3000:3000"
+    volumes:
+      - rdf-workbench-data:/data
+
+volumes:
+  rdf-workbench-data:
+```
+
 ## Configuration
 
 Common runtime variables:
