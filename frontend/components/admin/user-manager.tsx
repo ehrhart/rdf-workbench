@@ -234,7 +234,9 @@ export function UserManager({ users, currentUserId }: UserManagerProps) {
                         <Button
                           variant="outline"
                           size="sm"
-                          disabled={pending !== null}
+                          disabled={
+                            pending !== null || user.id === currentUserId
+                          }
                           onClick={() => resetPassword(user)}
                         >
                           Reset password

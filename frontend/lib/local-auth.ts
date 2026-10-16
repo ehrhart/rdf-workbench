@@ -425,7 +425,12 @@ export async function setLocalUserRole(
  * the old one.
  */
 export async function resetLocalUserPassword(userId: string): Promise<string> {
-  await requireLocalAdmin()
+  const administrator = await requireLocalAdmin()
+  if (userId === administrator.id) {
+    throw new QueryError(
+      'You cannot reset your own password. Use the change password page instead.'
+    )
+  }
   const temporaryPassword = generateTemporaryPassword()
   const db = await getWorkbenchDatabase()
   const passwordHash = await hash(temporaryPassword)
