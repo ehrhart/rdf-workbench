@@ -294,7 +294,6 @@ function generateTemporaryPassword(): string {
       ]
     )
   }
-  // Four groups of four (XXXX-XXXX-XXXX-XXXX) for human transcription.
   const groups: string[] = []
   for (let offset = 0; offset < characters.length; offset += 4) {
     groups.push(characters.slice(offset, offset + 4).join(''))
