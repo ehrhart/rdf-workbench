@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.5.0](https://github.com/ehrhart/rdf-workbench/compare/v1.4.0...v1.5.0) (2026-10-17)
+
+
+### Features
+
+* **appearance:** runtime theme and branding customization ([ae2263a](https://github.com/ehrhart/rdf-workbench/commit/ae2263a7eafbe5a93e30508dd6ad7b403126cf5c))
+* **prefixes:** render IRIs and datatypes with user-defined prefixes in tables ([407fc90](https://github.com/ehrhart/rdf-workbench/commit/407fc90ca8331bdce4eb407d1206afb5759653a4))
+* **provider:** add generic triplestore provider ([0f259bb](https://github.com/ehrhart/rdf-workbench/commit/0f259bb8f6ea6ba40d3e77ea51c6e54af13eac34))
+
+
+### Bug Fixes
+
+* **auth:** block admin password self-reset that revoked own session ([173c7d9](https://github.com/ehrhart/rdf-workbench/commit/173c7d94eaf955e3c2e34e6c7bc3cc4e3c80c092))
+* **dereference:** validate paths against the URL parser instead of a slug regex ([6231b36](https://github.com/ehrhart/rdf-workbench/commit/6231b36d9df4c8c75c76c2bcb373e58f915b1292))
+
 ## [1.4.0](https://github.com/ehrhart/rdf-workbench/compare/v1.3.0...v1.4.0) (2026-10-12)
 
 
