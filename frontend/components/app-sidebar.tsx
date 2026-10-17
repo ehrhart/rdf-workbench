@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import type * as React from 'react'
+import { BrandMark } from '@/components/brand-mark'
 import { NavItems } from '@/components/nav-items'
 import { NavUser } from '@/components/nav-user'
 import {
@@ -16,7 +17,6 @@ import {
 import type { NavItem, NavUser as NavUserType } from '@/config/navigation'
 import type { UpdateInfo } from '@/lib/update-check'
 import { cn } from '@/lib/utils'
-import RDFIcon from './rdf-icon'
 
 export interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   user: NavUserType | null
@@ -25,7 +25,7 @@ export interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   navSecondaryItems?: NavItem[]
   isAuthenticated?: boolean
   appName?: string
-  appIcon?: React.ComponentType<{ className?: string }>
+  brandLogoVersion?: string | null
 }
 
 export function AppSidebar({
@@ -34,7 +34,7 @@ export function AppSidebar({
   navMainItems,
   navSecondaryItems,
   appName = 'RDF Workbench',
-  appIcon: AppIcon = RDFIcon,
+  brandLogoVersion,
   ...props
 }: AppSidebarProps) {
   return (
@@ -51,7 +51,7 @@ export function AppSidebar({
               className="data-[slot=sidebar-menu-button]:p-1.5!"
             >
               <Link href="/">
-                <AppIcon className="size-5!" />
+                <BrandMark version={brandLogoVersion} className="size-5!" />
                 <span className="text-base font-semibold group-data-[collapsible=icon]:hidden">
                   {appName}
                 </span>

@@ -246,6 +246,37 @@ function migrate(db: Database.Database): void {
     })()
   }
 
+  if (current.version < 11) {
+    db.transaction(() => {
+      db.exec(`
+        CREATE TABLE appearance_settings (
+          id INTEGER PRIMARY KEY CHECK (id = 1),
+          primary_color TEXT,
+          accent_color TEXT,
+          sidebar_color TEXT,
+          instance_name TEXT,
+          radius TEXT NOT NULL DEFAULT 'default',
+          default_mode TEXT NOT NULL DEFAULT 'light'
+            CHECK (default_mode IN ('light', 'dark', 'system')),
+          updated_at TEXT NOT NULL
+        );
+
+        CREATE TABLE appearance_assets (
+          kind TEXT PRIMARY KEY,
+          mime TEXT NOT NULL,
+          data TEXT NOT NULL,
+          updated_at TEXT NOT NULL
+        );
+      `)
+      db.prepare(
+        'INSERT INTO appearance_settings (id, updated_at) VALUES (1, ?)'
+      ).run(new Date().toISOString())
+      db.prepare(
+        'INSERT INTO schema_migrations (version, applied_at) VALUES (11, ?)'
+      ).run(new Date().toISOString())
+    })()
+  }
+
   const prefixCount = db
     .prepare('SELECT COUNT(*) AS count FROM prefixes')
     .get() as {

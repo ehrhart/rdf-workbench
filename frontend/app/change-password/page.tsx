@@ -4,8 +4,8 @@ import { ChangePasswordForm } from '@/components/auth/change-password-form'
 import RDFIcon from '@/components/rdf-icon'
 import { Card } from '@/components/ui/card'
 import { safeInternalRedirect } from '@/config/access'
+import { getInstanceName } from '@/lib/appearance/appearance-settings'
 import { getWorkbenchRuntime } from '@/lib/runtime'
-import { getWorkbenchName } from '@/lib/runtime/config'
 
 export const metadata: Metadata = {
   title: 'Change password',
@@ -26,7 +26,7 @@ export default async function ChangePasswordPage({
   const principal = await (await getWorkbenchRuntime()).auth.getPrincipal()
   if (!principal) redirect('/login')
 
-  const appName = getWorkbenchName()
+  const appName = await getInstanceName()
   const redirectTarget = safeInternalRedirect(requestedRedirect)
 
   return (

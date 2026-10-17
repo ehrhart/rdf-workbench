@@ -8,6 +8,7 @@ export type NavIcon =
   | 'help'
   | 'import'
   | 'network'
+  | 'palette'
   | 'settings'
   | 'terminal'
 
@@ -137,6 +138,11 @@ const navMain: NavItem[] = [
       {
         title: 'Dereferencing',
         url: '/admin/dereference',
+        requiredRole: 'admin'
+      },
+      {
+        title: 'Appearance',
+        url: '/admin/appearance',
         requiredRole: 'admin'
       },
       {

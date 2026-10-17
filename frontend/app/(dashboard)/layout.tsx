@@ -3,8 +3,11 @@ import { AppSidebar } from '@/components/app-sidebar'
 import { SiteHeader } from '@/components/site-header'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { getVisibleNavItems } from '@/config/navigation'
+import {
+  getAppearanceAssetMeta,
+  getInstanceName
+} from '@/lib/appearance/appearance-settings'
 import { getWorkbenchRuntime } from '@/lib/runtime'
-import { getWorkbenchName } from '@/lib/runtime/config'
 import { getUpdateInfo } from '@/lib/update-check'
 
 export const dynamic = 'force-dynamic'
@@ -24,6 +27,10 @@ export default async function DashboardLayout({
       }
     : null
   const updateInfo = session ? await getUpdateInfo() : null
+  const [appName, logoMeta] = await Promise.all([
+    getInstanceName(),
+    getAppearanceAssetMeta('logo')
+  ])
 
   return (
     <SidebarProvider
@@ -43,7 +50,8 @@ export default async function DashboardLayout({
           runtime.navigation.navSecondary,
           user
         )}
-        appName={getWorkbenchName()}
+        appName={appName}
+        brandLogoVersion={logoMeta?.updatedAt ?? null}
       />
       <SidebarInset>
         <SiteHeader user={user} />

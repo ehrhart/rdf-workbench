@@ -7,6 +7,7 @@ import {
   ImportIcon,
   type LucideIcon,
   NetworkIcon,
+  PaletteIcon,
   SettingsIcon,
   SparklesIcon,
   SquareActivityIcon,
@@ -50,6 +51,7 @@ const NAV_ICONS: Record<NavIcon, LucideIcon> = {
   help: HelpCircleIcon,
   import: ImportIcon,
   network: NetworkIcon,
+  palette: PaletteIcon,
   settings: SettingsIcon,
   terminal: TerminalIcon
 }

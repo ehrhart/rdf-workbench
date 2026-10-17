@@ -1,9 +1,12 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { LoginForm } from '@/components/auth/login-form'
-import RDFIcon from '@/components/rdf-icon'
+import { BrandMark } from '@/components/brand-mark'
 import { Card } from '@/components/ui/card'
-import { getWorkbenchName } from '@/lib/runtime/config'
+import {
+  getAppearanceAssetMeta,
+  getInstanceName
+} from '@/lib/appearance/appearance-settings'
 
 export const metadata: Metadata = {
   title: 'Login',
@@ -16,12 +19,15 @@ export default async function LoginPage({
   searchParams: { redirect?: string }
 }) {
   const { redirect } = await searchParams
-  const appName = getWorkbenchName()
+  const [appName, logoMeta] = await Promise.all([
+    getInstanceName(),
+    getAppearanceAssetMeta('logo')
+  ])
   return (
     <div className="flex flex-col h-screen w-full bg-linear-to-br from-background to-secondary/20">
       <header className="py-5 px-6 flex items-center">
         <Link href="/" className="mr-6 flex items-center space-x-2 group">
-          <RDFIcon className="size-5" />
+          <BrandMark version={logoMeta?.updatedAt ?? null} className="size-5" />
           <span className="text-base font-semibold">{appName}</span>
         </Link>
       </header>

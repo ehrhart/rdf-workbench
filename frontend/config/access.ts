@@ -83,6 +83,7 @@ export const ACCESS_RULES: AccessRule[] = [
   { pattern: '/login', access: 'public' },
   { pattern: '/logout', access: 'public' },
   { pattern: '/health', access: 'public' },
+  { pattern: '/api/appearance/logo', access: 'public' },
   { pattern: '/change-password', access: 'session' },
 
   // Read access is intentionally left open here; mutation protection is

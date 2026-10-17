@@ -6,8 +6,8 @@ import { SharedChatView } from '@/components/ask/shared-chat-view'
 import RDFIcon from '@/components/rdf-icon'
 import { Button } from '@/components/ui/button'
 import { getShareById } from '@/lib/ai/conversation-share-store'
+import { getInstanceName } from '@/lib/appearance/appearance-settings'
 import { getWorkbenchRuntime } from '@/lib/runtime'
-import { getWorkbenchName } from '@/lib/runtime/config'
 
 export const dynamic = 'force-dynamic'
 
@@ -33,7 +33,7 @@ export default async function SharePage({
 
   const principal = await (await getWorkbenchRuntime()).auth.getPrincipal()
   const isOwner = principal?.id === share.ownerId
-  const appName = getWorkbenchName()
+  const appName = await getInstanceName()
 
   return (
     <div className="flex min-h-svh flex-col bg-background">
