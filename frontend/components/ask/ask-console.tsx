@@ -432,7 +432,7 @@ function SearchEntitiesCard({ part }: { part: ToolUIPart }) {
           href={`/resource?uri=${encodeURIComponent(result.resource)}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="rounded-full border px-2 py-0.5 hover:bg-muted"
+          className="rounded-full border px-2 py-0.5 hover:bg-accent hover:text-accent-foreground"
           title={result.resource}
         >
           {result.label || result.resource}

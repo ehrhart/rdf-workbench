@@ -806,7 +806,7 @@ export function QueryWorkbench<TResults>({
                         'flex cursor-pointer items-center rounded-lg px-4 py-2.5 transition-all duration-200',
                         activeTabId === tab.id
                           ? 'bg-background hover:bg-background font-medium'
-                          : 'bg-muted/50 hover:bg-muted'
+                          : 'bg-muted/50 hover:bg-accent'
                       )}
                       onClick={() => handleTabChange(tab.id)}
                       onKeyDown={(e) => {

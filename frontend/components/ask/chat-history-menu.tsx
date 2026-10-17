@@ -109,7 +109,7 @@ function ConversationRow({
     <div
       className={cn(
         'group flex items-center gap-0.5 rounded-md',
-        active ? 'bg-accent' : 'hover:bg-muted/60'
+        active ? 'bg-accent' : 'hover:bg-accent/60'
       )}
     >
       <button

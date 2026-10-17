@@ -930,7 +930,7 @@ const BindingsResultsTable = ({
             rows.map((row) => (
               <div
                 key={row.id}
-                className="flex border-b border-border last:border-b-0 hover:bg-muted/50"
+                className="flex border-b border-border last:border-b-0 hover:bg-accent/50"
                 style={{ minWidth: `${tableTotalSize}px` }}
               >
                 {row.getVisibleCells().map((cell) => {

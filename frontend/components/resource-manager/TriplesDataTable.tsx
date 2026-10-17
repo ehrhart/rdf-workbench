@@ -406,7 +406,7 @@ export const TriplesDataTable = memo(function TriplesDataTable({
             {table.getHeaderGroups().map((headerGroup) => (
               <tr
                 key={headerGroup.id}
-                className="hover:bg-muted/50 data-[state=selected]:bg-muted border-b transition-colors"
+                className="hover:bg-accent/50 data-[state=selected]:bg-accent border-b transition-colors"
               >
                 {headerGroup.headers.map((header) => (
                   <th
@@ -433,7 +433,7 @@ export const TriplesDataTable = memo(function TriplesDataTable({
               skeletonRowIds.map((rowId) => (
                 <tr
                   key={rowId}
-                  className="hover:bg-muted/50 data-[state=selected]:bg-muted border-b transition-colors"
+                  className="hover:bg-accent/50 data-[state=selected]:bg-accent border-b transition-colors"
                 >
                   {visibleColumns.map((col) => (
                     <td
@@ -449,7 +449,7 @@ export const TriplesDataTable = memo(function TriplesDataTable({
               rows.map((row) => (
                 <tr
                   key={row.id}
-                  className="hover:bg-muted/50 data-[state=selected]:bg-muted border-b transition-colors"
+                  className="hover:bg-accent/50 data-[state=selected]:bg-accent border-b transition-colors"
                   data-state={row.getIsSelected() && 'selected'}
                 >
                   {row.getVisibleCells().map((cell) => {
