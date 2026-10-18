@@ -19,7 +19,7 @@ async function IsqlConsoleContent() {
 }
 
 export default async function IsqlPage() {
-  await requirePageAccess('session')
+  await requirePageAccess('admin')
   return (
     <DashboardShell>
       <DashboardHeader heading="ISQL Console" />

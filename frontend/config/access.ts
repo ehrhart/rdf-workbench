@@ -98,10 +98,10 @@ export const ACCESS_RULES: AccessRule[] = [
   { pattern: '/ask', access: 'anonymousAsk' },
   { pattern: '/api/conversations', access: 'session' },
 
-  { pattern: '/api/isql', access: 'session', feature: 'virtuoso-isql' },
+  { pattern: '/api/isql', access: 'admin', feature: 'virtuoso-isql' },
   { pattern: '/api/import', access: 'session', feature: 'virtuoso-import' },
   { pattern: '/api/export', access: 'session', feature: 'virtuoso-export' },
-  { pattern: '/isql', access: 'session', feature: 'virtuoso-isql' },
+  { pattern: '/isql', access: 'admin', feature: 'virtuoso-isql' },
   {
     pattern: '/fulltext-index',
     access: 'session',

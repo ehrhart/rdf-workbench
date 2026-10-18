@@ -14,6 +14,13 @@ export async function POST(request: Request) {
   const auth = await requirePrincipal()
   if (auth.response) return auth.response
 
+  if (auth.principal.role !== 'admin') {
+    return NextResponse.json(
+      { error: 'Only administrators can run ISQL commands' },
+      { status: 403 }
+    )
+  }
+
   try {
     const body = (await request.json().catch(() => ({}))) as IsqlRequestBody
     const query = typeof body.query === 'string' ? body.query : ''

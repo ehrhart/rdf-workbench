@@ -100,7 +100,8 @@ const navMain: NavItem[] = [
     title: 'ISQL Console',
     url: '/isql',
     icon: 'terminal',
-    requiredFeature: 'virtuoso-isql'
+    requiredFeature: 'virtuoso-isql',
+    requiredRole: 'admin'
   },
   {
     title: 'Monitor',
