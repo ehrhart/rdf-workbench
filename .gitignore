@@ -1,4 +1,4 @@
 .env
 *.log
 /virtuoso-database
-/frontend/data/
+/frontend/data/.DS_Store
