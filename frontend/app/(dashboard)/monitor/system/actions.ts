@@ -18,9 +18,7 @@ export async function sysStat(
   }
 
   try {
-    const selectClauses = ids.map(
-      (item) => `sys_stat('${item}') AS "${item}"`
-    )
+    const selectClauses = ids.map((item) => `sys_stat('${item}') AS "${item}"`)
     const sqlQuery = `SELECT ${selectClauses.join(', ')}`
 
     const data = await executeIsqlCommand<Record<string, unknown>[]>(sqlQuery)

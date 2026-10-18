@@ -4,8 +4,8 @@ import { unauthenticatedResponse } from '@/lib/api-auth'
 import { registerQuery, unregisterQuery } from '@/lib/query-registry'
 import { getWorkbenchRuntime } from '@/lib/runtime'
 import type { SparqlQueryKind } from '@/lib/runtime/contracts'
-import { SparqlTimeoutError } from '@/lib/sparql/errors'
 import { isSameOriginMutation, sameOriginError } from '@/lib/same-origin'
+import { SparqlTimeoutError } from '@/lib/sparql/errors'
 
 function detectQueryKind(query: string): SparqlQueryKind {
   try {
@@ -41,8 +41,7 @@ export async function POST(request: Request) {
     }
 
     const principal = await runtime.auth.getPrincipal()
-    const authenticated =
-      principal !== null && !principal.mustChangePassword
+    const authenticated = principal !== null && !principal.mustChangePassword
     if (!authenticated && (kind === 'update' || kind === 'unknown')) {
       return unauthenticatedResponse()
     }

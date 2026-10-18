@@ -70,6 +70,5 @@ export const systemVariables = {
   ]
 }
 
-export const allSystemVariables: string[] = Object.values(
-  systemVariables
-).flat()
+export const allSystemVariables: string[] =
+  Object.values(systemVariables).flat()

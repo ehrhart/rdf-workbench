@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server'
+import { requirePrincipal } from '@/lib/api-auth'
 import { hasFeature } from '@/lib/runtime'
 import { getRuntimeConfig } from '@/lib/runtime/config'
-import { requirePrincipal } from '@/lib/api-auth'
 import { isSameOriginMutation, sameOriginError } from '@/lib/same-origin'
 
 /**

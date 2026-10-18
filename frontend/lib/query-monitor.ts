@@ -1,8 +1,8 @@
 import 'server-only'
 
 import { after } from 'next/server'
-import { getRuntimeConfig } from '@/lib/runtime/config'
 import { cancelQuery, listQueries, ownsQuery } from '@/lib/query-registry'
+import { getRuntimeConfig } from '@/lib/runtime/config'
 import type {
   Principal,
   QueryMonitorAdapter,

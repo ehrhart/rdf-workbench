@@ -68,8 +68,7 @@ export function isPasswordChangeAllowed(pathname: string): boolean {
  */
 export function safeInternalRedirect(value: string | null | undefined): string {
   if (
-    value &&
-    value.startsWith('/') &&
+    value?.startsWith('/') &&
     !value.startsWith('//') &&
     !value.includes('\\')
   ) {
