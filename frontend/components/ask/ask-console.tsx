@@ -152,18 +152,16 @@ function compactCount(value: number): string {
   return String(value)
 }
 
-function csvField(value: string): string {
-  return /[",\n\r]/.test(value) ? `"${value.replaceAll('"', '""')}"` : value
-}
+import { escapeCsv } from '@/lib/sparql/serialize'
 
 function buildCsv(
   variables: string[],
   rows: Array<Record<string, string>>
 ): string {
-  const lines = [variables.map(csvField).join(',')]
+  const lines = [variables.map(escapeCsv).join(',')]
   for (const row of rows) {
     lines.push(
-      variables.map((variable) => csvField(row[variable] ?? '')).join(',')
+      variables.map((variable) => escapeCsv(row[variable] ?? '')).join(',')
     )
   }
   return lines.join('\n')

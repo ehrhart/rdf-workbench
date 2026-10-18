@@ -14,11 +14,14 @@ function escapeXml(value: string): string {
     .replace(/'/g, '&apos;')
 }
 
-function escapeCsv(value: string): string {
-  if (/[",\n\r]/.test(value)) {
-    return `"${value.replace(/"/g, '""')}"`
+const FORMULA_PREFIX = /^[=+\-@\t\r]/
+
+export function escapeCsv(value: string): string {
+  const guarded = FORMULA_PREFIX.test(value) ? `'${value}` : value
+  if (/[",\n\r]/.test(guarded)) {
+    return `"${guarded.replace(/"/g, '""')}"`
   }
-  return value
+  return guarded
 }
 
 function escapeTsv(value: string): string {
