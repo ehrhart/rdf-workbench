@@ -23,6 +23,9 @@ yarn-error.log*
 # uploads directory (temporary chunks)
 /uploads
 
+# runtime data (local sqlite database)
+/data
+
 # vercel
 .vercel
 
