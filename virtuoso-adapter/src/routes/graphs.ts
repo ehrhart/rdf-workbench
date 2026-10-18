@@ -29,6 +29,17 @@ export async function deleteGraphAsync(
     // Decode the URI (it will be URL-encoded in the path)
     const decodedGraphUri = decodeURIComponent(String(graphUri))
 
+    // An IRIREF cannot contain these characters, so any occurrence means
+    // the value is either malformed or trying to break out of the graph
+    // token.
+    if (/[\s<>"{}|^`\\]/.test(decodedGraphUri)) {
+      res.status(400).json({
+        error: 'Invalid graph URI',
+        message: 'The graph URI contains characters not allowed in an IRI'
+      } as ErrorResponse)
+      return
+    }
+
     // Start the deletion in the background without waiting
     // Using setImmediate to ensure the response is sent immediately
     setImmediate(async () => {
