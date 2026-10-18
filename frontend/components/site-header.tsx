@@ -25,7 +25,7 @@ export function SiteHeader({
             className="flex items-center gap-1.5"
           />
           <div className="flex items-center gap-3">
-            <QueryActivity />
+            {user && <QueryActivity />}
             <UserAccountNav user={user} />
           </div>
         </div>
