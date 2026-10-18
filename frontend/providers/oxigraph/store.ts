@@ -2,6 +2,7 @@ import 'server-only'
 
 import { QueryError } from '@/lib/errors'
 import { getRuntimeConfig } from '@/lib/runtime/config'
+import { assertSafeSparqlIri } from '@/providers/spec/iri'
 import { oxigraphSparqlTransport } from './sparql'
 
 const TRIPLE_FORMATS = new Set([
@@ -51,6 +52,10 @@ export async function importFile(
 }
 
 export async function importUrl(url: string, graph?: string): Promise<void> {
+  assertSafeSparqlIri(url, 'URL')
+  if (graph) {
+    assertSafeSparqlIri(graph, 'Graph')
+  }
   const update = graph ? `LOAD <${url}> INTO GRAPH <${graph}>` : `LOAD <${url}>`
   await oxigraphSparqlTransport.execute(update, { kind: 'update' })
 }
