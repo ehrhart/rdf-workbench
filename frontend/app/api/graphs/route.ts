@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { hasFeature } from '@/lib/runtime'
 import { getRuntimeConfig } from '@/lib/runtime/config'
+import { requirePrincipal } from '@/lib/api-auth'
 import { isSameOriginMutation, sameOriginError } from '@/lib/same-origin'
 
 /**
@@ -8,6 +9,10 @@ import { isSameOriginMutation, sameOriginError } from '@/lib/same-origin'
  */
 export async function DELETE(req: NextRequest) {
   if (!isSameOriginMutation(req)) return sameOriginError()
+
+  const auth = await requirePrincipal()
+  if (auth.response) return auth.response
+
   if (!(await hasFeature('virtuoso-graph-mutations'))) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
   }
