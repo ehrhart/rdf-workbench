@@ -30,7 +30,10 @@ export async function getResourceSuggestions(
   }
 
   const result = await tryCatch(async () => {
-    const escapedTerm = searchTerm.replace(/"/g, '\\"')
+    const escapedTerm = searchTerm
+      .replace(/\\/g, '\\\\')
+      .replace(/'/g, "''")
+      .replace(/"/g, '\\"')
 
     const query = `
       DEFINE input:same-as "SAME_AS_OFF"
