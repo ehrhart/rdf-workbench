@@ -1,21 +1,27 @@
+'use server'
+
 import { executeIsqlCommand } from '@/providers/virtuoso/odbc-connection'
+import { allSystemVariables } from './variables'
 
 type StatValue = string | number | null
+
+const allowedVariables = new Set(allSystemVariables)
 
 export async function sysStat(
   id: string | string[]
 ): Promise<Record<string, StatValue>> {
-  try {
-    let sqlQuery: string
-
-    if (Array.isArray(id)) {
-      // Handle multiple IDs
-      const selectClauses = id.map((item) => `sys_stat('${item}') AS "${item}"`)
-      sqlQuery = `SELECT ${selectClauses.join(', ')}`
-    } else {
-      // Handle single ID
-      sqlQuery = `SELECT sys_stat('${id}') AS "${id}"`
+  const ids = Array.isArray(id) ? id : [id]
+  for (const requested of ids) {
+    if (!allowedVariables.has(requested)) {
+      throw new Error('Unknown system variable')
     }
+  }
+
+  try {
+    const selectClauses = ids.map(
+      (item) => `sys_stat('${item}') AS "${item}"`
+    )
+    const sqlQuery = `SELECT ${selectClauses.join(', ')}`
 
     const data = await executeIsqlCommand<Record<string, unknown>[]>(sqlQuery)
     const result = data[0]
