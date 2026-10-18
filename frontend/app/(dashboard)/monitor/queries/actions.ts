@@ -5,15 +5,12 @@ import type { RunningQueryInfo } from '@/lib/runtime/contracts'
 
 export type RunningQuery = RunningQueryInfo
 
-/**
- * Fetches all currently running queries from the configured triplestore.
- * @returns An array of running query objects
- */
 export async function getRunningQueries(): Promise<RunningQuery[]> {
   try {
     const runtime = await getWorkbenchRuntime()
     if (!runtime.queryMonitor) return []
     const caller = await runtime.auth.getPrincipal()
+    if (caller?.role !== 'admin') return []
     return await runtime.queryMonitor.listRunning(caller)
   } catch (error) {
     console.error('Error fetching running queries:', error)

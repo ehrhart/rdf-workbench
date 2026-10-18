@@ -4,12 +4,12 @@ import { buildNavigation } from '@/config/navigation'
 import { dereferenceRepository } from '@/lib/dereference/repository'
 import { localAuthAdapter } from '@/lib/local-auth'
 import { localPrefixSource } from '@/lib/local-prefixes'
+import { registryQueryMonitor } from '@/lib/query-monitor'
 import type { FeatureId, WorkbenchRuntime } from '@/lib/runtime/contracts'
 import { computeFeatures } from '@/lib/runtime/features'
 import { savedQueryRepository } from '@/lib/saved-queries'
 import { qleverGraphReader } from './graphs'
 import { getQleverEndpointOverview } from './overview'
-import { qleverQueryMonitor } from './query-monitor'
 import { qleverSparqlTransport } from './sparql'
 import { getResourceSuggestions } from './text-search'
 
@@ -28,7 +28,7 @@ export const qleverRuntime: WorkbenchRuntime = {
   auth: localAuthAdapter,
   features,
   navigation,
-  queryMonitor: qleverQueryMonitor,
+  queryMonitor: registryQueryMonitor,
   textSearch: { getResourceSuggestions },
   getEndpointOverview: getQleverEndpointOverview
 }

@@ -152,9 +152,6 @@ importers:
       shiki:
         specifier: ^4.4.3
         version: 4.4.3
-      short-hash:
-        specifier: ^1.0.0
-        version: 1.0.0
       sonner:
         specifier: ^2.0.8
         version: 2.0.8(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -219,9 +216,6 @@ importers:
       '@types/react-resizable':
         specifier: ^4.0.0
         version: 4.0.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      '@types/short-hash':
-        specifier: ^1.0.3
-        version: 1.0.3
       '@types/sparqljs':
         specifier: ^3.1.12
         version: 3.1.12
@@ -2070,9 +2064,6 @@ packages:
   '@types/readdir-glob@1.1.5':
     resolution: {integrity: sha512-raiuEPUYqXu+nvtY2Pe8s8FEmZ3x5yAH4VkLdihcPdalvsHltomrRC9BzuStrJ9yk06470hS0Crw0f1pXqD+Hg==}
 
-  '@types/short-hash@1.0.3':
-    resolution: {integrity: sha512-hSjYH3Zv4kL99oxqsXJaGB9WPzNVw/neSlo8qia7pU7iakkZCBgdznXv7gAfH142SH6B1bKTRshmWeSK0kr63g==}
-
   '@types/sparqljs@3.1.12':
     resolution: {integrity: sha512-zg/sdKKtYI0845wKPSuSgunyU1o/+7tRzMw85lHsf4p/0UbA6+65MXAyEtv1nkaqSqrq/bXm7+bqXas+Xo5dpQ==}
 
@@ -3367,9 +3358,6 @@ packages:
     resolution: {integrity: sha512-NqADB8VjPFLM2V0VvHUewwwsw0ZWBaIdgo+ieHtK3hasLz4qeCRjYcqfB6AQrBggRKppKF8L52/VqdVsO47Dlw==}
     engines: {node: '>= 0.4'}
 
-  hash-string@1.0.0:
-    resolution: {integrity: sha512-dtNNyxXobzHavayZwOwRWhBTqS9GX4jDjIMsGc0fDyaN2A+4zMn5Ua9ODDCggN6w3Spma6mAHL3ImmW3BkWDmQ==}
-
   hasown@2.0.4:
     resolution: {integrity: sha512-T2UbfbBEF32wiepXIsMlTW9+dDYC6wMh/t/vYA4tuOMKqWz/n3vr1NFSxQiyP+zk2mXsoMA/i/7qV6LKut1t1A==}
     engines: {node: '>= 0.4'}
@@ -4502,9 +4490,6 @@ packages:
   shiki@4.4.3:
     resolution: {integrity: sha512-Mb/GvXPHBAXdgGIcnfU5L3ldpn1XcxrGkPHwqgRx17/I2XRfqlFKk2vGkHWINn1kdXvzJZeuO3is6I9KLPFm0g==}
     engines: {node: '>=20'}
-
-  short-hash@1.0.0:
-    resolution: {integrity: sha512-qbUCD2Pkl4IXRyVqneEjGnUr0NGDGLzZnBUVGJngIQZf/FrhOL0yJhH+JQzak0t8xMmScIKpoX1SxOsPHdwa4w==}
 
   side-channel-list@1.0.1:
     resolution: {integrity: sha512-mjn/0bi/oUURjc5Xl7IaWi/OJJJumuoJFQJfDDyO46+hBWsfaVM65TBHq2eoZBhzl9EchxOijpkbRC8SVBQU0w==}
@@ -6625,8 +6610,6 @@ snapshots:
     dependencies:
       '@types/node': 26.4.0
 
-  '@types/short-hash@1.0.3': {}
-
   '@types/sparqljs@3.1.12':
     dependencies:
       '@rdfjs/types': 2.0.1
@@ -8075,8 +8058,6 @@ snapshots:
     dependencies:
       has-symbols: 1.1.0
 
-  hash-string@1.0.0: {}
-
   hasown@2.0.4:
     dependencies:
       function-bind: 1.1.2
@@ -9496,10 +9477,6 @@ snapshots:
       '@shikijs/types': 4.4.3
       '@shikijs/vscode-textmate': 10.0.2
       '@types/hast': 3.0.5
-
-  short-hash@1.0.0:
-    dependencies:
-      hash-string: 1.0.0
 
   side-channel-list@1.0.1:
     dependencies:

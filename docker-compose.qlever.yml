@@ -5,7 +5,6 @@ services:
       WORKBENCH_DB_PATH: /data/workbench.sqlite
       BOOTSTRAP_ADMIN_USERNAME: ${BOOTSTRAP_ADMIN_USERNAME}
       BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD}
-      QLEVER_ACCESS_TOKEN: ${QLEVER_ACCESS_TOKEN:-}
     volumes:
       - qlever-workbench-data:/data
 

@@ -3,6 +3,7 @@ import 'server-only'
 import { buildNavigation } from '@/config/navigation'
 import { dereferenceRepository } from '@/lib/dereference/repository'
 import { localAuthAdapter } from '@/lib/local-auth'
+import { registryQueryMonitor } from '@/lib/query-monitor'
 import { getRuntimeConfig } from '@/lib/runtime/config'
 import type {
   FeatureId,
@@ -20,7 +21,6 @@ import {
   getResourceSuggestions,
   updatePrefix
 } from './capabilities'
-import { virtuosoQueryMonitor } from './query-monitor'
 import { virtuosoSparqlTransport } from './sparql'
 
 const sparql: SparqlTransport = virtuosoSparqlTransport
@@ -52,7 +52,7 @@ export const virtuosoRuntime: WorkbenchRuntime = {
   auth: localAuthAdapter,
   features,
   navigation,
-  queryMonitor: virtuosoQueryMonitor,
+  queryMonitor: registryQueryMonitor,
   textSearch: { getResourceSuggestions },
   async getEndpointOverview() {
     const config = getRuntimeConfig()

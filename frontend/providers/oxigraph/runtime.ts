@@ -4,6 +4,7 @@ import { buildNavigation } from '@/config/navigation'
 import { dereferenceRepository } from '@/lib/dereference/repository'
 import { localAuthAdapter } from '@/lib/local-auth'
 import { localPrefixSource } from '@/lib/local-prefixes'
+import { registryQueryMonitor } from '@/lib/query-monitor'
 import type { FeatureId, WorkbenchRuntime } from '@/lib/runtime/contracts'
 import { computeFeatures } from '@/lib/runtime/features'
 import { savedQueryRepository } from '@/lib/saved-queries'
@@ -34,6 +35,7 @@ export const oxigraphRuntime: WorkbenchRuntime = {
   auth: localAuthAdapter,
   features,
   navigation,
+  queryMonitor: registryQueryMonitor,
   textSearch: createSpecTextSearch(sparql),
   graphMutations: createSpecGraphMutations(sparql),
   getEndpointOverview: () => getOxigraphEndpointOverview(graphs, sparql)

@@ -30,8 +30,7 @@ const virtuosoSchema = commonSchema.extend({
 const qleverSchema = commonSchema.extend({
   TRIPLESTORE_PROVIDER: z.literal('qlever'),
   BOOTSTRAP_ADMIN_USERNAME: z.string().min(1),
-  BOOTSTRAP_ADMIN_PASSWORD: z.string().min(1),
-  QLEVER_ACCESS_TOKEN: z.string().min(1).optional()
+  BOOTSTRAP_ADMIN_PASSWORD: z.string().min(1)
 })
 
 const oxigraphSchema = commonSchema.extend({

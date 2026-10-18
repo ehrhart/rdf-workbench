@@ -110,7 +110,7 @@ const navMain: NavItem[] = [
       {
         title: 'Queries and update',
         url: '/monitor/queries',
-        requiredFeature: ['qlever-query-monitor', 'virtuoso-query-monitor']
+        requiredFeature: 'query-monitor'
       },
       { title: 'System', url: '/monitor/system' }
     ]
