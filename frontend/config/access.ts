@@ -67,7 +67,15 @@ export function isPasswordChangeAllowed(pathname: string): boolean {
  * by the login action and the change-password flow.
  */
 export function safeInternalRedirect(value: string | null | undefined): string {
-  return value?.startsWith('/') && !value.startsWith('//') ? value : '/overview'
+  if (
+    value &&
+    value.startsWith('/') &&
+    !value.startsWith('//') &&
+    !value.includes('\\')
+  ) {
+    return value
+  }
+  return '/overview'
 }
 
 /**
