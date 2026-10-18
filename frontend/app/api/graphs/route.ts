@@ -4,9 +4,6 @@ import { hasFeature } from '@/lib/runtime'
 import { getRuntimeConfig } from '@/lib/runtime/config'
 import { isSameOriginMutation, sameOriginError } from '@/lib/same-origin'
 
-/**
- * Deletes a graph asynchronously via the Virtuoso adapter.
- */
 export async function DELETE(req: NextRequest) {
   if (!isSameOriginMutation(req)) return sameOriginError()
 

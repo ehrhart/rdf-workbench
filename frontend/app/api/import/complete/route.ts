@@ -11,7 +11,7 @@ import { cleanStaleUploads } from '@/lib/upload-cleanup'
 import { stagedUploadPath } from '@/lib/upload-paths'
 import { getVirtuosoConfig } from '@/providers/virtuoso/config'
 
-const UPLOAD_TIMEOUT_MS = 10 * 60 * 1000 // 10 minutes timeout for large files
+const UPLOAD_TIMEOUT_MS = 10 * 60 * 1000
 
 /**
  * After chunks are uploaded, this endpoint forwards the complete file
@@ -49,7 +49,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid filename' }, { status: 400 })
     }
 
-    // Check if file exists
     try {
       await stat(filePath)
     } catch {
@@ -59,14 +58,12 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Stream the file using form-data package which properly handles large files
     const formData = new FormData()
     const fileStream = createReadStream(filePath)
     formData.append('file', fileStream, {
       filename: basename(filename).replace(/[\r\n]/g, '')
     })
 
-    // Upload using streaming with http/https modules
     const url = new URL(adapterUrl)
     const isHttps = url.protocol === 'https:'
     const httpModule = isHttps ? https : http
@@ -115,12 +112,10 @@ export async function POST(req: NextRequest) {
       }
     )
 
-    // Clean up the temporary file
     try {
       await unlink(filePath)
     } catch (unlinkError) {
       console.error('Failed to delete temporary file:', unlinkError)
-      // Don't fail the request if cleanup fails
     }
 
     if (uploadResult.status < 200 || uploadResult.status >= 300) {
@@ -134,7 +129,6 @@ export async function POST(req: NextRequest) {
       try {
         errorData = JSON.parse(uploadResult.data)
       } catch {
-        // If response is not JSON, use raw data
         errorData = { error: uploadResult.data }
       }
       return NextResponse.json(
@@ -155,16 +149,12 @@ export async function POST(req: NextRequest) {
     const err = error as Error
     console.error('Error in /api/import/complete:', err)
 
-    // Clean up file on error if we have a filename
     if (filename) {
       try {
         await unlink(stagedUploadPath(auth.principal.id, filename))
-      } catch {
-        // Ignore cleanup errors
-      }
+      } catch {}
     }
 
-    // In development, return detailed error information
     const isDevelopment = process.env.NODE_ENV === 'development'
     const errorResponse = isDevelopment
       ? {

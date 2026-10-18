@@ -16,9 +16,7 @@ function detectQueryKind(query: string): SparqlQueryKind {
     if ('updates' in parsed) {
       return 'update'
     }
-  } catch {
-    // Ignore parsing errors
-  }
+  } catch {}
   return 'unknown'
 }
 
