@@ -48,7 +48,10 @@ export default async function ChangePasswordPage({
             </p>
           </div>
           <Card className="p-6 rounded-none sm:rounded-xl">
-            <ChangePasswordForm redirectTarget={redirectTarget} />
+            <ChangePasswordForm
+              redirectTarget={redirectTarget}
+              requireCurrentPassword={!principal.mustChangePassword}
+            />
           </Card>
         </div>
       </div>

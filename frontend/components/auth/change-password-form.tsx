@@ -8,9 +8,11 @@ import { Label } from '@/components/ui/label'
 import { PASSWORD_MIN_LENGTH } from '@/lib/definitions'
 
 export function ChangePasswordForm({
-  redirectTarget
+  redirectTarget,
+  requireCurrentPassword
 }: {
   redirectTarget: string
+  requireCurrentPassword: boolean
 }) {
   const [state, action, pending] = useActionState(
     changePasswordAction,
@@ -20,6 +22,23 @@ export function ChangePasswordForm({
   return (
     <form action={action} className="space-y-4">
       <input type="hidden" name="redirect" value={redirectTarget} />
+      {requireCurrentPassword && (
+        <div className="space-y-2">
+          <Label htmlFor="currentPassword">Current password</Label>
+          <Input
+            id="currentPassword"
+            name="currentPassword"
+            type="password"
+            autoComplete="current-password"
+            disabled={pending}
+          />
+          {state?.errors?.currentPassword && (
+            <p className="text-sm text-destructive">
+              {state.errors.currentPassword[0]}
+            </p>
+          )}
+        </div>
+      )}
       <div className="space-y-2">
         <Label htmlFor="newPassword">New password</Label>
         <Input

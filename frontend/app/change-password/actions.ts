@@ -14,6 +14,7 @@ export async function changePasswordAction(
   formData: FormData
 ): Promise<ChangePasswordFormState> {
   const parsed = ChangePasswordFormSchema.safeParse({
+    currentPassword: formData.get('currentPassword') || undefined,
     newPassword: formData.get('newPassword'),
     confirmPassword: formData.get('confirmPassword')
   })
@@ -22,7 +23,10 @@ export async function changePasswordAction(
   }
 
   try {
-    await changeOwnLocalPassword(parsed.data.newPassword)
+    await changeOwnLocalPassword(
+      parsed.data.newPassword,
+      parsed.data.currentPassword
+    )
   } catch (error) {
     if (error instanceof AuthError || error instanceof QueryError) {
       return { message: error.message }

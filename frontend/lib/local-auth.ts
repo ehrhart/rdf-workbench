@@ -316,7 +316,10 @@ function generateTemporaryPassword(): string {
  * from the session cookie — there is no userId parameter, so the action
  * layer cannot target another account.
  */
-export async function changeOwnLocalPassword(password: string): Promise<void> {
+export async function changeOwnLocalPassword(
+  password: string,
+  currentPassword?: string
+): Promise<void> {
   const cookieStore = await cookies()
   const token = cookieStore.get(SESSION_COOKIE_NAME)?.value
   const principal = token ? await getLocalPrincipalByToken(token) : null
@@ -334,6 +337,19 @@ export async function changeOwnLocalPassword(password: string): Promise<void> {
     .prepare('SELECT password_hash FROM users WHERE id = ?')
     .get(principal.id) as { password_hash: string } | undefined
   if (!row) throw new AuthError('Authentication required')
+
+  // The forced-change flow is exempt: the flagged principal just
+  // authenticated with the password it is about to replace. Everyone
+  // else must prove the current password before the session can rotate
+  // the credential.
+  if (!principal.mustChangePassword) {
+    if (!currentPassword) {
+      throw new QueryError('Your current password is required')
+    }
+    if (!(await verify(row.password_hash, currentPassword))) {
+      throw new QueryError('Your current password is incorrect')
+    }
+  }
 
   if (await verify(row.password_hash, password)) {
     throw new QueryError('Choose a password different from your current one')

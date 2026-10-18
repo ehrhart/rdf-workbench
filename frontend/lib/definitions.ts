@@ -22,6 +22,7 @@ export type LoginFormState =
 
 export const ChangePasswordFormSchema = z
   .object({
+    currentPassword: z.string().optional(),
     newPassword: z.string().min(PASSWORD_MIN_LENGTH, {
       message: `Password must be at least ${PASSWORD_MIN_LENGTH} characters`
     }),
@@ -37,6 +38,7 @@ export const ChangePasswordFormSchema = z
 export type ChangePasswordFormState =
   | {
       errors?: {
+        currentPassword?: string[]
         newPassword?: string[]
         confirmPassword?: string[]
       }
