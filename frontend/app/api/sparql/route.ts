@@ -7,9 +7,6 @@ import type { SparqlQueryKind } from '@/lib/runtime/contracts'
 import { SparqlTimeoutError } from '@/lib/sparql/errors'
 import { isSameOriginMutation, sameOriginError } from '@/lib/same-origin'
 
-const UUID_PATTERN =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-
 function detectQueryKind(query: string): SparqlQueryKind {
   try {
     const parsed = new Parser({ skipUngroupedVariableCheck: true }).parse(query)
@@ -50,9 +47,7 @@ export async function POST(request: Request) {
       return unauthenticatedResponse()
     }
 
-    const headerId = request.headers.get('x-query-id')
-    const queryId =
-      headerId && UUID_PATTERN.test(headerId) ? headerId : crypto.randomUUID()
+    const queryId = crypto.randomUUID()
     const controller = new AbortController()
     registerQuery(queryId, principal?.id ?? null, query, () =>
       controller.abort()
