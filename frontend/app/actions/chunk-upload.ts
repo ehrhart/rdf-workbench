@@ -1,25 +1,19 @@
 'use server'
 
 import type { FileHandle } from 'node:fs/promises'
-import { mkdir, open, unlink } from 'node:fs/promises'
-import { join } from 'node:path'
+import { open, unlink } from 'node:fs/promises'
 
 import type { ChunkUploadHandler } from 'nextjs-chunk-upload-action'
 import { getWorkbenchRuntime } from '@/lib/runtime'
+import { ensureUserUploadsDir, stagedUploadPath } from '@/lib/upload-paths'
 
-const UPLOADS_DIR = join(process.cwd(), 'uploads')
 const MAX_CHUNK_SIZE = 10 * 1024 * 1024 // 10MB max per chunk
+const MAX_STAGED_SIZE = 100 * 1024 * 1024 * 1024
 
 interface ChunkMetadata {
   name: string
   totalSize: number
   [key: string]: string | number
-}
-
-async function userUploadsDir(userId: string): Promise<string> {
-  const dir = join(UPLOADS_DIR, userId)
-  await mkdir(dir, { recursive: true })
-  return dir
 }
 
 /**
@@ -52,9 +46,22 @@ export const chunkUploadAction: ChunkUploadHandler<ChunkMetadata> = async (
     throw new Error('Invalid offset')
   }
 
+  const totalSize = Number(metadata.totalSize)
+  if (
+    !Number.isInteger(totalSize) ||
+    totalSize < 0 ||
+    totalSize > MAX_STAGED_SIZE
+  ) {
+    throw new Error('Invalid total size')
+  }
+  if (offset + blob.size > totalSize) {
+    throw new Error('Chunk exceeds the declared total size')
+  }
+
   const buffer = Buffer.from(await blob.arrayBuffer())
 
-  const filePath = join(await userUploadsDir(principal.id), metadata.name)
+  await ensureUserUploadsDir(principal.id)
+  const filePath = stagedUploadPath(principal.id, metadata.name)
 
   let fileHandle: FileHandle | undefined
   try {

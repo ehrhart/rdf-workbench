@@ -2,19 +2,14 @@ import { createReadStream } from 'node:fs'
 import { stat, unlink } from 'node:fs/promises'
 import http from 'node:http'
 import https from 'node:https'
-import { join } from 'node:path'
 import FormData from 'form-data'
 import { type NextRequest, NextResponse } from 'next/server'
 import { requirePrincipal } from '@/lib/api-auth'
 import { isSameOriginMutation, sameOriginError } from '@/lib/same-origin'
+import { stagedUploadPath } from '@/lib/upload-paths'
 import { getVirtuosoConfig } from '@/providers/virtuoso/config'
 
-const UPLOADS_DIR = join(process.cwd(), 'uploads')
 const UPLOAD_TIMEOUT_MS = 10 * 60 * 1000 // 10 minutes timeout for large files
-
-function stagedFilePath(userId: string, filename: string): string {
-  return join(UPLOADS_DIR, userId, filename)
-}
 
 /**
  * After chunks are uploaded, this endpoint forwards the complete file
@@ -41,7 +36,12 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const filePath = stagedFilePath(auth.principal.id, filename)
+    let filePath: string
+    try {
+      filePath = stagedUploadPath(auth.principal.id, filename)
+    } catch {
+      return NextResponse.json({ error: 'Invalid filename' }, { status: 400 })
+    }
 
     // Check if file exists
     try {
@@ -150,7 +150,7 @@ export async function POST(req: NextRequest) {
     // Clean up file on error if we have a filename
     if (filename) {
       try {
-        await unlink(stagedFilePath(auth.principal.id, filename))
+        await unlink(stagedUploadPath(auth.principal.id, filename))
       } catch {
         // Ignore cleanup errors
       }
