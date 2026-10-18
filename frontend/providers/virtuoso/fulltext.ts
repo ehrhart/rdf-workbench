@@ -4,6 +4,8 @@ import { tryCatch } from '@/lib/result'
 import type { FTIndexStatus, FTRule } from '@/types'
 import { executeIsqlCommand } from './odbc-connection'
 
+const escapeSqlLiteral = (value: string): string => value.replace(/'/g, "''")
+
 /**
  * Get all full-text indexing rules from DB.DBA.RDF_OBJ_FT_RULES
  */
@@ -33,12 +35,12 @@ export async function addFTRule(
   predicate: string | null,
   reason: string
 ): Promise<{ success: boolean; added: boolean }> {
-  const graphValue = graph ? `'${graph}'` : 'NULL'
-  const predicateValue = predicate ? `'${predicate}'` : 'NULL'
+  const graphValue = graph ? `'${escapeSqlLiteral(graph)}'` : 'NULL'
+  const predicateValue = predicate ? `'${escapeSqlLiteral(predicate)}'` : 'NULL'
 
   const result = await tryCatch(async () =>
     executeIsqlCommand<Array<{ callret: number }>>(
-      `SELECT DB.DBA.RDF_OBJ_FT_RULE_ADD(${graphValue}, ${predicateValue}, '${reason}') as callret`
+      `SELECT DB.DBA.RDF_OBJ_FT_RULE_ADD(${graphValue}, ${predicateValue}, '${escapeSqlLiteral(reason)}') as callret`
     )
   )
 
@@ -64,12 +66,12 @@ export async function deleteFTRule(
   predicate: string | null,
   reason: string
 ): Promise<{ success: boolean; deleted: boolean }> {
-  const graphValue = graph ? `'${graph}'` : 'NULL'
-  const predicateValue = predicate ? `'${predicate}'` : 'NULL'
+  const graphValue = graph ? `'${escapeSqlLiteral(graph)}'` : 'NULL'
+  const predicateValue = predicate ? `'${escapeSqlLiteral(predicate)}'` : 'NULL'
 
   const result = await tryCatch(async () =>
     executeIsqlCommand<Array<{ callret: number }>>(
-      `SELECT DB.DBA.RDF_OBJ_FT_RULE_DEL(${graphValue}, ${predicateValue}, '${reason}') as callret`
+      `SELECT DB.DBA.RDF_OBJ_FT_RULE_DEL(${graphValue}, ${predicateValue}, '${escapeSqlLiteral(reason)}') as callret`
     )
   )
 
@@ -112,7 +114,8 @@ export async function setFTBatchMode(
   try {
     if (mode === 'auto') {
       // Automatic mode: ON with interval
-      const intervalValue = interval || 10
+      const intervalValue =
+        Number.isInteger(interval) && (interval ?? 0) > 0 ? interval : 10
       await executeIsqlCommand(
         `DB.DBA.VT_BATCH_UPDATE('DB.DBA.RDF_OBJ', 'ON', ${intervalValue})`
       )
