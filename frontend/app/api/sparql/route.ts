@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server'
 import { Parser } from 'sparqljs'
+import { unauthenticatedResponse } from '@/lib/api-auth'
 import { registerQuery, unregisterQuery } from '@/lib/query-registry'
 import { getWorkbenchRuntime } from '@/lib/runtime'
 import type { SparqlQueryKind } from '@/lib/runtime/contracts'
 import { SparqlTimeoutError } from '@/lib/sparql/errors'
+import { isSameOriginMutation, sameOriginError } from '@/lib/same-origin'
 
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -36,11 +38,22 @@ export async function POST(request: Request) {
 
     const runtime = await getWorkbenchRuntime()
 
+    const kind = detectQueryKind(query)
+    if (kind === 'update' && !isSameOriginMutation(request)) {
+      return sameOriginError()
+    }
+
+    const principal = await runtime.auth.getPrincipal()
+    const authenticated =
+      principal !== null && !principal.mustChangePassword
+    if (!authenticated && (kind === 'update' || kind === 'unknown')) {
+      return unauthenticatedResponse()
+    }
+
     const headerId = request.headers.get('x-query-id')
     const queryId =
       headerId && UUID_PATTERN.test(headerId) ? headerId : crypto.randomUUID()
     const controller = new AbortController()
-    const principal = await runtime.auth.getPrincipal()
     registerQuery(queryId, principal?.id ?? null, query, () =>
       controller.abort()
     )
@@ -48,7 +61,7 @@ export async function POST(request: Request) {
     try {
       const data = await runtime.sparql.execute(query, {
         queryId,
-        kind: detectQueryKind(query),
+        kind,
         signal: AbortSignal.any([request.signal, controller.signal])
       })
       return NextResponse.json(data, { status: 200 })
