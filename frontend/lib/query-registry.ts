@@ -1,3 +1,5 @@
+import 'server-only'
+
 /**
  * Owner marker for queries submitted through the anonymous public endpoint.
  * No principal id ever equals this, so ownsQuery() never matches and such
@@ -12,7 +14,18 @@ interface TrackedQuery {
   abort: () => void
 }
 
-const registry = new Map<string, TrackedQuery>()
+const globalStore = globalThis as typeof globalThis & {
+  __workbenchQueryRegistry?: Map<string, TrackedQuery>
+}
+
+// Next.js builds each route as its own bundle, so a plain module-level Map
+// exists once per bundle: the SPARQL routes and the monitor action would
+// read different registries. globalThis is shared across bundles in the
+// server process.
+if (!globalStore.__workbenchQueryRegistry) {
+  globalStore.__workbenchQueryRegistry = new Map<string, TrackedQuery>()
+}
+const registry = globalStore.__workbenchQueryRegistry
 
 export function registerQuery(
   id: string,
