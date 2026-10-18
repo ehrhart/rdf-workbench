@@ -334,8 +334,9 @@ async function initialize(): Promise<Database.Database> {
     const passwordHash = await hash(config.BOOTSTRAP_ADMIN_PASSWORD)
     db.prepare(`
       INSERT INTO users
-        (id, username, password_hash, role, disabled, created_at, updated_at)
-      VALUES (?, ?, ?, 'admin', 0, ?, ?)
+        (id, username, password_hash, role, disabled, must_change_password,
+         created_at, updated_at)
+      VALUES (?, ?, ?, 'admin', 0, 1, ?, ?)
     `).run(
       crypto.randomUUID(),
       config.BOOTSTRAP_ADMIN_USERNAME.trim().toLowerCase(),
