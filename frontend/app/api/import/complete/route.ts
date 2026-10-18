@@ -2,6 +2,7 @@ import { createReadStream } from 'node:fs'
 import { stat, unlink } from 'node:fs/promises'
 import http from 'node:http'
 import https from 'node:https'
+import { basename } from 'node:path'
 import FormData from 'form-data'
 import { type NextRequest, NextResponse } from 'next/server'
 import { requirePrincipal } from '@/lib/api-auth'
@@ -56,7 +57,9 @@ export async function POST(req: NextRequest) {
     // Stream the file using form-data package which properly handles large files
     const formData = new FormData()
     const fileStream = createReadStream(filePath)
-    formData.append('file', fileStream, { filename })
+    formData.append('file', fileStream, {
+      filename: basename(filename).replace(/[\r\n]/g, '')
+    })
 
     // Upload using streaming with http/https modules
     const url = new URL(adapterUrl)
