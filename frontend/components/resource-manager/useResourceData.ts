@@ -56,6 +56,12 @@ export function useResourceData(
       setStatus('loading')
       setError(null)
 
+      if (/[<>]/.test(resourceUri)) {
+        setStatus('error')
+        setError('The resource URI contains characters that are not allowed')
+        return
+      }
+
       try {
         const metaQuery = `
         PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>

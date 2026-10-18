@@ -151,7 +151,7 @@ export default function NodeInfoPanel({
         <div className="text-muted-foreground text-sm">
           <span className="font-medium">URI:</span>{' '}
           <Link
-            href={`/resource?uri=${node.id}`}
+            href={`/resource?uri=${encodeURIComponent(node.id)}`}
             target="_blank"
             rel="noopener"
             className="wrap-break-word text-blue-600 hover:underline"
