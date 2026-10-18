@@ -3,6 +3,7 @@ import { anonymousReadEnabled } from '@/config/access'
 import { requirePrincipal, resolveOptionalViewer } from '@/lib/api-auth'
 import { AuthError, ConnectionError, QueryError } from '@/lib/errors'
 import { getWorkbenchRuntime } from '@/lib/runtime'
+import type { Principal } from '@/lib/runtime/contracts'
 import { isSameOriginMutation, sameOriginError } from '@/lib/same-origin'
 
 const errorResponse = (error: unknown, hasSession: boolean) => {
@@ -33,15 +34,21 @@ const errorResponse = (error: unknown, hasSession: boolean) => {
 }
 
 async function listSavedQueries(
-  viewerId: string | null,
-  hasSession: boolean
+  principal: Principal | null
 ): Promise<NextResponse> {
   try {
     const runtime = await getWorkbenchRuntime()
+    const viewerId = principal ? principal.id : null
     const items = await runtime.savedQueries.list(viewerId)
-    return NextResponse.json({ items })
+    const seesOwners = principal?.role === 'admin'
+    const visibleItems = seesOwners
+      ? items
+      : items.map((item) =>
+          item.ownerId === viewerId ? item : { ...item, ownerUsername: '' }
+        )
+    return NextResponse.json({ items: visibleItems })
   } catch (error) {
-    return errorResponse(error, hasSession)
+    return errorResponse(error, Boolean(principal))
   }
 }
 
@@ -49,12 +56,12 @@ export async function GET() {
   if (!anonymousReadEnabled()) {
     const auth = await requirePrincipal()
     if (auth.response) return auth.response
-    return listSavedQueries(auth.principal.id, true)
+    return listSavedQueries(auth.principal)
   }
 
   const viewer = await resolveOptionalViewer()
   if (viewer.response) return viewer.response
-  return listSavedQueries(viewer.viewerId, false)
+  return listSavedQueries(null)
 }
 
 export async function POST(request: Request) {
