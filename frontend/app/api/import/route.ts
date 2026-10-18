@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
 
     let url = `${apiBaseUrl}/api/import/jobs`
     if (jobId) {
-      url = `${apiBaseUrl}/api/import/status/${jobId}`
+      url = `${apiBaseUrl}/api/import/status/${encodeURIComponent(jobId)}`
     }
 
     const response = await fetch(url, {

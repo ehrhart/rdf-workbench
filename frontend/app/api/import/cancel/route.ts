@@ -28,7 +28,7 @@ export async function POST(
 
     // Forward the request to the Virtuoso adapter
     const response = await fetch(
-      `${getVirtuosoConfig().VIRTUOSO_ADAPTER_URL}/api/import/cancel/${jobId}`,
+      `${getVirtuosoConfig().VIRTUOSO_ADAPTER_URL}/api/import/cancel/${encodeURIComponent(jobId)}`,
       {
         method: 'POST',
         headers: {
