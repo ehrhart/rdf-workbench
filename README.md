@@ -222,8 +222,8 @@ Common runtime variables:
   queries, dereference paths, prefixes).
 - `ALLOW_ANONYMOUS_READ`: set to `1` or `true` to let logged-out visitors open
   read-oriented pages (dashboard, graphs overview, visual graph, SPARQL
-  console). Administration pages, and on Virtuoso also import, ISQL, monitor,
-  namespaces, and configuration, still require a session. All writes
+  console). Administration pages, the monitor, and on Virtuoso also import,
+  ISQL, namespaces, and configuration, still require a session. All writes
   authenticate at their own route or action layer regardless. Disabled by
   default.
 

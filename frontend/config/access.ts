@@ -110,9 +110,6 @@ export const ACCESS_RULES: AccessRule[] = [
   { pattern: '/import', access: 'session' },
   { pattern: '/namespaces', access: 'session' },
   { pattern: '/monitor/queries', access: 'session' },
-  // The monitor layout requires a session (and the admin role on
-  // qlever/oxigraph) for the whole subtree, so the sidebar item and the
-  // layout stay consistent.
   { pattern: '/monitor/system', access: 'session' },
 
   { pattern: '/admin', access: 'admin' },
