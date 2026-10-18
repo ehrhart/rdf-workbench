@@ -8,6 +8,10 @@ function filePattern(filename: string): string {
   return `%/${filename}`
 }
 
+function escapeSqlLiteral(value: string): string {
+  return value.replace(/'/g, "''")
+}
+
 function buildJobId(filename: string, graphIri: string): string {
   return `${filename}|${graphIri}`
 }
@@ -58,7 +62,7 @@ export async function registerBulkLoadJob(
   graphIri: string
 ): Promise<string> {
   const connection = await getConnection()
-  const pattern = filePattern(filename)
+  const pattern = filePattern(escapeSqlLiteral(filename))
 
   // Virtuoso won't process duplicate entries in LOAD_LIST, so remove any
   // existing job for this file and graph.
@@ -84,7 +88,7 @@ export async function registerBulkLoadJob(
   })
   // ld_dir registers files for the RDF bulk loader. Docs: https://docs.openlinksw.com/virtuoso/rdfperstrload/#rdfperstrloadbulk
   await connection.query(
-    `ld_dir('${IMPORTS_PATH}', '${filename}', '${graphIri}')`
+    `ld_dir('${escapeSqlLiteral(IMPORTS_PATH)}', '${escapeSqlLiteral(filename)}', '${escapeSqlLiteral(graphIri)}')`
   )
   await connection.close()
 
@@ -115,7 +119,7 @@ export async function getBulkLoadJobStatus(
       ll_file, ll_graph, ll_state, ll_started, ll_done,
       ll_host, ll_work_time, ll_error
     FROM DB.DBA.LOAD_LIST
-    WHERE ll_file LIKE '${filePattern(parsed.filename)}' AND ll_graph = '${parsed.graphIri}'
+    WHERE ll_file LIKE '${filePattern(escapeSqlLiteral(parsed.filename))}' AND ll_graph = '${escapeSqlLiteral(parsed.graphIri)}'
   `
 
   const result = await connection.query(query)
@@ -188,7 +192,7 @@ export async function cancelBulkLoadJob(jobId: string): Promise<void> {
   const jobResult = await connection.query(`
     SELECT ll_state, ll_error
     FROM DB.DBA.LOAD_LIST
-    WHERE ll_file LIKE '${filePattern(parsed.filename)}' AND ll_graph = '${parsed.graphIri}'
+    WHERE ll_file LIKE '${filePattern(escapeSqlLiteral(parsed.filename))}' AND ll_graph = '${escapeSqlLiteral(parsed.graphIri)}'
   `)
 
   if (jobResult.length === 0) {
@@ -213,7 +217,7 @@ export async function cancelBulkLoadJob(jobId: string): Promise<void> {
   // Delete the job from LOAD_LIST
   await connection.query(`
     DELETE FROM DB.DBA.LOAD_LIST
-    WHERE ll_file LIKE '${filePattern(parsed.filename)}' AND ll_graph = '${parsed.graphIri}'
+    WHERE ll_file LIKE '${filePattern(escapeSqlLiteral(parsed.filename))}' AND ll_graph = '${escapeSqlLiteral(parsed.graphIri)}'
   `)
 
   await connection.close()
@@ -231,7 +235,7 @@ export async function removeBulkLoadJobsForFile(
   const connection = await getConnection()
   await connection.query(`
     DELETE FROM DB.DBA.LOAD_LIST
-    WHERE ll_file LIKE '${filePattern(filename)}'
+    WHERE ll_file LIKE '${filePattern(escapeSqlLiteral(filename))}'
   `)
   await connection.close()
   logger.info('Related bulk load jobs removed', { filename })
