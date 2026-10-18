@@ -24,7 +24,7 @@ services:
         "--union-default-graph"
       ]
     ports:
-      - "${OXIGRAPH_PORT:-7878}:7878"
+      - "127.0.0.1:${OXIGRAPH_PORT:-7878}:7878"
     volumes:
       - oxigraph-data:/data
     healthcheck:
