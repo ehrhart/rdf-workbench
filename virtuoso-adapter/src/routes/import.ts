@@ -69,7 +69,7 @@ export async function ensureDirectory(
     logger.error('Error ensuring imports directory', { error: err.message })
     res.status(500).json({
       error: 'Failed to ensure imports directory',
-      message: err.message
+      message: 'The request could not be completed'
     } as ErrorResponse)
     return
   }
@@ -130,7 +130,7 @@ export const uploadFile = [
       })
       res.status(500).json({
         error: 'Failed to upload file to imports folder',
-        message: err.message
+        message: 'The request could not be completed'
       } as ErrorResponse)
       return
     }
@@ -163,7 +163,7 @@ export async function uploadFromUrl(
     })
     res.status(500).json({
       error: 'Failed to import from URL',
-      message: err.message
+      message: 'The request could not be completed'
     } as ErrorResponse)
     return
   }
@@ -194,7 +194,7 @@ export async function uploadSnippet(
     })
     res.status(500).json({
       error: 'Failed to save snippet',
-      message: err.message
+      message: 'The request could not be completed'
     } as ErrorResponse)
     return
   }
@@ -251,7 +251,7 @@ export async function bulkLoad(req: Request, res: Response): Promise<void> {
     })
     res.status(500).json({
       error: 'Failed to create bulk load job',
-      message: err.message
+      message: 'The request could not be completed'
     } as ErrorResponse)
     return
   }
@@ -274,7 +274,7 @@ export async function getJobStatus(req: Request, res: Response): Promise<void> {
     logger.error('Error fetching job status', { error: err.message, jobId })
     res.status(500).json({
       error: 'Failed to fetch job status',
-      message: err.message
+      message: 'The request could not be completed'
     } as ErrorResponse)
     return
   }
@@ -294,7 +294,7 @@ export async function getAllJobs(req: Request, res: Response): Promise<void> {
     logger.error('Error fetching all jobs', { error: err.message })
     res.status(500).json({
       error: 'Failed to fetch jobs',
-      message: err.message
+      message: 'The request could not be completed'
     } as ErrorResponse)
     return
   }
@@ -318,7 +318,7 @@ export async function cancelJob(req: Request, res: Response): Promise<void> {
     logger.error('Error cancelling job', { error: err.message, jobId })
     res.status(500).json({
       error: 'Failed to cancel job',
-      message: err.message
+      message: 'The request could not be completed'
     } as ErrorResponse)
     return
   }
@@ -352,7 +352,7 @@ export async function deleteFileHandler(
     })
     res.status(500).json({
       error: 'Failed to delete file',
-      message: err.message
+      message: 'The request could not be completed'
     } as ErrorResponse)
     return
   }

@@ -84,7 +84,7 @@ export async function deleteGraphAsync(
     })
     res.status(500).json({
       error: 'Failed to initiate graph deletion',
-      message: err.message
+      message: 'The request could not be completed'
     } as ErrorResponse)
     return
   }

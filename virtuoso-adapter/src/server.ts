@@ -69,7 +69,7 @@ const errorHandler = (
   logger.error('Error occurred', { error: err.message })
   res.status(500).json({
     error: 'Internal server error',
-    message: err.message
+    message: 'The request could not be completed'
   } as ErrorResponse)
 }
 

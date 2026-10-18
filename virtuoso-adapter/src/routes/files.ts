@@ -87,7 +87,7 @@ export async function listSharedFiles(
     })
     res.status(500).json({
       error: 'Failed to list files',
-      message: err.message
+      message: 'The request could not be completed'
     } as ErrorResponse)
   }
 }
@@ -153,7 +153,7 @@ export async function downloadSharedFile(
     })
     res.status(500).json({
       error: 'Failed to stream file',
-      message: err.message
+      message: 'The request could not be completed'
     } as ErrorResponse)
   }
 }
@@ -191,7 +191,7 @@ export async function deleteSharedFiles(
     if (err.code === 'ENOENT') {
       res.status(404).json({
         error: 'File not found',
-        message: err.message
+        message: 'The request could not be completed'
       } as ErrorResponse)
       return
     }
@@ -202,7 +202,7 @@ export async function deleteSharedFiles(
     })
     res.status(500).json({
       error: 'Failed to delete files',
-      message: err.message
+      message: 'The request could not be completed'
     } as ErrorResponse)
   }
 }
