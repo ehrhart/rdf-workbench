@@ -26,7 +26,7 @@
     "@tanstack/react-table": "^8.21.3",
     "@tanstack/react-virtual": "^3.14.10",
     "@types/react-virtualized": "^9.22.3",
-    "@zazuko/yasgui": "^4.6.1",
+    "@zazuko/yasgui": "^4.6.2",
     "@zazuko/yasqe": "^4.6.1",
     "ai": "^7.0.127",
     "archiver": "^8.0.0",
@@ -100,6 +100,9 @@
   },
   "packageManager": "pnpm@10.33.0+sha512.10568bb4a6afb58c9eb3630da90cc9516417abebd3fabbe6739f0ae795728da1491e9db5a544c76ad8eb7570f5c4bb3d6c637b2cb41bfdcdb47fa823c8649319",
   "pnpm": {
+    "overrides": {
+      "decode-uri-component": "0.5.0"
+    },
     "onlyBuiltDependencies": [
       "@fortawesome/fontawesome-common-types",
       "@fortawesome/free-solid-svg-icons",
