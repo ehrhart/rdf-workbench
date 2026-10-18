@@ -1,14 +1,11 @@
 import { type NextRequest, NextResponse } from 'next/server'
-import { getWorkbenchRuntime } from '@/lib/runtime'
-import type {
-  SparqlRequestOptions,
-  WorkbenchRuntime
-} from '@/lib/runtime/contracts'
 import {
   PUBLIC_QUERY_OWNER,
   registerQuery,
   unregisterQuery
-} from '@/providers/qlever/query-registry'
+} from '@/lib/query-registry'
+import { getWorkbenchRuntime } from '@/lib/runtime'
+import type { WorkbenchRuntime } from '@/lib/runtime/contracts'
 
 export async function GET(request: NextRequest) {
   const query = request.nextUrl.searchParams.get('query')
@@ -17,7 +14,7 @@ export async function GET(request: NextRequest) {
   }
   const format = request.nextUrl.searchParams.get('format')
   const accept = format ?? request.headers.get('accept')
-  return runPublicQuery(query, accept)
+  return runPublicQuery(request, query, accept)
 }
 
 export async function POST(request: NextRequest) {
@@ -25,24 +22,33 @@ export async function POST(request: NextRequest) {
   if (!query) {
     return jsonError('No query provided', 400)
   }
-  return runPublicQuery(query, request.headers.get('accept'))
+  return runPublicQuery(request, query, request.headers.get('accept'))
 }
 
-async function runPublicQuery(query: string, accept: string | null) {
+async function runPublicQuery(
+  request: NextRequest,
+  query: string,
+  accept: string | null
+) {
   const runtime = await getWorkbenchRuntime()
   const requested = accept?.trim() || 'application/sparql-results+json'
-  return streamDownload(runtime, query, requested)
+  return streamDownload(runtime, request.signal, query, requested)
 }
 
 async function streamDownload(
   runtime: WorkbenchRuntime,
+  clientSignal: AbortSignal,
   query: string,
   accept: string
 ) {
+  const queryId = crypto.randomUUID()
+  const controller = new AbortController()
+  registerQuery(queryId, PUBLIC_QUERY_OWNER, query, () => controller.abort())
   try {
-    const upstream = await withPublicQueryTracking(runtime, query, (options) =>
-      runtime.sparql.download(query, accept, options)
-    )
+    const upstream = await runtime.sparql.download(query, accept, {
+      queryId,
+      signal: AbortSignal.any([clientSignal, controller.signal])
+    })
     const contentType = upstream.headers.get('content-type') ?? accept
 
     if (!upstream.ok) {
@@ -61,6 +67,8 @@ async function streamDownload(
     const message =
       error instanceof Error ? error.message : 'SPARQL query failed'
     return jsonError(message, 400)
+  } finally {
+    unregisterQuery(queryId)
   }
 }
 
@@ -77,21 +85,6 @@ async function readQueryBody(request: NextRequest): Promise<string | null> {
     return params.get('query')
   }
   return (await request.text()) || null
-}
-
-async function withPublicQueryTracking<T>(
-  runtime: WorkbenchRuntime,
-  query: string,
-  run: (options: SparqlRequestOptions) => Promise<T>
-): Promise<T> {
-  if (runtime.provider !== 'qlever') return run({})
-  const queryId = crypto.randomUUID()
-  registerQuery(queryId, PUBLIC_QUERY_OWNER, query)
-  try {
-    return await run({ queryId })
-  } finally {
-    unregisterQuery(queryId)
-  }
 }
 
 function jsonError(message: string, status: number) {

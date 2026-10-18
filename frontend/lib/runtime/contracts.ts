@@ -58,7 +58,7 @@ export type SparqlQueryKind =
 export interface SparqlRequestOptions {
   timeoutMs?: number
   signal?: AbortSignal
-  /** Assigns the QLever query id used for per-query tracking and cancellation. */
+  /** Assigns the workbench query id used for per-query tracking and cancellation. */
   queryId?: string
   /** Query kind, used to negotiate the upstream response format. */
   kind?: SparqlQueryKind

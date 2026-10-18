@@ -1,16 +1,9 @@
 import { NextResponse } from 'next/server'
 import { Parser } from 'sparqljs'
+import { registerQuery, unregisterQuery } from '@/lib/query-registry'
 import { getWorkbenchRuntime } from '@/lib/runtime'
 import type { SparqlQueryKind } from '@/lib/runtime/contracts'
 import { SparqlTimeoutError } from '@/lib/sparql/errors'
-import {
-  registerQuery as registerQleverQuery,
-  unregisterQuery as unregisterQleverQuery
-} from '@/providers/qlever/query-registry'
-import {
-  registerQuery as registerVirtuosoQuery,
-  unregisterQuery as unregisterVirtuosoQuery
-} from '@/providers/virtuoso/query-registry'
 
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -32,7 +25,6 @@ function detectQueryKind(query: string): SparqlQueryKind {
 
 export async function POST(request: Request) {
   try {
-    // Parse the body as the SPARQL query (application/sparql-query)
     const query = await request.text()
 
     if (!query) {
@@ -44,41 +36,24 @@ export async function POST(request: Request) {
 
     const runtime = await getWorkbenchRuntime()
 
-    let queryId: string | undefined
-    let registered = false
-    let abortController: AbortController | null = null
     const headerId = request.headers.get('x-query-id')
-    if (headerId && UUID_PATTERN.test(headerId)) {
-      queryId = headerId
-      const principal = await runtime.auth.getPrincipal()
-      if (runtime.provider === 'qlever') {
-        registerQleverQuery(queryId, principal?.id ?? null, query)
-      } else {
-        abortController = new AbortController()
-        registerVirtuosoQuery(queryId, principal?.id ?? null, query, () =>
-          abortController?.abort()
-        )
-      }
-      registered = true
-    }
+    const queryId =
+      headerId && UUID_PATTERN.test(headerId) ? headerId : crypto.randomUUID()
+    const controller = new AbortController()
+    const principal = await runtime.auth.getPrincipal()
+    registerQuery(queryId, principal?.id ?? null, query, () =>
+      controller.abort()
+    )
 
     try {
-      const data = await runtime.sparql.execute(
-        query,
-        queryId
-          ? {
-              queryId,
-              kind: detectQueryKind(query),
-              ...(abortController ? { signal: abortController.signal } : {})
-            }
-          : { kind: detectQueryKind(query) }
-      )
+      const data = await runtime.sparql.execute(query, {
+        queryId,
+        kind: detectQueryKind(query),
+        signal: AbortSignal.any([request.signal, controller.signal])
+      })
       return NextResponse.json(data, { status: 200 })
     } finally {
-      if (registered && queryId) {
-        if (runtime.provider === 'qlever') unregisterQleverQuery(queryId)
-        else unregisterVirtuosoQuery(queryId)
-      }
+      unregisterQuery(queryId)
     }
   } catch (error) {
     const isTimeout = error instanceof SparqlTimeoutError
