@@ -70,7 +70,9 @@ async function createLocalSession(user: Principal): Promise<void> {
   const config = getRuntimeConfig()
   cookieStore.set(SESSION_COOKIE_NAME, token, {
     httpOnly: true,
-    secure: config.NODE_ENV === 'production',
+    secure:
+      config.WORKBENCH_URL.startsWith('https:') ||
+      config.NODE_ENV === 'production',
     sameSite: 'lax',
     path: '/',
     expires: expiresAt
