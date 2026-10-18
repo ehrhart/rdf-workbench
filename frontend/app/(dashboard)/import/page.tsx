@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 }
 
 export default async function ImportPage() {
-  await requirePageAccess('session')
+  await requirePageAccess('admin')
   await requireAnyFeature([
     'virtuoso-import',
     'oxigraph-import',

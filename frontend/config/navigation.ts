@@ -74,6 +74,7 @@ const navMain: NavItem[] = [
     title: 'Import',
     url: '/import',
     icon: 'import',
+    requiredRole: 'admin',
     requiredFeature: ['virtuoso-import', 'oxigraph-import', 'generic-import']
   },
   {

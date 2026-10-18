@@ -107,7 +107,7 @@ export const ACCESS_RULES: AccessRule[] = [
   { pattern: '/api/conversations', access: 'session' },
 
   { pattern: '/api/isql', access: 'admin', feature: 'virtuoso-isql' },
-  { pattern: '/api/import', access: 'session', feature: 'virtuoso-import' },
+  { pattern: '/api/import', access: 'admin', feature: 'virtuoso-import' },
   { pattern: '/api/export', access: 'session', feature: 'virtuoso-export' },
   { pattern: '/isql', access: 'admin', feature: 'virtuoso-isql' },
   {
@@ -115,7 +115,7 @@ export const ACCESS_RULES: AccessRule[] = [
     access: 'session',
     feature: 'virtuoso-fulltext'
   },
-  { pattern: '/import', access: 'session' },
+  { pattern: '/import', access: 'admin' },
   { pattern: '/namespaces', access: 'session' },
   { pattern: '/monitor/queries', access: 'session' },
   { pattern: '/monitor/system', access: 'session' },
