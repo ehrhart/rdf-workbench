@@ -16,6 +16,13 @@ import { getWorkbenchDatabase } from '@/lib/workbench-database'
 const SESSION_COOKIE_NAME = 'session'
 const SESSION_DURATION_MS = 7 * 24 * 60 * 60 * 1000
 
+let dummyHashPromise: Promise<string> | null = null
+
+function getDummyHash(): Promise<string> {
+  dummyHashPromise ??= hash('rdf-workbench-unknown-user-verify')
+  return dummyHashPromise
+}
+
 interface UserRow {
   id: string
   username: string
@@ -92,11 +99,12 @@ export async function loginLocalUser(
     `)
     .get(username) as UserRow | undefined
 
-  if (
-    !row ||
-    row.disabled ||
-    !(await verify(row.password_hash, credentials.password))
-  ) {
+  if (!row || row.disabled) {
+    await verify(await getDummyHash(), credentials.password)
+    throw new AuthError('Invalid username or password')
+  }
+
+  if (!(await verify(row.password_hash, credentials.password))) {
     throw new AuthError('Invalid username or password')
   }
 

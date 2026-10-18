@@ -1,9 +1,16 @@
 'use server'
 
+import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { PASSWORD_CHANGE_PATH, safeInternalRedirect } from '@/config/access'
 import { LoginFormSchema, type LoginFormState } from '@/lib/definitions'
 import { AuthError, ConnectionError } from '@/lib/errors'
+import {
+  isLoginBlocked,
+  loginThrottleKey,
+  recordLoginFailure,
+  recordLoginSuccess
+} from '@/lib/login-throttle'
 import { getWorkbenchRuntime } from '@/lib/runtime'
 import type { Principal } from '@/lib/runtime/contracts'
 
@@ -27,14 +34,26 @@ export async function login(
   const { username, password } = validatedFields.data
   const requestedRedirect = formData.get('redirect') as string | null
 
+  const headerList = await headers()
+  const clientIp =
+    headerList.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
+  const throttleKey = loginThrottleKey(username, clientIp)
+  if (isLoginBlocked(throttleKey)) {
+    return { message: 'Too many attempts. Please try again later.' }
+  }
+
   let principal: Principal
   try {
     principal = await (await getWorkbenchRuntime()).auth.login({
       username,
       password
     })
+    recordLoginSuccess(throttleKey)
   } catch (error) {
     if (error instanceof AuthError || error instanceof ConnectionError) {
+      if (error instanceof AuthError) {
+        recordLoginFailure(throttleKey)
+      }
       return { message: error.message }
     }
     console.error('Unexpected login error:', error)
