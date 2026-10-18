@@ -1,0 +1,19 @@
+# yaml-language-server: $schema=https://lefthook.dev/schema.json
+
+pre-commit:
+  jobs:
+    - name: frontend-biome
+      root: frontend
+      run: pnpm exec biome check --write --no-errors-on-unmatched {staged_files}
+      stage_fixed: true
+
+pre-push:
+  piped: true
+  jobs:
+    - name: adapter-build
+      root: virtuoso-adapter
+      run: pnpm build
+
+    - name: frontend-build
+      root: frontend
+      run: pnpm build
