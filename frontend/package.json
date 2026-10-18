@@ -9,7 +9,7 @@
     "lint": "biome check .",
     "lint:fix": "biome check . --fix",
     "format": "biome format . --write",
-    "prepare": "lefthook install"
+    "prepare": "if git rev-parse --git-dir >/dev/null 2>&1; then lefthook install; fi"
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "^3.0.62",
