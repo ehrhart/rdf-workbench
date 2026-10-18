@@ -1,5 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
+import { Readable, Transform } from 'node:stream'
+import { pipeline } from 'node:stream/promises'
 
 import { promisify } from 'node:util'
 import { IMPORTS_PATH, MAX_UPLOAD_BYTES } from './config'
@@ -7,6 +9,7 @@ import { logger } from './logger'
 
 // Promisified file system operations for async/await usage
 const writeFileAsync = promisify(fs.writeFile)
+const renameAsync = promisify(fs.rename)
 const unlinkAsync = promisify(fs.unlink)
 const statAsync = promisify(fs.stat)
 const mkdirAsync = promisify(fs.mkdir)
@@ -31,30 +34,37 @@ export function resolveSharedPath(relativePath: string): string {
   return target
 }
 
-async function readRemoteBody(
+async function streamRemoteBody(
   response: Response,
-  limit: number
-): Promise<Buffer> {
+  limit: number,
+  destination: string
+): Promise<number> {
   if (!response.body) {
     throw new Error('Remote response has no body')
   }
 
-  const reader = response.body.getReader()
-  const chunks: Uint8Array[] = []
   let total = 0
-  for (;;) {
-    const { done, value } = await reader.read()
-    if (done) break
-    total += value.byteLength
-    if (total > limit) {
-      await reader.cancel().catch(() => undefined)
-      throw new Error(
-        `Remote file exceeds the maximum allowed size of ${limit} bytes`
-      )
+  const counter = new Transform({
+    transform(chunk: Buffer, _encoding, callback) {
+      total += chunk.length
+      if (total > limit) {
+        callback(
+          new Error(
+            `Remote file exceeds the maximum allowed size of ${limit} bytes`
+          )
+        )
+        return
+      }
+      callback(null, chunk)
     }
-    chunks.push(value)
-  }
-  return Buffer.concat(chunks)
+  })
+
+  await pipeline(
+    Readable.fromWeb(response.body as import('stream/web').ReadableStream),
+    counter,
+    fs.createWriteStream(destination)
+  )
+  return total
 }
 
 /**
@@ -204,12 +214,6 @@ export async function saveRemoteFile(
       throw new Error(`Failed to download file: ${response.statusText}`)
     }
 
-    const buffer = await readRemoteBody(response, MAX_UPLOAD_BYTES)
-
-    if (buffer.length === 0) {
-      throw new Error('Downloaded file is empty')
-    }
-
     const urlPath = url.pathname.split('/').filter(Boolean).pop() ?? ''
     const parsed = path.parse(urlPath)
 
@@ -223,13 +227,35 @@ export async function saveRemoteFile(
       extensionHint
     })
 
+    const finalPath = path.join(IMPORTS_PATH, filename)
+    const partPath = `${finalPath}.part`
+
+    let size: number
+    try {
+      size = await streamRemoteBody(response, MAX_UPLOAD_BYTES, partPath)
+    } catch (error) {
+      await unlinkAsync(partPath).catch(() => undefined)
+      throw error
+    }
+
+    if (size === 0) {
+      await unlinkAsync(partPath).catch(() => undefined)
+      throw new Error('Downloaded file is empty')
+    }
+
+    await renameAsync(partPath, finalPath)
+
     logger.info('Saving remote RDF import', {
       sourceUrl,
       filename,
-      size: buffer.length
+      size
     })
 
-    return writeBufferToImports(buffer, filename)
+    return {
+      filename,
+      size,
+      path: finalPath
+    }
   } catch (error) {
     const err = error as Error
     logger.error('Error fetching RDF from URL', {
