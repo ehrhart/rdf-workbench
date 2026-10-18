@@ -5,8 +5,10 @@ import https from 'node:https'
 import { basename } from 'node:path'
 import FormData from 'form-data'
 import { type NextRequest, NextResponse } from 'next/server'
+import { after } from 'next/server'
 import { requirePrincipal } from '@/lib/api-auth'
 import { isSameOriginMutation, sameOriginError } from '@/lib/same-origin'
+import { cleanStaleUploads } from '@/lib/upload-cleanup'
 import { stagedUploadPath } from '@/lib/upload-paths'
 import { getVirtuosoConfig } from '@/providers/virtuoso/config'
 
@@ -21,6 +23,10 @@ export async function POST(req: NextRequest) {
 
   const auth = await requirePrincipal()
   if (auth.response) return auth.response
+
+  after(async () => {
+    await cleanStaleUploads()
+  })
 
   const adapterUrl = getVirtuosoConfig().VIRTUOSO_ADAPTER_URL
 
