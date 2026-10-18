@@ -44,6 +44,13 @@ COPY . .
 # Build TypeScript code
 RUN pnpm build
 
+# Run as a dedicated non-root user
+RUN groupadd --system --gid 1001 nodejs && \
+    useradd --system --uid 1001 --gid nodejs workbench && \
+    chown -R workbench:nodejs /app
+
+USER workbench
+
 # Expose the specified port
 EXPOSE 50118
 
