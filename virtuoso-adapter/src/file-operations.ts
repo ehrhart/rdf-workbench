@@ -14,6 +14,23 @@ const accessAsync = promisify(fs.access)
 
 const REMOTE_FETCH_TIMEOUT_MS = 60_000
 
+const SHARED_ROOT = path.resolve(IMPORTS_PATH)
+
+export { SHARED_ROOT }
+
+/**
+ * Resolves a relative path inside the shared imports root, rejecting
+ * anything that resolves outside of it.
+ */
+export function resolveSharedPath(relativePath: string): string {
+  const normalized = path.normalize(relativePath.trim())
+  const target = path.resolve(SHARED_ROOT, normalized)
+  if (target !== SHARED_ROOT && !target.startsWith(SHARED_ROOT + path.sep)) {
+    throw new Error('Path is outside of the shared directory')
+  }
+  return target
+}
+
 async function readRemoteBody(
   response: Response,
   limit: number
@@ -71,29 +88,6 @@ export async function ensureImportsDirectory(): Promise<{
  * @param buffer File buffer
  * @returns File metadata
  */
-export async function saveUploadedFile(
-  filename: string,
-  buffer: Buffer
-): Promise<{ filename: string; size: number; path: string }> {
-  await ensureImportsDirectory()
-  const filePath = path.join(IMPORTS_PATH, filename)
-
-  // Write file to imports folder
-  await writeFileAsync(filePath, buffer)
-
-  logger.info('File uploaded to imports folder', {
-    filename,
-    size: buffer.length,
-    path: filePath
-  })
-
-  return {
-    filename,
-    size: buffer.length,
-    path: filePath
-  }
-}
-
 function sanitizeBasename(name: string): string {
   const cleaned = name
     .trim()
@@ -278,9 +272,8 @@ export async function saveTextSnippet(
  * @returns True if file exists
  */
 export async function fileExists(filename: string): Promise<boolean> {
-  const filePath = path.join(IMPORTS_PATH, filename)
   try {
-    await statAsync(filePath)
+    await statAsync(resolveSharedPath(filename))
     return true
   } catch {
     return false
@@ -292,7 +285,7 @@ export async function fileExists(filename: string): Promise<boolean> {
  * @param filename Name of the file to delete
  */
 export async function deleteFile(filename: string): Promise<void> {
-  const filePath = path.join(IMPORTS_PATH, filename)
+  const filePath = resolveSharedPath(filename)
 
   try {
     await unlinkAsync(filePath)

@@ -7,34 +7,18 @@ import path from 'node:path'
 import { pipeline } from 'node:stream/promises'
 import { createGunzip } from 'node:zlib'
 import type { Request, Response } from 'express'
-import { IMPORTS_PATH } from '../config'
+import {
+  resolveSharedPath,
+  SHARED_ROOT
+} from '../file-operations'
 import { logger } from '../logger'
 import type { ErrorResponse } from '../types'
 
-const SHARED_ROOT = path.resolve(IMPORTS_PATH)
 const EXPORTS_SUBDIRECTORY = 'exports'
 const EXPORTS_DIRECTORY = path.join(SHARED_ROOT, EXPORTS_SUBDIRECTORY)
 
 export async function ensureExportsDirectory(): Promise<void> {
   await fsp.mkdir(EXPORTS_DIRECTORY, { recursive: true })
-}
-
-function sanitizeRelativePath(value: string): string {
-  const trimmed = value.trim().replace(/^[/\\]+/, '')
-  const normalized = path.normalize(trimmed)
-  if (normalized === '' || normalized === '.' || normalized === path.sep) {
-    return ''
-  }
-  return normalized.replace(/^\.\.(?:[/\\]|$)/g, '')
-}
-
-function resolveSafePath(relativePath: string): string {
-  const sanitized = sanitizeRelativePath(relativePath)
-  const target = path.resolve(SHARED_ROOT, sanitized)
-  if (!target.startsWith(SHARED_ROOT)) {
-    throw new Error('Path is outside of shared directory')
-  }
-  return target
 }
 
 interface SharedFileEntry {
@@ -61,7 +45,7 @@ export async function listSharedFiles(
       await ensureExportsDirectory()
     }
 
-    const targetDir = resolveSafePath(subdirParam || '.')
+    const targetDir = resolveSharedPath(subdirParam || '.')
     const entries = await fsp.readdir(targetDir, { withFileTypes: true })
 
     const files: SharedFileEntry[] = []
@@ -130,7 +114,7 @@ export async function downloadSharedFile(
       await ensureExportsDirectory()
     }
 
-    const absolutePath = resolveSafePath(relativePathParam)
+    const absolutePath = resolveSharedPath(relativePathParam)
     await fsp.access(absolutePath, fsConstants.R_OK)
 
     const stat = await fsp.stat(absolutePath)
@@ -196,7 +180,7 @@ export async function deleteSharedFiles(
   try {
     await Promise.all(
       paths.map(async (relativePath: string) => {
-        const absolutePath = resolveSafePath(relativePath)
+        const absolutePath = resolveSharedPath(relativePath)
         await fsp.unlink(absolutePath)
       })
     )

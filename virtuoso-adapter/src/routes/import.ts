@@ -1,5 +1,7 @@
 import type { Request, Response } from 'express'
 import multer from 'multer'
+import crypto from 'node:crypto'
+import path from 'node:path'
 import {
   cancelBulkLoadJob,
   getAllBulkLoadJobs,
@@ -36,7 +38,14 @@ const storage = multer.diskStorage({
     }
   },
   filename: (_req, file, cb) => {
-    cb(null, file.originalname)
+    // Server-generated name: the client never controls where its upload
+    // lands. The extension decides how the bulk loader parses the file.
+    const ext = path
+      .extname(file.originalname)
+      .toLowerCase()
+      .replace(/[^a-z0-9.]/g, '')
+      .slice(0, 16)
+    cb(null, `${Date.now()}-${crypto.randomBytes(8).toString('hex')}${ext}`)
   }
 })
 
@@ -97,7 +106,8 @@ export const uploadFile = [
 
       // File is already saved by multer's diskStorage
       logger.info('File uploaded to imports folder', {
-        filename: req.file.originalname,
+        filename: req.file.filename,
+        originalname: req.file.originalname,
         size: req.file.size,
         sizeMB: fileSizeMB,
         durationMs: uploadDuration,
@@ -106,7 +116,7 @@ export const uploadFile = [
       })
 
       res.json({
-        filename: req.file.originalname,
+        filename: req.file.filename,
         size: req.file.size,
         path: IMPORTS_PATH
       })
