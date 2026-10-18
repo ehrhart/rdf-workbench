@@ -6,7 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 export default function DashboardLoading() {
   return (
     <DashboardShell>
-      <DashboardHeader heading="Dashboard" />
+      <DashboardHeader heading="Overview" />
       <div className="grid gap-4 md:gap-8">
         {/* Search skeleton */}
         <Card>

@@ -17,7 +17,7 @@ import {
 } from '@/lib/runtime'
 
 export const metadata: Metadata = {
-  title: 'Dashboard',
+  title: 'Overview',
   description: 'Overview of the configured RDF store'
 }
 
@@ -58,11 +58,11 @@ async function StatsSection() {
   )
 }
 
-export default async function DashboardPage() {
+export default async function OverviewPage() {
   await requirePageAccess('anonymousRead')
   return (
     <DashboardShell>
-      <DashboardHeader heading="Dashboard" />
+      <DashboardHeader heading="Overview" />
       <div className="grid gap-4 md:gap-8">
         <ResourceSearch />
 

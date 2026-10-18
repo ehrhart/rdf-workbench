@@ -26,7 +26,10 @@ export default async function LoginPage({
   return (
     <div className="flex flex-col h-screen w-full bg-linear-to-br from-background to-secondary/20">
       <header className="py-5 px-6 flex items-center">
-        <Link href="/" className="mr-6 flex items-center space-x-2 group">
+        <Link
+          href="/overview"
+          className="mr-6 flex items-center space-x-2 group"
+        >
           <BrandMark version={logoMeta?.updatedAt ?? null} className="size-5" />
           <span className="text-base font-semibold">{appName}</span>
         </Link>

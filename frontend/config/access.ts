@@ -63,11 +63,11 @@ export function isPasswordChangeAllowed(pathname: string): boolean {
 
 /**
  * Accepts only same-origin relative paths ("/x", never "//x" or an
- * absolute URL); anything else collapses to "/". Consumed by the login
- * action and the change-password flow.
+ * absolute URL); anything else collapses to the overview page. Consumed
+ * by the login action and the change-password flow.
  */
 export function safeInternalRedirect(value: string | null | undefined): string {
-  return value?.startsWith('/') && !value.startsWith('//') ? value : '/'
+  return value?.startsWith('/') && !value.startsWith('//') ? value : '/overview'
 }
 
 /**
@@ -127,7 +127,7 @@ export const ACCESS_RULES: AccessRule[] = [
   { pattern: '/api/graphs', access: 'anonymousRead' },
   { pattern: '/api/saved-queries', access: 'anonymousRead' },
   { pattern: '/[entity]/[...id]', access: 'anonymousRead' },
-  { pattern: '/', access: 'anonymousRead', exact: true }
+  { pattern: '/overview', access: 'anonymousRead', exact: true }
 ]
 
 function ruleMatches(rule: AccessRule, pathname: string): boolean {

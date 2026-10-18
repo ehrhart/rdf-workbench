@@ -50,7 +50,7 @@ export function AppSidebar({
               asChild
               className="data-[slot=sidebar-menu-button]:p-1.5!"
             >
-              <Link href="/">
+              <Link href="/overview">
                 <BrandMark version={brandLogoVersion} className="size-5!" />
                 <span className="text-base font-semibold group-data-[collapsible=icon]:hidden">
                   {appName}

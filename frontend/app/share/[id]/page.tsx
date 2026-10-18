@@ -38,7 +38,10 @@ export default async function SharePage({
   return (
     <div className="flex min-h-svh flex-col bg-background">
       <header className="py-5 px-6 flex items-center">
-        <Link href="/" className="mr-6 flex items-center space-x-2 group">
+        <Link
+          href="/overview"
+          className="mr-6 flex items-center space-x-2 group"
+        >
           <RDFIcon className="size-5" />
           <span className="text-base font-semibold">{appName}</span>
         </Link>
