@@ -183,11 +183,16 @@ export async function saveRemoteFile(
   extensionHint?: string
 ): Promise<{ filename: string; size: number; path: string }> {
   try {
+    const url = new URL(sourceUrl)
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+      throw new Error('Only http and https URLs are supported')
+    }
+
     const controller = new AbortController()
     const timeout = setTimeout(() => controller.abort(), REMOTE_FETCH_TIMEOUT_MS)
     let response: Response
     try {
-      response = await fetch(sourceUrl, {
+      response = await fetch(url, {
         signal: controller.signal,
         redirect: 'follow'
       })
@@ -205,7 +210,6 @@ export async function saveRemoteFile(
       throw new Error('Downloaded file is empty')
     }
 
-    const url = new URL(sourceUrl)
     const urlPath = url.pathname.split('/').filter(Boolean).pop() ?? ''
     const parsed = path.parse(urlPath)
 
