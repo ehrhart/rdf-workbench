@@ -25,6 +25,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       `${getVirtuosoConfig().VIRTUOSO_ADAPTER_URL}/api/import/bulk-load`,
       {
         method: 'POST',
+        signal: AbortSignal.timeout(30_000),
         headers: {
           'Content-Type': 'application/json',
           'X-Adapter-Token': getVirtuosoConfig().VIRTUOSO_ADAPTER_TOKEN

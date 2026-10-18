@@ -16,6 +16,7 @@ export async function POST(request: NextRequest) {
 
     const response = await fetch(`${apiBaseUrl}/api/import/snippet`, {
       method: 'POST',
+      signal: AbortSignal.timeout(30_000),
       headers: {
         'Content-Type': 'application/json',
         'X-Adapter-Token': getVirtuosoConfig().VIRTUOSO_ADAPTER_TOKEN

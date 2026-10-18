@@ -24,6 +24,7 @@ export async function GET(req: NextRequest) {
     }
 
     const response = await fetch(url, {
+      signal: AbortSignal.timeout(30_000),
       headers: {
         'X-Adapter-Token': getVirtuosoConfig().VIRTUOSO_ADAPTER_TOKEN
       }
@@ -71,6 +72,7 @@ export async function DELETE(req: NextRequest) {
       `${apiBaseUrl}/api/import/file/${encodeURIComponent(filename)}`,
       {
         method: 'DELETE',
+        signal: AbortSignal.timeout(30_000),
         headers: {
           'X-Adapter-Token': getVirtuosoConfig().VIRTUOSO_ADAPTER_TOKEN
         }

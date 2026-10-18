@@ -31,6 +31,7 @@ export async function POST(
       `${getVirtuosoConfig().VIRTUOSO_ADAPTER_URL}/api/import/cancel/${encodeURIComponent(jobId)}`,
       {
         method: 'POST',
+        signal: AbortSignal.timeout(30_000),
         headers: {
           'X-Adapter-Token': getVirtuosoConfig().VIRTUOSO_ADAPTER_TOKEN
         }
