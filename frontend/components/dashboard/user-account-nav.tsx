@@ -1,7 +1,8 @@
 'use client'
 
-import { LogOutIcon } from 'lucide-react'
+import { KeyRoundIcon, LogOutIcon } from 'lucide-react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import {
@@ -11,6 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
+import { PASSWORD_CHANGE_PATH } from '@/config/access'
 import { getUserInitials } from '@/lib/utils'
 import type { User } from '@/types'
 
@@ -19,6 +21,7 @@ interface UserAccountNavProps {
 }
 
 export function UserAccountNav({ user }: UserAccountNavProps) {
+  const pathname = usePathname()
   if (!user) {
     return (
       <Button asChild variant="default" size="sm">
@@ -42,6 +45,15 @@ export function UserAccountNav({ user }: UserAccountNavProps) {
             <p className="font-medium">{user.username}</p>
           </div>
         </div>
+        <DropdownMenuItem className="cursor-pointer" asChild>
+          <Link
+            href={`${PASSWORD_CHANGE_PATH}?redirect=${encodeURIComponent(pathname)}`}
+            className="flex items-center w-full"
+          >
+            <KeyRoundIcon />
+            <span>Change password</span>
+          </Link>
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem className="cursor-pointer" asChild>
           <a href="/logout" className="flex items-center w-full">
