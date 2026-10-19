@@ -84,7 +84,6 @@ export function ChangePasswordForm({
       </Button>
 
       <p className="text-muted-foreground text-center text-sm">
-        The new password must be at least {PASSWORD_MIN_LENGTH} characters.{' '}
         {/* A plain anchor on purpose: a prefetching Link to the /logout
             route handler would run the logout on prefetch. */}
         <a
