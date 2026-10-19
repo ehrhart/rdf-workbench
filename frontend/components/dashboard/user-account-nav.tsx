@@ -1,7 +1,8 @@
 'use client'
 
-import { LogOutIcon, UserIcon } from 'lucide-react'
+import { LogOutIcon } from 'lucide-react'
 import Link from 'next/link'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -10,6 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
+import { getUserInitials } from '@/lib/utils'
 import type { User } from '@/types'
 
 interface UserAccountNavProps {
@@ -28,8 +30,10 @@ export function UserAccountNav({ user }: UserAccountNavProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-          <UserIcon className="h-5 w-5" />
+        <Button variant="ghost" className="relative size-8 rounded-full">
+          <Avatar>
+            <AvatarFallback>{getUserInitials(user.username)}</AvatarFallback>
+          </Avatar>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">

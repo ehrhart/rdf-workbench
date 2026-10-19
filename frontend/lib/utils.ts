@@ -1,3 +1,13 @@
+export function getUserInitials(username: string) {
+  return username
+    .split(/[\s._-]+/)
+    .filter(Boolean)
+    .map((part) => part[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase()
+}
+
 export type GraphExportFileType = {
   name: string
   contentType: string

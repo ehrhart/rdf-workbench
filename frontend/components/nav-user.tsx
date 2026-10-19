@@ -1,6 +1,7 @@
 'use client'
 
 import { LogOutIcon, MoreVerticalIcon } from 'lucide-react'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,17 +17,12 @@ import {
   useSidebar
 } from '@/components/ui/sidebar'
 import type { NavUser as NavUserType } from '@/config/navigation'
+import { getUserInitials } from '@/lib/utils'
 
 export function NavUser({ user }: { user: NavUserType }) {
   const { isMobile } = useSidebar()
 
-  const initials = user.username
-    .split(/[\s._-]+/)
-    .filter(Boolean)
-    .map((part) => part[0])
-    .slice(0, 2)
-    .join('')
-    .toUpperCase()
+  const initials = getUserInitials(user.username)
 
   return (
     <SidebarMenu>
@@ -34,9 +30,9 @@ export function NavUser({ user }: { user: NavUserType }) {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground">
-              <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-sidebar-accent text-xs font-semibold">
-                {initials}
-              </div>
+              <Avatar size="sm">
+                <AvatarFallback>{initials}</AvatarFallback>
+              </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
                 <span className="truncate font-medium">{user.username}</span>
               </div>
