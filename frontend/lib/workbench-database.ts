@@ -336,7 +336,7 @@ async function initialize(): Promise<Database.Database> {
       INSERT INTO users
         (id, username, password_hash, role, disabled, must_change_password,
          created_at, updated_at)
-      VALUES (?, ?, ?, 'admin', 0, 1, ?, ?)
+      VALUES (?, ?, ?, 'admin', 0, 0, ?, ?)
     `).run(
       crypto.randomUUID(),
       config.BOOTSTRAP_ADMIN_USERNAME.trim().toLowerCase(),
