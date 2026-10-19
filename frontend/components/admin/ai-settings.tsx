@@ -37,6 +37,14 @@ import {
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import type { AiSettings } from '@/lib/ai/ai-settings'
+import type { AiJobDto } from '@/lib/ai/ask-contract'
+import { useAiJobs, useJobCompletion } from '@/lib/client/ai-jobs'
+
+function formatElapsed(totalSeconds: number): string {
+  const minutes = Math.floor(totalSeconds / 60)
+  const seconds = totalSeconds % 60
+  return minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`
+}
 
 const MAX_QUESTIONS = 10
 const MAX_QUESTION_LENGTH = 200
@@ -54,6 +62,7 @@ type QuestionsFormValues = { exampleQuestions: { value: string }[] }
 
 interface AiSettingsFormProps {
   initial: AiSettings
+  initialExploreJob: AiJobDto | null
 }
 
 function SortableQuestionRow({
@@ -118,9 +127,15 @@ function SortableQuestionRow({
   )
 }
 
-export function AiSettingsForm({ initial }: AiSettingsFormProps) {
-  const [exploring, setExploring] = useState(false)
+export function AiSettingsForm({
+  initial,
+  initialExploreJob
+}: AiSettingsFormProps) {
   const [savingCard, setSavingCard] = useState<SaveTarget | null>(null)
+  const { job, running, elapsedSeconds, start, cancel } = useAiJobs(
+    'explore',
+    initialExploreJob
+  )
 
   // Each card gets its own react-hook-form instance, so each card's Save
   // button tracks only its own changes. All three cards store their values
@@ -137,6 +152,25 @@ export function AiSettingsForm({ initial }: AiSettingsFormProps) {
       exampleQuestions: initial.exampleQuestions.map((value) => ({ value }))
     }
   })
+
+  useJobCompletion(job, (finished) => {
+    if (finished.status === 'succeeded' && finished.knowledge) {
+      // The runner already wrote the notes into ai_settings; mirroring them
+      // into the form keeps the visible state in sync without a re-save.
+      knowledgeForm.setValue('graphKnowledge', finished.knowledge, {
+        shouldDirty: false
+      })
+      for (const form of [knowledgeForm, instructionForm, questionsForm]) {
+        form.reset(form.getValues())
+      }
+      toast.success('Knowledge graph summary updated')
+    } else if (finished.status === 'failed') {
+      toast.error(finished.error ?? 'Summary generation failed')
+    } else if (finished.status === 'cancelled') {
+      toast.info('Summary generation cancelled')
+    }
+  })
+
   const { fields, append, remove, move } = useFieldArray({
     control: questionsForm.control,
     name: 'exampleQuestions'
@@ -147,7 +181,7 @@ export function AiSettingsForm({ initial }: AiSettingsFormProps) {
       coordinateGetter: sortableKeyboardCoordinates
     })
   )
-  const actionsDisabled = savingCard !== null || exploring
+  const saving = savingCard !== null
 
   function onDragEnd(event: DragEndEvent) {
     const { active, over } = event
@@ -183,27 +217,9 @@ export function AiSettingsForm({ initial }: AiSettingsFormProps) {
   }
 
   async function explore() {
-    setExploring(true)
-    try {
-      const response = await fetch('/api/admin/ai/explore-graph', {
-        method: 'POST'
-      })
-      const payload = (await response.json().catch(() => null)) as {
-        knowledge?: string
-        error?: string
-      } | null
-      if (!response.ok || typeof payload?.knowledge !== 'string') {
-        toast.error(payload?.error ?? 'Summary generation failed')
-        return
-      }
-      knowledgeForm.setValue('graphKnowledge', payload.knowledge, {
-        shouldDirty: false
-      })
-      await saveCard('knowledge')
-    } catch {
-      toast.error('Summary generation failed')
-    } finally {
-      setExploring(false)
+    const result = await start()
+    if (!result.ok) {
+      toast.error(result.error ?? 'Summary generation failed')
     }
   }
 
@@ -219,19 +235,37 @@ export function AiSettingsForm({ initial }: AiSettingsFormProps) {
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={explore}
-              disabled={actionsDisabled}
-            >
-              {exploring && <Loader2Icon className="animate-spin" />}
-              Generate summary
-            </Button>
-            {exploring && (
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={explore}
+                disabled={saving || running}
+              >
+                {running && <Loader2Icon className="animate-spin" />}
+                Generate summary
+              </Button>
+              {running && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => cancel()}
+                  disabled={savingCard !== null}
+                >
+                  Cancel
+                </Button>
+              )}
+            </div>
+            {running ? (
+              <p className="mt-2 text-muted-foreground text-sm">
+                Running in the background ({formatElapsed(elapsedSeconds)}
+                {job && job.stepsDone > 0 ? `, step ${job.stepsDone}` : ''}).
+                You can leave this page; the notes are saved automatically.
+              </p>
+            ) : (
               <p className="mt-2 text-muted-foreground text-sm">
                 Runs several read-only queries against the graph — this can take
-                a minute.
+                a few minutes.
               </p>
             )}
           </div>
@@ -239,13 +273,15 @@ export function AiSettingsForm({ initial }: AiSettingsFormProps) {
             rows={10}
             maxLength={MAX_KNOWLEDGE_LENGTH}
             placeholder="What the dataset describes, how entity types relate, useful query patterns, pitfalls…"
+            disabled={running}
+            aria-busy={running}
             {...knowledgeForm.register('graphKnowledge')}
           />
           <div className="flex justify-start">
             <Button
               type="button"
               onClick={() => saveCard('knowledge')}
-              disabled={actionsDisabled || !knowledgeForm.formState.isDirty}
+              disabled={saving || running || !knowledgeForm.formState.isDirty}
             >
               {savingCard === 'knowledge' && (
                 <Loader2Icon className="animate-spin" />
@@ -273,7 +309,7 @@ export function AiSettingsForm({ initial }: AiSettingsFormProps) {
             <Button
               type="button"
               onClick={() => saveCard('instruction')}
-              disabled={actionsDisabled || !instructionForm.formState.isDirty}
+              disabled={saving || !instructionForm.formState.isDirty}
             >
               {savingCard === 'instruction' && (
                 <Loader2Icon className="animate-spin" />
@@ -309,7 +345,7 @@ export function AiSettingsForm({ initial }: AiSettingsFormProps) {
                   id={field.id}
                   index={index}
                   register={questionsForm.register}
-                  disabled={actionsDisabled}
+                  disabled={saving}
                   onRemove={() => remove(index)}
                 />
               ))}
@@ -319,7 +355,7 @@ export function AiSettingsForm({ initial }: AiSettingsFormProps) {
             type="button"
             variant="outline"
             onClick={addRow}
-            disabled={actionsDisabled || fields.length >= MAX_QUESTIONS}
+            disabled={saving || fields.length >= MAX_QUESTIONS}
           >
             <PlusIcon />
             Add question
@@ -328,7 +364,7 @@ export function AiSettingsForm({ initial }: AiSettingsFormProps) {
             <Button
               type="button"
               onClick={() => saveCard('questions')}
-              disabled={actionsDisabled || !questionsForm.formState.isDirty}
+              disabled={saving || !questionsForm.formState.isDirty}
             >
               {savingCard === 'questions' && (
                 <Loader2Icon className="animate-spin" />

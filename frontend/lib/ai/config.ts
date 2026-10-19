@@ -15,6 +15,12 @@ const aiConfigSchema = z.object({
     .max(120_000)
     .default(30_000),
   AI_RESULT_LIMIT: z.coerce.number().int().min(1).max(10_000).default(1_000),
+  AI_JOB_TIMEOUT_MS: z.coerce
+    .number()
+    .int()
+    .min(30_000)
+    .max(3_600_000)
+    .default(900_000),
   AI_PROFILE_MAX_CLASSES: z.coerce.number().int().min(1).max(500).default(60),
   AI_PROFILE_MAX_PROPERTIES: z.coerce
     .number()

@@ -243,6 +243,9 @@ Ask assistant variables:
   defaults to `30000`.
 - `AI_RESULT_LIMIT`: maximum rows the assistant reads per query; defaults to
   `1000`.
+- `AI_JOB_TIMEOUT_MS`: timeout in milliseconds for background AI jobs (the
+  knowledge graph summary and the dataset profile build); defaults to
+  `900000` (15 minutes), capped at `3600000`.
 - `AI_PROFILE_MAX_CLASSES`: maximum classes in a dataset profile; defaults to
   `60`.
 - `AI_PROFILE_MAX_PROPERTIES`: maximum properties per class in a dataset

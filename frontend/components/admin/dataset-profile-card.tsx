@@ -1,7 +1,6 @@
 'use client'
 
 import { format } from 'date-fns'
-import { Loader2Icon } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -13,41 +12,54 @@ import {
   CardTitle
 } from '@/components/ui/card'
 import type {
+  AiJobDto,
   ProfileResponseDto,
   ProfileSummaryDto
 } from '@/lib/ai/ask-contract'
+import { useAiJobs, useJobCompletion } from '@/lib/client/ai-jobs'
 
 interface DatasetProfileCardProps {
   initialSummary: ProfileSummaryDto | null
+  initialProfileJob: AiJobDto | null
 }
 
 export function DatasetProfileCard({
-  initialSummary
+  initialSummary,
+  initialProfileJob
 }: DatasetProfileCardProps) {
   const [summary, setSummary] = useState<ProfileSummaryDto | null>(
     initialSummary
   )
-  const [rebuilding, setRebuilding] = useState(false)
+  const { job, running, elapsedSeconds, start, cancel } = useAiJobs(
+    'profile',
+    initialProfileJob
+  )
+
+  useJobCompletion(job, async (finished) => {
+    if (finished.status === 'succeeded') {
+      try {
+        const response = await fetch('/api/ask/profile')
+        const payload = (await response
+          .json()
+          .catch(() => null)) as ProfileResponseDto | null
+        if (payload?.profile) {
+          setSummary(payload.profile)
+          toast.success('Dataset profile rebuilt')
+        }
+      } catch {
+        toast.error('Profile rebuilt, but the summary could not be refreshed')
+      }
+    } else if (finished.status === 'failed') {
+      toast.error(finished.error ?? 'Profile rebuild failed')
+    } else if (finished.status === 'cancelled') {
+      toast.info('Profile rebuild cancelled')
+    }
+  })
 
   async function rebuild() {
-    setRebuilding(true)
-    try {
-      const response = await fetch('/api/ask/profile', { method: 'POST' })
-      const payload = (await response.json().catch(() => null)) as
-        | (ProfileResponseDto & { error?: string })
-        | null
-      if (!response.ok || payload?.error) {
-        toast.error(payload?.error ?? 'Profile rebuild failed')
-        return
-      }
-      if (payload?.profile) {
-        setSummary(payload.profile)
-        toast.success('Dataset profile rebuilt')
-      }
-    } catch {
-      toast.error('Profile rebuild failed')
-    } finally {
-      setRebuilding(false)
+    const result = await start()
+    if (!result.ok) {
+      toast.error(result.error ?? 'Profile rebuild failed')
     }
   }
 
@@ -62,7 +74,12 @@ export function DatasetProfileCard({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {summary ? (
+        {running ? (
+          <p className="text-muted-foreground text-sm">
+            Building in the background ({elapsedSeconds}s elapsed). You can
+            leave this page.
+          </p>
+        ) : summary ? (
           <p className="text-sm">
             <span className="text-muted-foreground">Built </span>
             {format(new Date(summary.builtAt), 'PPp')}
@@ -74,15 +91,15 @@ export function DatasetProfileCard({
           </p>
         )}
         <div className="flex justify-start">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={rebuild}
-            disabled={rebuilding}
-          >
-            {rebuilding && <Loader2Icon className="animate-spin" />}
-            {summary ? 'Rebuild profile' : 'Build profile'}
-          </Button>
+          {running ? (
+            <Button type="button" variant="outline" onClick={() => cancel()}>
+              Cancel build
+            </Button>
+          ) : (
+            <Button type="button" variant="outline" onClick={rebuild}>
+              {summary ? 'Rebuild profile' : 'Build profile'}
+            </Button>
+          )}
         </div>
       </CardContent>
     </Card>

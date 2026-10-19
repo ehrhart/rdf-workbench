@@ -92,7 +92,8 @@ function createSearchEntitiesTool(runtime: WorkbenchRuntime) {
 
 function createRunQueryTool(
   runtime: WorkbenchRuntime,
-  profile: DatasetProfile | null
+  profile: DatasetProfile | null,
+  signal?: AbortSignal
 ) {
   return tool({
     description:
@@ -127,7 +128,8 @@ function createRunQueryTool(
       const startedAt = performance.now()
       try {
         const result = await runtime.sparql.execute(validation.query, {
-          timeoutMs
+          timeoutMs,
+          signal
         })
         const durationMs = Math.round(performance.now() - startedAt)
         if (result.kind === 'boolean') {
@@ -185,10 +187,11 @@ function createRunQueryTool(
 
 export function createAskTools(
   runtime: WorkbenchRuntime,
-  profile: DatasetProfile | null
+  profile: DatasetProfile | null,
+  signal?: AbortSignal
 ): AskTools {
   return {
     search_entities: createSearchEntitiesTool(runtime),
-    run_readonly_query: createRunQueryTool(runtime, profile)
+    run_readonly_query: createRunQueryTool(runtime, profile, signal)
   }
 }

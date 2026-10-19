@@ -277,6 +277,37 @@ function migrate(db: Database.Database): void {
     })()
   }
 
+  if (current.version < 12) {
+    db.transaction(() => {
+      db.exec(`
+        CREATE TABLE ai_jobs (
+          id TEXT PRIMARY KEY,
+          kind TEXT NOT NULL CHECK (kind IN ('explore', 'profile')),
+          status TEXT NOT NULL
+            CHECK (status IN ('running', 'succeeded', 'failed', 'cancelled')),
+          started_at TEXT NOT NULL,
+          finished_at TEXT,
+          steps_done INTEGER NOT NULL DEFAULT 0,
+          error TEXT,
+          knowledge TEXT,
+          model TEXT
+        );
+        CREATE INDEX ai_jobs_kind_idx ON ai_jobs(kind, started_at DESC);
+      `)
+      db.prepare(
+        'INSERT INTO schema_migrations (version, applied_at) VALUES (12, ?)'
+      ).run(new Date().toISOString())
+    })()
+  }
+
+  // A job can only be running while the process that started it lives, so
+  // any running row seen at open time belongs to a dead process.
+  db.prepare(`
+    UPDATE ai_jobs
+    SET status = 'failed', finished_at = ?, error = 'interrupted by restart'
+    WHERE status = 'running'
+  `).run(new Date().toISOString())
+
   const prefixCount = db
     .prepare('SELECT COUNT(*) AS count FROM prefixes')
     .get() as {

@@ -84,3 +84,17 @@ export async function saveAiSettings(input: AiSettings): Promise<AiSettings> {
 
   return { exampleQuestions, customInstruction, graphKnowledge }
 }
+
+/**
+ * Single-column write for the background exploration job, so finishing a
+ * job never clobbers concurrent edits to the other two cards.
+ */
+export async function updateGraphKnowledge(
+  graphKnowledge: string
+): Promise<void> {
+  const knowledge = graphKnowledge.trim().slice(0, MAX_KNOWLEDGE_LENGTH)
+  const db = await getWorkbenchDatabase()
+  db.prepare(
+    'UPDATE ai_settings SET graph_knowledge = ?, updated_at = ? WHERE id = 1'
+  ).run(knowledge, new Date().toISOString())
+}

@@ -1,10 +1,14 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { getAiSettings } from '@/lib/ai/ai-settings'
+import { getAiConfig } from '@/lib/ai/config'
 import type { DatasetProfile } from '@/lib/ai/dataset-profile'
+import {
+  JobAlreadyRunningError,
+  startProfileJob
+} from '@/lib/ai/exploration-jobs'
 import {
   getProfileSummary,
   loadStoredProfile,
-  rebuildProfile,
   withLivePrefixes
 } from '@/lib/ai/profile-store'
 import { buildSystemPrompt } from '@/lib/ai/prompt'
@@ -60,8 +64,8 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(_request: NextRequest) {
-  if (!isSameOriginMutation(_request)) return sameOriginError()
+export async function POST(request: NextRequest) {
+  if (!isSameOriginMutation(request)) return sameOriginError()
 
   const runtime = await getWorkbenchRuntime()
   if (!computeFeatures(runtime.provider, process.env).has('ai-ask')) {
@@ -78,30 +82,30 @@ export async function POST(_request: NextRequest) {
     )
   }
 
-  try {
-    const profile = await rebuildProfile()
-    return NextResponse.json({
-      profile: {
-        builtAt: profile.builtAt,
-        provider: profile.provider,
-        endpoint: profile.endpoint,
-        classCount: profile.classes.length,
-        propertyCount: profile.classes.reduce(
-          (total, cls) => total + cls.properties.length,
-          0
-        ),
-        tripleCount: profile.tripleCount
-      }
-    })
-  } catch (error) {
-    console.error('[ask] profile rebuild failed:', error)
+  const aiConfig = getAiConfig()
+  if (!aiConfig) {
     return NextResponse.json(
       {
         error:
-          error instanceof Error
-            ? error.message
-            : 'Failed to build the dataset profile'
+          'AI is not configured. Set AI_BASE_URL, AI_API_KEY, and AI_MODEL to enable the ask assistant.'
       },
+      { status: 503 }
+    )
+  }
+
+  try {
+    const job = await startProfileJob()
+    return NextResponse.json({ job }, { status: 202 })
+  } catch (error) {
+    if (error instanceof JobAlreadyRunningError) {
+      return NextResponse.json(
+        { error: error.message, job: error.job },
+        { status: 409 }
+      )
+    }
+    console.error('[ask] failed to start the profile job:', error)
+    return NextResponse.json(
+      { error: 'Failed to start the profile build' },
       { status: 500 }
     )
   }

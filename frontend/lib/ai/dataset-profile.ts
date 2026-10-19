@@ -56,10 +56,11 @@ interface SampleRow {
 }
 
 async function selectBindings(
-  query: string
+  query: string,
+  signal?: AbortSignal
 ): Promise<Record<string, SparqlBindingValue>[]> {
   const runtime = await getWorkbenchRuntime()
-  const result = await runtime.sparql.execute(query)
+  const result = await runtime.sparql.execute(query, { signal })
   if (result.kind !== 'bindings') return []
   return result.bindings
 }
@@ -93,15 +94,19 @@ function termToSample(value: SparqlBindingValue, maxChars: number): string {
 }
 
 async function listClassesWithCounts(
-  maxClasses: number
+  maxClasses: number,
+  signal?: AbortSignal
 ): Promise<Map<string, number>> {
-  const rows = (await selectBindings(`
+  const rows = (await selectBindings(
+    `
     SELECT ?class (COUNT(DISTINCT ?subject) AS ?count)
     WHERE { ?subject a ?class }
     GROUP BY ?class
     ORDER BY DESC(?count)
     LIMIT ${maxClasses}
-  `)) as unknown as ClassRow[]
+  `,
+    signal
+  )) as unknown as ClassRow[]
   const counts = new Map<string, number>()
   for (const row of rows) {
     const classIri = iriValue(row.class)
@@ -112,18 +117,22 @@ async function listClassesWithCounts(
 }
 
 async function listClassLabels(
-  classIris: string[]
+  classIris: string[],
+  signal?: AbortSignal
 ): Promise<Map<string, string>> {
   if (classIris.length === 0) return new Map()
   const values = classIris.map((iri) => `<${requireSafeIri(iri)}>`).join(' ')
-  const rows = await selectBindings(`
+  const rows = await selectBindings(
+    `
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
     SELECT ?entity ?label
     WHERE {
       VALUES ?entity { ${values} }
       ?entity rdfs:label ?label .
     }
-  `)
+  `,
+    signal
+  )
   const labels = new Map<string, string>()
   const preferred = new Set<string>()
   for (const row of rows) {
@@ -142,15 +151,19 @@ async function listClassLabels(
 
 async function listClassProperties(
   classIri: string,
-  maxProperties: number
+  maxProperties: number,
+  signal?: AbortSignal
 ): Promise<Map<string, number>> {
-  const rows = (await selectBindings(`
+  const rows = (await selectBindings(
+    `
     SELECT ?property (COUNT(*) AS ?count)
     WHERE { ?subject a <${requireSafeIri(classIri)}> ; ?property ?object . }
     GROUP BY ?property
     ORDER BY DESC(?count)
     LIMIT ${maxProperties}
-  `)) as unknown as PropertyRow[]
+  `,
+    signal
+  )) as unknown as PropertyRow[]
   const counts = new Map<string, number>()
   for (const row of rows) {
     const propertyIri = iriValue(row.property)
@@ -167,9 +180,11 @@ interface SampledProperty {
 
 async function sampleClassObjects(
   classIri: string,
-  scanLimit: number
+  scanLimit: number,
+  signal?: AbortSignal
 ): Promise<Map<string, SampledProperty>> {
-  const rows = (await selectBindings(`
+  const rows = (await selectBindings(
+    `
     SELECT ?property ?object ?objectType
     WHERE {
       ?subject a <${requireSafeIri(classIri)}> ;
@@ -177,7 +192,9 @@ async function sampleClassObjects(
       OPTIONAL { ?object a ?objectType . }
     }
     LIMIT ${scanLimit}
-  `)) as unknown as SampleRow[]
+  `,
+    signal
+  )) as unknown as SampleRow[]
 
   const perProperty = new Map<string, SampledProperty>()
   for (const row of rows) {
@@ -217,15 +234,19 @@ async function sampleClassObjects(
 }
 
 async function listGlobalProperties(
-  maxProperties: number
+  maxProperties: number,
+  signal?: AbortSignal
 ): Promise<Map<string, number>> {
-  const rows = (await selectBindings(`
+  const rows = (await selectBindings(
+    `
     SELECT ?property (COUNT(*) AS ?count)
     WHERE { ?subject ?property ?object . }
     GROUP BY ?property
     ORDER BY DESC(?count)
     LIMIT ${maxProperties}
-  `)) as unknown as PropertyRow[]
+  `,
+    signal
+  )) as unknown as PropertyRow[]
   const counts = new Map<string, number>()
   for (const row of rows) {
     const propertyIri = iriValue(row.property)
@@ -248,14 +269,17 @@ async function readTotalTriples(): Promise<number | null> {
 async function mapWithConcurrency<T, R>(
   items: T[],
   limit: number,
-  worker: (item: T) => Promise<R>
+  worker: (item: T) => Promise<R>,
+  signal?: AbortSignal
 ): Promise<R[]> {
   const results: R[] = new Array(items.length)
   let cursor = 0
   const runners = Array.from(
     { length: Math.min(limit, items.length) },
     async () => {
-      while (cursor < items.length) {
+      // Once aborted, stop scheduling: in-flight queries fail on their own
+      // and the caller's abort gate discards the partial result.
+      while (cursor < items.length && !signal?.aborted) {
         const index = cursor
         cursor += 1
         results[index] = await worker(items[index])
@@ -293,7 +317,9 @@ function toProfileProperties(
   return properties.sort((a, b) => b.count - a.count)
 }
 
-export async function buildDatasetProfile(): Promise<DatasetProfile> {
+export async function buildDatasetProfile(
+  signal?: AbortSignal
+): Promise<DatasetProfile> {
   const runtime = await getWorkbenchRuntime()
   const runtimeConfig = getRuntimeConfig()
   const aiConfig: AiConfig | null = getAiConfig()
@@ -307,28 +333,36 @@ export async function buildDatasetProfile(): Promise<DatasetProfile> {
       runtime.graphs.listNamedGraphs().catch(() => [] as NamedGraph[]),
       runtime.prefixes.list().catch(() => ({}) as Record<string, string>),
       readTotalTriples(),
-      listClassesWithCounts(maxClasses),
-      listGlobalProperties(200).catch(() => new Map<string, number>())
+      listClassesWithCounts(maxClasses, signal),
+      listGlobalProperties(200, signal).catch(() => new Map<string, number>())
     ])
 
   const classIris = [...classCounts.keys()]
-  const labels = await listClassLabels(classIris)
+  const labels = await listClassLabels(classIris, signal)
 
   const perClassResults = await mapWithConcurrency(
     classIris,
     4,
     async (classIri) => {
       const [propertyCounts, sampled] = await Promise.all([
-        listClassProperties(classIri, maxPropertiesPerClass).catch(
+        listClassProperties(classIri, maxPropertiesPerClass, signal).catch(
           () => new Map<string, number>()
         ),
-        sampleClassObjects(classIri, sampleScanLimit).catch(
+        sampleClassObjects(classIri, sampleScanLimit, signal).catch(
           () => new Map<string, SampledProperty>()
         )
       ])
       return { classIri, propertyCounts, sampled }
-    }
+    },
+    signal
   )
+
+  // The per-item catches above swallow aborts to keep sibling queries
+  // running; this gate is what guarantees a cancelled build never stores
+  // a partial profile.
+  if (signal?.aborted) {
+    throw new Error('Profile build aborted')
+  }
 
   const coveredProperties = new Set<string>()
   const classes: ProfileClass[] = perClassResults.map(

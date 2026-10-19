@@ -5,6 +5,7 @@ import { DatasetProfileCard } from '@/components/admin/dataset-profile-card'
 import { DashboardHeader } from '@/components/dashboard/header'
 import { DashboardShell } from '@/components/dashboard/shell'
 import { getAiSettings } from '@/lib/ai/ai-settings'
+import { latestJobs } from '@/lib/ai/exploration-jobs'
 import { getProfileSummary } from '@/lib/ai/profile-store'
 import { hasAnyFeature, requirePageAccess } from '@/lib/runtime'
 
@@ -17,16 +18,20 @@ export default async function AiSettingsPage() {
   if (!(await hasAnyFeature(['ai-ask']))) notFound()
 
   await requirePageAccess('admin', '/admin/ai')
-  const [settings, summary] = await Promise.all([
+  const [settings, summary, jobs] = await Promise.all([
     getAiSettings(),
-    getProfileSummary().catch(() => null)
+    getProfileSummary().catch(() => null),
+    latestJobs().catch(() => ({ explore: null, profile: null }))
   ])
 
   return (
     <DashboardShell>
       <DashboardHeader heading="AI Settings" />
-      <DatasetProfileCard initialSummary={summary} />
-      <AiSettingsForm initial={settings} />
+      <DatasetProfileCard
+        initialSummary={summary}
+        initialProfileJob={jobs.profile}
+      />
+      <AiSettingsForm initial={settings} initialExploreJob={jobs.explore} />
     </DashboardShell>
   )
 }

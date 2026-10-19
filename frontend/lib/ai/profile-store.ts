@@ -218,11 +218,13 @@ export async function withLivePrefixes(
 }
 
 /** Latest stored profile, or a freshly built one. */
-export async function loadOrBuildProfile(): Promise<DatasetProfile | null> {
+export async function loadOrBuildProfile(
+  signal?: AbortSignal
+): Promise<DatasetProfile | null> {
   const stored = await loadStoredProfile()
   if (stored && stored.classes.length > 0) return stored
 
-  buildingProfile ??= buildDatasetProfile()
+  buildingProfile ??= buildDatasetProfile(signal)
     .then(async (profile) => {
       await storeProfile(profile)
       return profile
@@ -235,12 +237,6 @@ export async function loadOrBuildProfile(): Promise<DatasetProfile | null> {
       buildingProfile = undefined
     })
   return buildingProfile
-}
-
-export async function rebuildProfile(): Promise<DatasetProfile> {
-  const profile = await buildDatasetProfile()
-  await storeProfile(profile)
-  return profile
 }
 
 export async function getProfileSummary(): Promise<ProfileSummary | null> {

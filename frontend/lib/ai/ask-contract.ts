@@ -59,6 +59,23 @@ export interface AskMessageMetadata {
   usage?: { inputTokens?: number; outputTokens?: number }
 }
 
+export type AiJobKind = 'explore' | 'profile'
+
+export type AiJobStatus = 'running' | 'succeeded' | 'failed' | 'cancelled'
+
+export interface AiJobDto {
+  id: string
+  kind: AiJobKind
+  status: AiJobStatus
+  startedAt: string
+  finishedAt: string | null
+  stepsDone: number
+  error: string | null
+  /** Generated notes; set for succeeded explore jobs. */
+  knowledge: string | null
+  model: string
+}
+
 export interface ConversationDto {
   id: string
   title: string
