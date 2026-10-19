@@ -1,5 +1,6 @@
 'use client'
 
+import { cn } from 'cn'
 import { LinkIcon, LoaderIcon, ShareIcon, UnlinkIcon } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
@@ -19,7 +20,6 @@ import {
   TooltipContent,
   TooltipTrigger
 } from '@/components/ui/tooltip'
-import { cn } from '@/lib/utils'
 
 interface ShareInfo {
   id: string

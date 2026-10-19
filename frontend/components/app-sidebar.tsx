@@ -1,5 +1,6 @@
 'use client'
 
+import { cn } from 'cn'
 import Link from 'next/link'
 import type * as React from 'react'
 import { BrandMark } from '@/components/brand-mark'
@@ -16,7 +17,6 @@ import {
 } from '@/components/ui/sidebar'
 import type { NavItem, NavUser as NavUserType } from '@/config/navigation'
 import type { UpdateInfo } from '@/lib/update-check'
-import { cn } from '@/lib/utils'
 
 export interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   user: NavUserType | null

@@ -1,5 +1,6 @@
 'use client'
 
+import { cn } from 'cn'
 import {
   AlertTriangle,
   Check,
@@ -59,7 +60,6 @@ import {
   TooltipTrigger
 } from '@/components/ui/tooltip'
 import { tryCatch } from '@/lib/result'
-import { cn } from '@/lib/utils'
 import type {
   BulkLoadJob,
   BulkLoadJobApiPayload,

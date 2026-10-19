@@ -1,4 +1,5 @@
 import type { Column, RowData } from '@tanstack/react-table'
+import { cn } from 'cn'
 import { FunnelIcon } from 'lucide-react'
 import { useCallback } from 'react'
 import { Button } from '@/components/ui/button'
@@ -7,7 +8,6 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
-import { cn } from '@/lib/utils'
 import { FilterContent } from './FilterContent'
 
 interface ColumnFilterDropdownProps<TData extends RowData> {

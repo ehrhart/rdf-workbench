@@ -1,5 +1,6 @@
 'use client'
 
+import { cn } from 'cn'
 import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import {
@@ -33,7 +34,6 @@ import {
   RADIUS_CHOICES,
   type RadiusChoice
 } from '@/lib/appearance/tokens'
-import { cn } from '@/lib/utils'
 
 const DEFAULT_SETTINGS: AppearanceSettings = {
   primaryColor: null,

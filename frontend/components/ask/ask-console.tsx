@@ -1,6 +1,7 @@
 'use client'
 
 import type { ToolUIPart, UIMessage } from 'ai'
+import { cn } from 'cn'
 import {
   AlertTriangleIcon,
   ArrowUpIcon,
@@ -55,7 +56,6 @@ import type {
   RunQueryOutput,
   SearchEntitiesOutput
 } from '@/lib/ai/ask-contract'
-import { cn } from '@/lib/utils'
 
 interface AskConsoleProps {
   initialProfileSummary: ProfileSummaryDto | null

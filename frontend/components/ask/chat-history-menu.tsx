@@ -1,5 +1,6 @@
 'use client'
 
+import { cn } from 'cn'
 import { startOfDay, subDays } from 'date-fns'
 import { ChevronDownIcon, PencilIcon, PlusIcon, TrashIcon } from 'lucide-react'
 import { useCallback, useMemo, useRef, useState } from 'react'
@@ -12,7 +13,6 @@ import {
   PopoverTrigger
 } from '@/components/ui/popover'
 import type { ConversationDto } from '@/lib/ai/ask-contract'
-import { cn } from '@/lib/utils'
 
 interface Bucket {
   label: string

@@ -1,5 +1,6 @@
 'use client'
 
+import { cn } from 'cn'
 import {
   CheckIcon,
   CopyIcon,
@@ -38,7 +39,6 @@ import {
 } from '@/lib/client/copy-snippets'
 import type { QueryHistoryService } from '@/lib/client/query-history'
 import { fetchSavedQuery } from '@/lib/client/saved-queries'
-import { cn } from '@/lib/utils'
 import type { SavedQuery } from '@/types'
 import { Spinner } from '../sparql-editor/spinner'
 import { Input } from '../ui/input'

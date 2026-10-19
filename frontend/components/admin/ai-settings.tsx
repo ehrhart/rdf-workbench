@@ -20,6 +20,7 @@ import {
   verticalListSortingStrategy
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import { cn } from 'cn'
 import { GripVerticalIcon, Loader2Icon, PlusIcon, XIcon } from 'lucide-react'
 import { useState } from 'react'
 import { type UseFormRegister, useFieldArray, useForm } from 'react-hook-form'
@@ -36,7 +37,6 @@ import {
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import type { AiSettings } from '@/lib/ai/ai-settings'
-import { cn } from '@/lib/utils'
 
 const MAX_QUESTIONS = 10
 const MAX_QUESTION_LENGTH = 200

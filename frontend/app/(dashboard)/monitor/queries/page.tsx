@@ -1,5 +1,6 @@
 'use client'
 
+import { cn } from 'cn'
 import { DownloadIcon, PauseIcon, PlayIcon, RefreshCwIcon } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { DashboardHeader } from '@/components/dashboard/header'
@@ -19,7 +20,7 @@ import {
   TooltipContent,
   TooltipTrigger
 } from '@/components/ui/tooltip'
-import { cn, formatDuration } from '@/lib/utils'
+import { formatDuration } from '@/lib/utils'
 import { abortQuery, getRunningQueries, type RunningQuery } from './actions'
 
 export default function QueriesMonitorPage(): React.ReactElement {

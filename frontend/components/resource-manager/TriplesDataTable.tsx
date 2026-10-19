@@ -12,6 +12,7 @@ import {
   getSortedRowModel,
   useReactTable
 } from '@tanstack/react-table'
+import { cn } from 'cn'
 import {
   ArrowDownIcon,
   ArrowUpDown,
@@ -57,7 +58,6 @@ import {
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Switch } from '@/components/ui/switch'
-import { cn } from '@/lib/utils'
 import { InputGroup, InputGroupIcon, InputGroupInput } from '../ui/input-group'
 import { DEFAULT_PAGE_SIZE, PAGE_SIZES } from './constants'
 import { ResourceLink } from './ResourceLink'

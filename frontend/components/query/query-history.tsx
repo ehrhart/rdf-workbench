@@ -1,5 +1,6 @@
 'use client'
 
+import { cn } from 'cn'
 import { format, formatDistanceToNow } from 'date-fns'
 import { Copy, Play, RefreshCw, Search, Trash2 } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
@@ -23,7 +24,7 @@ import {
 } from '@/components/ui/select'
 import type { QueryHistoryService } from '@/lib/client/query-history'
 import { queryHistoryService } from '@/lib/client/query-history'
-import { cn, formatDuration } from '@/lib/utils'
+import { formatDuration } from '@/lib/utils'
 import type { QueryHistoryItem } from '@/types'
 
 type SortOption = 'newest' | 'oldest' | 'fastest' | 'slowest'

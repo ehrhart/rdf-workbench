@@ -16,6 +16,7 @@ import {
   useReactTable,
   type VisibilityState
 } from '@tanstack/react-table'
+import { cn } from 'cn'
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -54,7 +55,6 @@ import {
   SelectValue
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
-import { cn } from '@/lib/utils'
 import type { SparqlBindingsResult, SparqlQueryResult } from '@/types'
 import {
   InputGroup,
