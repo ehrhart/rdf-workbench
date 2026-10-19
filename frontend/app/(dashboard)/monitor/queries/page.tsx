@@ -68,24 +68,33 @@ export default function QueriesMonitorPage(): React.ReactElement {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({})
   const stringLimit = 100
 
-  const fetchQueries = useCallback(async (): Promise<void> => {
-    try {
-      setLoading(true)
-      const data = await getMonitoredQueries()
-      setQueries(sortQueries(data))
-      setError(null)
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : 'Failed to fetch monitored queries'
-      )
-    } finally {
-      setLoading(false)
-    }
-  }, [])
+  const fetchQueries = useCallback(
+    async (showSpinner = false): Promise<void> => {
+      try {
+        if (showSpinner) {
+          setLoading(true)
+        }
+        const data = await getMonitoredQueries()
+        setQueries(sortQueries(data))
+        setError(null)
+      } catch (err) {
+        setError(
+          err instanceof Error
+            ? err.message
+            : 'Failed to fetch monitored queries'
+        )
+      } finally {
+        if (showSpinner) {
+          setLoading(false)
+        }
+      }
+    },
+    []
+  )
 
   useEffect(() => {
     if (!paused) {
-      fetchQueries()
+      fetchQueries(true)
     }
 
     const intervalId = !paused ? setInterval(fetchQueries, 5000) : undefined
@@ -134,8 +143,12 @@ export default function QueriesMonitorPage(): React.ReactElement {
       <DashboardHeader heading="Query monitor" />
       <div>
         <div className="mb-4 flex items-center justify-between">
-          <Button variant="outline" onClick={fetchQueries} disabled={loading}>
-            <RefreshCwIcon />
+          <Button
+            variant="outline"
+            onClick={() => fetchQueries(true)}
+            disabled={loading}
+          >
+            <RefreshCwIcon className={cn(loading && 'animate-spin')} />
             Refresh
           </Button>
 
@@ -163,7 +176,7 @@ export default function QueriesMonitorPage(): React.ReactElement {
           </Alert>
         )}
 
-        {loading && !paused && (
+        {loading && queries.length === 0 && !paused && (
           <div className="my-8 flex items-center justify-center">
             <RefreshCwIcon className="h-6 w-6 animate-spin" />
           </div>
