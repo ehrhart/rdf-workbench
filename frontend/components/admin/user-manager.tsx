@@ -1,7 +1,7 @@
 'use client'
 
 import { Loader2Icon, UserPlusIcon } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { type FormEvent, useState } from 'react'
 import { toast } from 'sonner'
 import {
@@ -34,6 +34,7 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table'
+import { PASSWORD_CHANGE_PATH } from '@/config/access'
 import { PASSWORD_MIN_LENGTH } from '@/lib/definitions'
 import type { CreateUserInput, LocalUser } from '@/lib/local-auth'
 
@@ -44,6 +45,7 @@ interface UserManagerProps {
 
 export function UserManager({ users, currentUserId }: UserManagerProps) {
   const router = useRouter()
+  const pathname = usePathname()
   const [pending, setPending] = useState<string | null>(null)
   const [temporaryPassword, setTemporaryPassword] = useState(false)
   const [reveal, setReveal] = useState<PasswordReveal | null>(null)
@@ -234,12 +236,19 @@ export function UserManager({ users, currentUserId }: UserManagerProps) {
                         <Button
                           variant="outline"
                           size="sm"
-                          disabled={
-                            pending !== null || user.id === currentUserId
+                          disabled={pending !== null}
+                          onClick={
+                            user.id === currentUserId
+                              ? () =>
+                                  router.push(
+                                    `${PASSWORD_CHANGE_PATH}?redirect=${encodeURIComponent(pathname)}`
+                                  )
+                              : () => resetPassword(user)
                           }
-                          onClick={() => resetPassword(user)}
                         >
-                          Reset password
+                          {user.id === currentUserId
+                            ? 'Change password'
+                            : 'Reset password'}
                         </Button>
                         <Button
                           variant={user.disabled ? 'default' : 'destructive'}
