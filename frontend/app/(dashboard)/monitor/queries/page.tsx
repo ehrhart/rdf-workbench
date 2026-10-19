@@ -2,7 +2,13 @@
 
 import { cn } from 'cn'
 import { DownloadIcon, PauseIcon, PlayIcon, RefreshCwIcon } from 'lucide-react'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore
+} from 'react'
 import { DashboardHeader } from '@/components/dashboard/header'
 import { DashboardShell } from '@/components/dashboard/shell'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -60,6 +66,105 @@ function sortQueries(queries: MonitoredQuery[]): MonitoredQuery[] {
   })
 }
 
+const queryClock = (() => {
+  let state = { now: Date.now(), baseline: Date.now() }
+  const listeners = new Set<() => void>()
+  let frame: number | null = null
+  let lastTick = 0
+  let enabled = true
+
+  function loop(nowMs: number): void {
+    frame = requestAnimationFrame(loop)
+    if (nowMs - lastTick < 100) return
+    lastTick = nowMs
+    state = { ...state, now: Date.now() }
+    for (const listener of listeners) listener()
+  }
+
+  function startLoop(): void {
+    if (frame === null) {
+      lastTick = 0
+      frame = requestAnimationFrame(loop)
+    }
+  }
+
+  return {
+    subscribe(listener: () => void): () => void {
+      listeners.add(listener)
+      if (listeners.size === 1 && enabled) startLoop()
+      return () => {
+        listeners.delete(listener)
+        if (listeners.size === 0 && frame !== null) {
+          cancelAnimationFrame(frame)
+          frame = null
+        }
+      }
+    },
+    getSnapshot(): { now: number; baseline: number } {
+      return state
+    },
+    getServerSnapshot(): { now: number; baseline: number } {
+      return state
+    },
+    setBaseline(): void {
+      state = { now: Date.now(), baseline: Date.now() }
+      for (const listener of listeners) listener()
+    },
+    setEnabled(value: boolean): void {
+      enabled = value
+      if (value && listeners.size > 0) startLoop()
+      if (!value && frame !== null) {
+        cancelAnimationFrame(frame)
+        frame = null
+      }
+    }
+  }
+})()
+
+function StaticDurationCell({ ms }: { ms: number }): React.ReactElement {
+  return (
+    <TableCell>
+      <Tooltip>
+        <TooltipTrigger>{formatDuration(ms)}</TooltipTrigger>
+        <TooltipContent>{ms} ms</TooltipContent>
+      </Tooltip>
+    </TableCell>
+  )
+}
+
+function LiveDurationCell({
+  query
+}: {
+  query: MonitoredQuery
+}): React.ReactElement {
+  const { now, baseline } = useSyncExternalStore(
+    queryClock.subscribe,
+    queryClock.getSnapshot,
+    queryClock.getServerSnapshot
+  )
+  const ms = query.lifetime + (now - baseline)
+  return (
+    <TableCell>
+      <Tooltip>
+        <TooltipTrigger>{formatDuration(ms)}</TooltipTrigger>
+        <TooltipContent>{ms} ms so far</TooltipContent>
+      </Tooltip>
+    </TableCell>
+  )
+}
+
+function DurationCell({
+  query
+}: {
+  query: MonitoredQuery
+}): React.ReactElement {
+  return query.state === 'RUNNING' ? (
+    <LiveDurationCell query={query} />
+  ) : (
+    <StaticDurationCell ms={query.durationMs ?? query.lifetime} />
+  )
+}
+
 function ExpandableQueryText({
   text,
   expanded,
@@ -113,8 +218,6 @@ export default function QueriesMonitorPage(): React.ReactElement {
   const [error, setError] = useState<string | null>(null)
   const [paused, setPaused] = useState<boolean>(false)
   const [expanded, setExpanded] = useState<Record<string, boolean>>({})
-  const [now, setNow] = useState<number>(() => Date.now())
-  const fetchedAtRef = useRef<number>(Date.now())
   const stringLimit = 100
 
   const fetchQueries = useCallback(
@@ -124,7 +227,7 @@ export default function QueriesMonitorPage(): React.ReactElement {
           setLoading(true)
         }
         const data = await getMonitoredQueries()
-        fetchedAtRef.current = Date.now()
+        queryClock.setBaseline()
         setQueries(sortQueries(data))
         setError(null)
       } catch (err) {
@@ -154,19 +257,9 @@ export default function QueriesMonitorPage(): React.ReactElement {
     }
   }, [paused, fetchQueries])
 
-  const hasRunningQuery = queries.some((query) => query.state === 'RUNNING')
-  const hasYoungRunningQuery = queries.some(
-    (query) =>
-      query.state === 'RUNNING' &&
-      query.lifetime + (now - fetchedAtRef.current) < 10_000
-  )
-  const tickerMs = hasYoungRunningQuery ? 100 : hasRunningQuery ? 1000 : 0
-
   useEffect(() => {
-    if (paused || tickerMs === 0) return
-    const intervalId = setInterval(() => setNow(Date.now()), tickerMs)
-    return () => clearInterval(intervalId)
-  }, [paused, tickerMs])
+    queryClock.setEnabled(!paused)
+  }, [paused])
 
   const togglePause = (): void => {
     setPaused(!paused)
@@ -322,22 +415,7 @@ export default function QueriesMonitorPage(): React.ReactElement {
                         {query.origin}
                       </TableCell>
                       <TableCell className="text-xs">{query.kind}</TableCell>
-                      <TableCell>
-                        <Tooltip>
-                          <TooltipTrigger>
-                            {formatDuration(
-                              query.state === 'RUNNING'
-                                ? query.lifetime + (now - fetchedAtRef.current)
-                                : (query.durationMs ?? query.lifetime)
-                            )}
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            {query.durationMs !== undefined
-                              ? `${query.durationMs} ms`
-                              : `${query.lifetime + (now - fetchedAtRef.current)} ms so far`}
-                          </TooltipContent>
-                        </Tooltip>
-                      </TableCell>
+                      <DurationCell query={query} />
                       <TableCell>
                         {query.state === 'RUNNING' && query.cancellable && (
                           <Tooltip>
