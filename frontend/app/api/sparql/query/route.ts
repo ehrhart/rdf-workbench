@@ -1,9 +1,5 @@
 import { type NextRequest, NextResponse } from 'next/server'
-import {
-  PUBLIC_QUERY_OWNER,
-  registerQuery,
-  unregisterQuery
-} from '@/lib/query-registry'
+import { PUBLIC_QUERY_OWNER } from '@/lib/query-registry'
 import { getWorkbenchRuntime } from '@/lib/runtime'
 import type { WorkbenchRuntime } from '@/lib/runtime/contracts'
 
@@ -41,13 +37,11 @@ async function streamDownload(
   query: string,
   accept: string
 ) {
-  const queryId = crypto.randomUUID()
-  const controller = new AbortController()
-  registerQuery(queryId, PUBLIC_QUERY_OWNER, query, () => controller.abort())
   try {
     const upstream = await runtime.sparql.download(query, accept, {
-      queryId,
-      signal: AbortSignal.any([clientSignal, controller.signal])
+      ownerId: PUBLIC_QUERY_OWNER,
+      origin: 'public:sparql',
+      signal: clientSignal
     })
     const contentType = upstream.headers.get('content-type') ?? accept
 
@@ -67,8 +61,6 @@ async function streamDownload(
     const message =
       error instanceof Error ? error.message : 'SPARQL query failed'
     return jsonError(message, 400)
-  } finally {
-    unregisterQuery(queryId)
   }
 }
 

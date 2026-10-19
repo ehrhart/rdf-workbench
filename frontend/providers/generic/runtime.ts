@@ -4,7 +4,7 @@ import { buildNavigation } from '@/config/navigation'
 import { dereferenceRepository } from '@/lib/dereference/repository'
 import { localAuthAdapter } from '@/lib/local-auth'
 import { localPrefixSource } from '@/lib/local-prefixes'
-import { registryQueryMonitor } from '@/lib/query-monitor'
+import { registryQueryMonitor, withQueryMonitoring } from '@/lib/query-monitor'
 import type { FeatureId, WorkbenchRuntime } from '@/lib/runtime/contracts'
 import { computeFeatures } from '@/lib/runtime/features'
 import { savedQueryRepository } from '@/lib/saved-queries'
@@ -19,7 +19,7 @@ const features: ReadonlySet<FeatureId> = computeFeatures('generic', process.env)
 
 const navigation = buildNavigation('generic', features)
 
-const sparql = genericSparqlTransport
+const sparql = withQueryMonitoring(genericSparqlTransport, 'provider:generic')
 const graphs = createSpecGraphReader(sparql)
 
 export const genericRuntime: WorkbenchRuntime = {

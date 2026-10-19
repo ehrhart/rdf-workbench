@@ -1,13 +1,23 @@
 import 'server-only'
 
 import { after } from 'next/server'
-import { cancelQuery, listQueries, ownsQuery } from '@/lib/query-registry'
+import {
+  cancelQuery,
+  completeQuery,
+  listHistory,
+  listQueries,
+  ownsQuery,
+  registerQuery
+} from '@/lib/query-registry'
 import { getRuntimeConfig } from '@/lib/runtime/config'
 import type {
+  MonitoredQueryInfo,
   Principal,
   QueryMonitorAdapter,
-  RunningQueryInfo
+  SparqlRequestOptions,
+  SparqlTransport
 } from '@/lib/runtime/contracts'
+import { SparqlTimeoutError } from '@/lib/sparql/errors'
 
 function watchUrl(id: string): string {
   const url = new URL(getRuntimeConfig().SPARQL_ENDPOINT)
@@ -50,16 +60,95 @@ async function cancelOnEngine(id: string): Promise<void> {
   })
 }
 
+function isAbortError(error: unknown): boolean {
+  return error instanceof DOMException && error.name === 'AbortError'
+}
+
+export function withQueryMonitoring(
+  transport: SparqlTransport,
+  defaultOrigin: string
+): SparqlTransport {
+  async function track<T>(
+    query: string,
+    options: SparqlRequestOptions | undefined,
+    run: (options: SparqlRequestOptions) => Promise<T>
+  ): Promise<T> {
+    const id = crypto.randomUUID()
+    const controller = new AbortController()
+    const { signal, ...rest } = options ?? {}
+    registerQuery(id, {
+      ownerId: rest.ownerId ?? null,
+      query,
+      kind: rest.kind ?? 'unknown',
+      origin: rest.origin ?? defaultOrigin,
+      abort: () => controller.abort()
+    })
+    const trackedSignal = signal
+      ? AbortSignal.any([signal, controller.signal])
+      : controller.signal
+    try {
+      const result = await run({ ...rest, signal: trackedSignal, queryId: id })
+      completeQuery(id, 'COMPLETED')
+      return result
+    } catch (error) {
+      if (controller.signal.aborted || isAbortError(error)) {
+        completeQuery(id, 'CANCELLED')
+      } else if (error instanceof SparqlTimeoutError) {
+        completeQuery(id, 'TIMEOUT')
+      } else {
+        completeQuery(
+          id,
+          'FAILED',
+          error instanceof Error ? error.message : String(error)
+        )
+      }
+      throw error
+    }
+  }
+
+  return {
+    execute(query, options) {
+      return track(query, options, (opts) => transport.execute(query, opts))
+    },
+    download(query, format, options) {
+      return track(query, options, (opts) =>
+        transport.download(query, format, opts)
+      )
+    },
+    getDownloadFormats(kind) {
+      return transport.getDownloadFormats(kind)
+    }
+  }
+}
+
 export const registryQueryMonitor: QueryMonitorAdapter = {
-  async listRunning(_caller: Principal | null): Promise<RunningQueryInfo[]> {
+  async list(_caller: Principal | null): Promise<MonitoredQueryInfo[]> {
     const now = Date.now()
-    return listQueries().map((entry) => ({
+    const running = listQueries().map((entry) => ({
       id: entry.id,
       query: entry.query,
+      kind: entry.kind,
+      origin: entry.origin,
+      ownerId: entry.ownerId,
+      startedAt: entry.startedAt,
       lifetime: now - entry.startedAt,
       state: 'RUNNING' as const,
       cancellable: true
     }))
+    const finished = listHistory().map((entry) => ({
+      id: entry.id,
+      query: entry.query,
+      kind: entry.kind,
+      origin: entry.origin,
+      ownerId: entry.ownerId,
+      startedAt: entry.startedAt,
+      lifetime: entry.durationMs,
+      state: entry.state,
+      durationMs: entry.durationMs,
+      error: entry.error,
+      cancellable: false
+    }))
+    return [...running, ...finished]
   },
 
   async cancel(id: string, caller: Principal | null): Promise<void> {

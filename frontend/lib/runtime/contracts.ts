@@ -57,10 +57,14 @@ export type SparqlQueryKind =
 export interface SparqlRequestOptions {
   timeoutMs?: number
   signal?: AbortSignal
-  /** Assigns the workbench query id used for per-query tracking and cancellation. */
+  /** Set by the monitoring wrapper so transports can correlate upstream, such as QLever's Query-Id header. */
   queryId?: string
   /** Query kind, used to negotiate the upstream response format. */
   kind?: SparqlQueryKind
+  /** Owner id recorded by the query monitor. Null means only administrators may cancel. */
+  ownerId?: string | null
+  /** Surface label recorded by the query monitor. Defaults to the provider origin. */
+  origin?: string
 }
 
 export interface DownloadFormat {
@@ -168,17 +172,35 @@ export interface EndpointOverview {
   settings?: Record<string, string | number | boolean | null>
 }
 
-export interface RunningQueryInfo {
+export type MonitoredQueryState =
+  | 'RUNNING'
+  | 'COMPLETED'
+  | 'FAILED'
+  | 'CANCELLED'
+  | 'TIMEOUT'
+
+export interface MonitoredQueryInfo {
   id: string
   query: string
+  kind: SparqlQueryKind
+  /** Surface the query came from, such as provider:qlever or api:sparql. */
+  origin: string
+  /** Owner id, or null for anonymous and system-internal queries. */
+  ownerId: string | null
+  startedAt: number
+  /** Age for running queries, total duration for finished ones. Milliseconds. */
   lifetime: number
-  state: 'RUNNING'
+  state: MonitoredQueryState
+  /** Total duration for finished queries. Milliseconds. */
+  durationMs?: number
+  error?: string
   /** Whether this query can be cancelled through the workbench. */
   cancellable: boolean
 }
 
 export interface QueryMonitorAdapter {
-  listRunning(caller: Principal | null): Promise<RunningQueryInfo[]>
+  /** Running queries plus the recent finished history. */
+  list(caller: Principal | null): Promise<MonitoredQueryInfo[]>
   cancel(id: string, caller: Principal | null): Promise<void>
 }
 
