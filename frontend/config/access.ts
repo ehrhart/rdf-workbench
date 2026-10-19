@@ -78,13 +78,12 @@ export function safeInternalRedirect(value: string | null | undefined): string {
 }
 
 /**
- * Every page and API route under `app/`, enumerated from the file tree.
- * First matching pattern wins: specific patterns are listed before broad
- * ones, and unlisted paths fall through to `session` (fail closed).
+ * Access rules for page and API routes under `app/`, enumerated from the
+ * file tree. Unlisted paths default to `session` (fail closed).
  *
- * Server actions (`app/actions` and the per-page `actions.ts` files) are
- * POSTs to their enclosing page paths and are covered by those rules. `error.tsx`,
- * `loading.tsx` and layout files are not routes.
+ * Server actions (`app/actions` and per-page `actions.ts` files) are handled
+ * through their enclosing page paths and are covered by those rules.
+ * `error.tsx`, `loading.tsx`, and layout files do not define routes.
  */
 export const ACCESS_RULES: AccessRule[] = [
   { pattern: '/login', access: 'public' },
@@ -93,14 +92,14 @@ export const ACCESS_RULES: AccessRule[] = [
   { pattern: '/api/appearance/logo', access: 'public' },
   { pattern: '/change-password', access: 'session' },
 
-  // Read access is intentionally left open here; mutation protection is
-  // handled at the endpoint layer, not in this list.
+  // Access is intentionally public here; authorization for mutations is
+  // enforced at the endpoint layer, not by this route-level access rule.
   { pattern: '/api/sparql', access: 'public' },
 
-  // Ask spends the deployment's LLM budget: ALLOW_ANONYMOUS_ASK lets
-  // anonymous visitors chat, otherwise a session is required. Anonymous
-  // chats are not saved, so /api/conversations stays session-only; the
-  // profile rebuild stays admin-gated in-route.
+  // Ask consumes the deployment's LLM budget. ALLOW_ANONYMOUS_ASK controls
+  // whether anonymous visitors can chat; otherwise, a session is required.
+  // Anonymous chats are not persisted, so /api/conversations remains
+  // session-only. Profile rebuild authorization is enforced in the route.
   { pattern: '/api/ask', access: 'anonymousAsk' },
   { pattern: '/ask', access: 'anonymousAsk' },
   { pattern: '/api/conversations', access: 'session' },
@@ -130,8 +129,11 @@ export const ACCESS_RULES: AccessRule[] = [
   { pattern: '/api/properties', access: 'anonymousRead' },
   { pattern: '/api/graphs', access: 'anonymousRead' },
   { pattern: '/api/saved-queries', access: 'anonymousRead' },
-  { pattern: '/[entity]/[...id]', access: 'anonymousRead' },
-  { pattern: '/overview', access: 'anonymousRead', exact: true }
+  { pattern: '/overview', access: 'anonymousRead', exact: true },
+
+  // Dereferenceable resource URLs (`DEREFERENCE_PATHS`).
+  { pattern: '/[entity]', access: 'anonymousRead' },
+  { pattern: '/[entity]/[...id]', access: 'anonymousRead' }
 ]
 
 function ruleMatches(rule: AccessRule, pathname: string): boolean {
@@ -172,15 +174,28 @@ export function anonymousAskEnabled(): boolean {
 }
 
 /**
+ * Finds the first matching rule for a pathname. Static rules take precedence
+ * over dynamic rules, regardless of array order. Within each category,
+ * array order determines which matching rule wins.
+ */
+function findMatchingRule(pathname: string): AccessRule | undefined {
+  const isDynamic = (rule: AccessRule) => rule.pattern.includes('[')
+  return (
+    ACCESS_RULES.find(
+      (rule) => !isDynamic(rule) && ruleMatches(rule, pathname)
+    ) ??
+    ACCESS_RULES.find((rule) => isDynamic(rule) && ruleMatches(rule, pathname))
+  )
+}
+
+/**
  * Raw access level of the first matching rule, without applying the
  * anonymous-read flag or resolving features. Used by sidebar visibility,
  * where an item's declared policy is what matters (public or
  * anonymous-read items are browsable), not the runtime flag.
  */
 export function resolveBaseAccess(pathname: string): AccessLevel {
-  const rule = ACCESS_RULES.find((candidate) =>
-    ruleMatches(candidate, pathname)
-  )
+  const rule = findMatchingRule(pathname)
   return rule?.access ?? 'session'
 }
 
@@ -210,9 +225,7 @@ export function resolveAccess(
   pathname: string,
   options: AccessOptions
 ): AccessDecision {
-  const rule = ACCESS_RULES.find((candidate) =>
-    ruleMatches(candidate, pathname)
-  )
+  const rule = findMatchingRule(pathname)
 
   if (!rule) {
     return { access: 'session', featureMissing: false }
