@@ -172,11 +172,14 @@ export default function QueriesMonitorPage(): React.ReactElement {
   }
 
   const handleDownload = (query: MonitoredQuery): void => {
-    const blob = new Blob([query.query], { type: 'text/plain' })
+    const isUpdate = query.kind === 'update'
+    const blob = new Blob([query.query], {
+      type: isUpdate ? 'application/sparql-update' : 'application/sparql-query'
+    })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `query_${query.id}.txt`
+    a.download = `query_${query.id}.${isUpdate ? 'ru' : 'rq'}`
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
