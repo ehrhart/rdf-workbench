@@ -211,6 +211,8 @@ Common runtime variables:
 - `WORKBENCH_NAME`: runtime display name; defaults to `RDF Workbench`.
 - `WORKBENCH_URL`: externally visible origin used for redirects and mutation
   origin checks.
+- `WORKBENCH_PORT`: host port for the workbench container in docker compose;
+  the container itself listens on `3000`.
 - `RESOURCE_BASE_URI`: base IRI of dereferenceable resources. A path configured
   for dereferencing maps `/path/<id>` to `<RESOURCE_BASE_URI>/path/<id>`.
 - `DEREFERENCE_PATHS`: optional list of dereferenceable path segments,
@@ -226,6 +228,27 @@ Common runtime variables:
   ISQL, namespaces, and configuration, still require a session. All writes
   authenticate at their own route or action layer regardless. Disabled by
   default.
+- `ALLOW_ANONYMOUS_ASK`: set to `1` or `true` to let logged-out visitors chat
+  with the ask assistant. Applies only when the assistant is configured.
+  Disabled by default.
+
+Ask assistant variables:
+
+- `AI_BASE_URL`: base URL of an OpenAI-compatible API. The ask assistant is
+  enabled only when `AI_BASE_URL`, `AI_API_KEY`, and `AI_MODEL` are all set.
+- `AI_API_KEY`: API key for that API.
+- `AI_MODEL`: model name the assistant uses.
+- `AI_MAX_STEPS`: maximum tool steps per question; defaults to `20`.
+- `AI_QUERY_TIMEOUT_MS`: timeout in milliseconds for assistant queries;
+  defaults to `30000`.
+- `AI_RESULT_LIMIT`: maximum rows the assistant reads per query; defaults to
+  `1000`.
+- `AI_PROFILE_MAX_CLASSES`: maximum classes in a dataset profile; defaults to
+  `60`.
+- `AI_PROFILE_MAX_PROPERTIES`: maximum properties per class in a dataset
+  profile; defaults to `30`.
+- `AI_PROFILE_MAX_SAMPLES`: maximum sample values per property; defaults to
+  `3`.
 
 Local-account providers:
 
@@ -240,7 +263,8 @@ Virtuoso frontend variables:
 
 - `VIRTUOSO_ADAPTER_URL`
 - `VIRTUOSO_ADAPTER_TOKEN` (at least 32 characters)
-- optional graph export limit and polling variables shown in `.env.example`
+- optional graph export path, limit, and polling variables shown in
+  `.env.example`
 
 Virtuoso adapter variables include the host, ISQL port, the service-account
 credentials, adapter token, import path, and upload limit. See `.env.example`
