@@ -385,16 +385,6 @@ export default function QueriesMonitorPage(): React.ReactElement {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <div className="mb-2 flex items-start">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleDownload(query)}
-                            className="mr-2"
-                          >
-                            <DownloadIcon />
-                          </Button>
-                        </div>
                         {isExpandable ? (
                           <ExpandableQueryText
                             text={
@@ -417,22 +407,42 @@ export default function QueriesMonitorPage(): React.ReactElement {
                       <TableCell className="text-xs">{query.kind}</TableCell>
                       <DurationCell query={query} />
                       <TableCell>
-                        {query.state === 'RUNNING' && query.cancellable && (
+                        <div className="flex items-center gap-1">
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button
                                 size="sm"
-                                variant="destructive"
-                                onClick={() => handleAbortQuery(query.id)}
+                                variant="ghost"
+                                aria-label={`Download query as .${
+                                  query.kind === 'update' ? 'ru' : 'rq'
+                                }`}
+                                onClick={() => handleDownload(query)}
                               >
-                                Abort
+                                <DownloadIcon />
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent>
-                              Click to abort this query
+                              Download query as .
+                              {query.kind === 'update' ? 'ru' : 'rq'}
                             </TooltipContent>
                           </Tooltip>
-                        )}
+                          {query.state === 'RUNNING' && query.cancellable && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => handleAbortQuery(query.id)}
+                                >
+                                  Abort
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                Click to abort this query
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   )
