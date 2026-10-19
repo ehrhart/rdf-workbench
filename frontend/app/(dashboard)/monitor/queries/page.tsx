@@ -1,7 +1,13 @@
 'use client'
 
 import { cn } from 'cn'
-import { DownloadIcon, PauseIcon, PlayIcon, RefreshCwIcon } from 'lucide-react'
+import {
+  DownloadIcon,
+  PauseIcon,
+  PlayIcon,
+  RefreshCwIcon,
+  Square
+} from 'lucide-react'
 import {
   useCallback,
   useEffect,
@@ -431,15 +437,15 @@ export default function QueriesMonitorPage(): React.ReactElement {
                               <TooltipTrigger asChild>
                                 <Button
                                   size="sm"
-                                  variant="destructive"
+                                  variant="ghost"
+                                  aria-label="Abort query"
                                   onClick={() => handleAbortQuery(query.id)}
+                                  className="text-destructive hover:text-destructive"
                                 >
-                                  Abort
+                                  <Square className="fill-current" />
                                 </Button>
                               </TooltipTrigger>
-                              <TooltipContent>
-                                Click to abort this query
-                              </TooltipContent>
+                              <TooltipContent>Abort this query</TooltipContent>
                             </Tooltip>
                           )}
                         </div>
