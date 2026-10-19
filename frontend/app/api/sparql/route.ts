@@ -1,23 +1,9 @@
 import { NextResponse } from 'next/server'
-import { Parser } from 'sparqljs'
 import { unauthenticatedResponse } from '@/lib/api-auth'
 import { getWorkbenchRuntime } from '@/lib/runtime'
-import type { SparqlQueryKind } from '@/lib/runtime/contracts'
 import { isSameOriginMutation, sameOriginError } from '@/lib/same-origin'
 import { SparqlTimeoutError } from '@/lib/sparql/errors'
-
-function detectQueryKind(query: string): SparqlQueryKind {
-  try {
-    const parsed = new Parser({ skipUngroupedVariableCheck: true }).parse(query)
-    if ('queryType' in parsed) {
-      return parsed.queryType.toLowerCase() as SparqlQueryKind
-    }
-    if ('updates' in parsed) {
-      return 'update'
-    }
-  } catch {}
-  return 'unknown'
-}
+import { detectQueryKind } from '@/lib/sparql/kind'
 
 export async function POST(request: Request) {
   try {

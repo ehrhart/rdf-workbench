@@ -18,6 +18,7 @@ import type {
   SparqlTransport
 } from '@/lib/runtime/contracts'
 import { SparqlTimeoutError } from '@/lib/sparql/errors'
+import { detectQueryKind } from '@/lib/sparql/kind'
 
 function watchUrl(id: string): string {
   const url = new URL(getRuntimeConfig().SPARQL_ENDPOINT)
@@ -76,10 +77,11 @@ export function withQueryMonitoring(
     const id = crypto.randomUUID()
     const controller = new AbortController()
     const { signal, ...rest } = options ?? {}
+    const kind = rest.kind ?? detectQueryKind(query)
     registerQuery(id, {
       ownerId: rest.ownerId ?? null,
       query,
-      kind: rest.kind ?? 'unknown',
+      kind,
       origin: rest.origin ?? defaultOrigin,
       abort: () => controller.abort()
     })
