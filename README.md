@@ -81,7 +81,7 @@ services:
       RESOURCE_BASE_URI: https://data.example.org
       WORKBENCH_DB_PATH: /data/workbench.sqlite
       BOOTSTRAP_ADMIN_USERNAME: admin
-      BOOTSTRAP_ADMIN_PASSWORD: replace-with-at-least-12-characters
+      BOOTSTRAP_ADMIN_PASSWORD: replace-with-at-least-8-characters
     ports:
       - "3000:3000"
     volumes:
@@ -105,7 +105,7 @@ services:
       WORKBENCH_URL: http://localhost:3000
       RESOURCE_BASE_URI: https://data.example.org
       WORKBENCH_DB_PATH: /data/workbench.sqlite
-      BOOTSTRAP_ADMIN_PASSWORD: replace-with-at-least-12-characters
+      BOOTSTRAP_ADMIN_PASSWORD: replace-with-at-least-8-characters
       VIRTUOSO_ADAPTER_URL: http://virtuoso-adapter:50118
       VIRTUOSO_ADAPTER_TOKEN: replace-with-at-least-32-characters
     ports:
@@ -145,7 +145,7 @@ services:
       RESOURCE_BASE_URI: https://data.example.org
       WORKBENCH_DB_PATH: /data/workbench.sqlite
       BOOTSTRAP_ADMIN_USERNAME: admin
-      BOOTSTRAP_ADMIN_PASSWORD: replace-with-at-least-12-characters
+      BOOTSTRAP_ADMIN_PASSWORD: replace-with-at-least-8-characters
     ports:
       - "3000:3000"
     volumes:
@@ -190,7 +190,7 @@ services:
       RESOURCE_BASE_URI: https://data.example.org
       WORKBENCH_DB_PATH: /data/workbench.sqlite
       BOOTSTRAP_ADMIN_USERNAME: admin
-      BOOTSTRAP_ADMIN_PASSWORD: replace-with-at-least-12-characters
+      BOOTSTRAP_ADMIN_PASSWORD: replace-with-at-least-8-characters
     ports:
       - "3000:3000"
     volumes:
