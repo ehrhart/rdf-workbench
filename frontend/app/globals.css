@@ -273,6 +273,21 @@
   }
 }
 
+/* The sidebar surface re-scopes the page-muted token to a sidebar-owned one:
+   --sidebar-muted-foreground defaults to the page value (identical look) and
+   is re-derived against a custom sidebar color by lib/appearance/tokens.ts,
+   so muted text inside the sidebar tracks the sidebar palette like the
+   sidebar-foreground tokens do. */
+:root,
+.dark {
+  --sidebar-muted-foreground: var(--muted-foreground);
+}
+
+[data-slot="sidebar"],
+[data-slot="sidebar-inner"] {
+  --muted-foreground: var(--sidebar-muted-foreground);
+}
+
 body {
   background-color: var(--color-background);
   color: var(--color-foreground);

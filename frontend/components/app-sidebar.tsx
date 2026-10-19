@@ -51,7 +51,10 @@ export function AppSidebar({
               className="data-[slot=sidebar-menu-button]:p-1.5!"
             >
               <Link href="/overview">
-                <BrandMark version={brandLogoVersion} className="size-5!" />
+                <BrandMark
+                  version={brandLogoVersion}
+                  className="size-5! text-sidebar-foreground"
+                />
                 <span className="text-base font-semibold group-data-[collapsible=icon]:hidden">
                   {appName}
                 </span>
@@ -74,7 +77,7 @@ export function AppSidebar({
               target="_blank"
               rel="noreferrer"
               title={`v${updateInfo.latestVersion} available (running v${updateInfo.currentVersion})`}
-              className="flex items-center gap-1.5 rounded-md font-medium text-amber-600 transition-colors hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300"
+              className="flex items-center gap-1.5 rounded-md font-medium text-sidebar-foreground transition-colors hover:text-sidebar-accent-foreground"
             >
               <span
                 className="size-1.5 shrink-0 rounded-full bg-amber-500"

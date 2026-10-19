@@ -31,7 +31,9 @@ export function NavUser({ user }: { user: NavUserType }) {
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground">
               <Avatar size="sm">
-                <AvatarFallback>{initials}</AvatarFallback>
+                <AvatarFallback className="bg-sidebar-accent text-sidebar-accent-foreground">
+                  {initials}
+                </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
                 <span className="truncate font-medium">{user.username}</span>

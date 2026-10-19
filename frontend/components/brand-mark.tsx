@@ -1,3 +1,4 @@
+import { cn } from 'cn'
 import RDFIcon from '@/components/rdf-icon'
 
 export function BrandMark({
@@ -7,7 +8,7 @@ export function BrandMark({
   version?: string | null
   className?: string
 }) {
-  if (!version) return <RDFIcon className={className} />
+  if (!version) return <RDFIcon className={cn('text-foreground', className)} />
   return (
     // biome-ignore lint/performance/noImgElement: user-uploaded logo served by a dynamic route with a cache-buster; image optimization is disabled app-wide
     <img

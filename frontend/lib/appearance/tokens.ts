@@ -133,6 +133,39 @@ function pickForeground(primary: Oklch): Oklch {
   return lightRatio >= darkRatio ? LIGHT_FOREGROUND : DARK_FOREGROUND
 }
 
+const AA_MUTED_CONTRAST_TARGET = 4.6
+
+function pickMutedForeground(bg: Oklch, foreground: Oklch): Oklch {
+  const target = AA_MUTED_CONTRAST_TARGET
+  const bgLuminance = relativeLuminance(bg)
+  if (contrastRatio(relativeLuminance(foreground), bgLuminance) < target) {
+    return foreground
+  }
+  let low = 0
+  let high = 1
+  for (let step = 0; step < 20; step += 1) {
+    const mid = (low + high) / 2
+    const mixed = {
+      L: bg.L + mid * (foreground.L - bg.L),
+      C: bg.C * (1 - mid),
+      h: bg.h
+    }
+    if (
+      contrastRatio(relativeLuminance(clampChroma(mixed)), bgLuminance) >=
+      target
+    ) {
+      high = mid
+    } else {
+      low = mid
+    }
+  }
+  return clampChroma({
+    L: bg.L + high * (foreground.L - bg.L),
+    C: bg.C * (1 - high),
+    h: bg.h
+  })
+}
+
 function formatNumber(value: number): string {
   return String(Math.round(value * 1000) / 1000)
 }
@@ -217,9 +250,11 @@ export function deriveTokens(settings: AppearanceSettings): DerivedTokens {
     })
     const foreground = pickForeground(bg)
     const accentForeground = pickForeground(accent)
+    const mutedForeground = pickMutedForeground(bg, foreground)
     for (const vars of [light, dark]) {
       vars['--sidebar'] = bgValue
       vars['--sidebar-foreground'] = toOklchString(foreground)
+      vars['--sidebar-muted-foreground'] = toOklchString(mutedForeground)
       vars['--sidebar-accent'] = toOklchString(accent)
       vars['--sidebar-accent-foreground'] = toOklchString(accentForeground)
       vars['--sidebar-border'] = toOklchString(border)
