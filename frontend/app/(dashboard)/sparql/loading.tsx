@@ -1,12 +1,12 @@
-import { DashboardHeader } from '@/components/dashboard/header'
 import { DashboardShell } from '@/components/dashboard/shell'
+import { DashboardHeaderSkeleton } from '@/components/skeletons'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 
 export default function SparqlLoading() {
   return (
     <DashboardShell>
-      <DashboardHeader heading="SPARQL Query Console" />
+      <DashboardHeaderSkeleton />
       <div className="space-y-4">
         <Card>
           <CardContent className="pt-6 space-y-4">

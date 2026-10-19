@@ -1,6 +1,14 @@
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 
+export function DashboardHeaderSkeleton() {
+  return (
+    <div className="flex items-center justify-between">
+      <Skeleton className="h-9 w-48" />
+    </div>
+  )
+}
+
 export function StatsCardsSkeleton() {
   return (
     <div className="grid gap-4 md:grid-cols-3">

@@ -1,12 +1,12 @@
-import { DashboardHeader } from '@/components/dashboard/header'
 import { DashboardShell } from '@/components/dashboard/shell'
+import { DashboardHeaderSkeleton } from '@/components/skeletons'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 
 export default function DashboardLoading() {
   return (
     <DashboardShell>
-      <DashboardHeader heading="Overview" />
+      <DashboardHeaderSkeleton />
       <div className="grid gap-4 md:gap-8">
         {/* Search skeleton */}
         <Card>

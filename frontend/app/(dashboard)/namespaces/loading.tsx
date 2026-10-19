@@ -1,12 +1,12 @@
-import { DashboardHeader } from '@/components/dashboard/header'
 import { DashboardShell } from '@/components/dashboard/shell'
+import { DashboardHeaderSkeleton } from '@/components/skeletons'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 
 export default function NamespacesLoading() {
   return (
     <DashboardShell>
-      <DashboardHeader heading="Prefix Management" />
+      <DashboardHeaderSkeleton />
       <div className="space-y-4">
         <div className="flex justify-between items-center">
           <Skeleton className="h-10 w-48" />
