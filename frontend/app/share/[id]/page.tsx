@@ -3,10 +3,13 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { SharedChatView } from '@/components/ask/shared-chat-view'
-import RDFIcon from '@/components/rdf-icon'
+import { BrandMark } from '@/components/brand-mark'
 import { Button } from '@/components/ui/button'
 import { getShareById } from '@/lib/ai/conversation-share-store'
-import { getInstanceName } from '@/lib/appearance/appearance-settings'
+import {
+  getAppearanceAssetMeta,
+  getInstanceName
+} from '@/lib/appearance/appearance-settings'
 import { getWorkbenchRuntime } from '@/lib/runtime'
 
 export const dynamic = 'force-dynamic'
@@ -33,7 +36,10 @@ export default async function SharePage({
 
   const principal = await (await getWorkbenchRuntime()).auth.getPrincipal()
   const isOwner = principal?.id === share.ownerId
-  const appName = await getInstanceName()
+  const [appName, logoMeta] = await Promise.all([
+    getInstanceName(),
+    getAppearanceAssetMeta('logo')
+  ])
 
   return (
     <div className="flex min-h-svh flex-col bg-background">
@@ -42,7 +48,7 @@ export default async function SharePage({
           href="/overview"
           className="mr-6 flex items-center space-x-2 group"
         >
-          <RDFIcon className="size-5" />
+          <BrandMark version={logoMeta?.updatedAt ?? null} className="size-5" />
           <span className="text-base font-semibold">{appName}</span>
         </Link>
       </header>
