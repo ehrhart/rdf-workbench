@@ -3,7 +3,7 @@
 import { Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import { getRunningQueries } from '@/app/(dashboard)/monitor/queries/actions'
+import { getMonitoredQueries } from '@/app/(dashboard)/monitor/queries/actions'
 import { Badge } from '@/components/ui/badge'
 
 export function QueryActivity() {
@@ -18,9 +18,9 @@ export function QueryActivity() {
       if (cancelled) return
       setLoading(true)
       try {
-        const data = await getRunningQueries()
+        const data = await getMonitoredQueries()
         if (cancelled) return
-        setCount(data.length)
+        setCount(data.filter((query) => query.state === 'RUNNING').length)
         setError(null)
       } catch (err) {
         if (cancelled) return

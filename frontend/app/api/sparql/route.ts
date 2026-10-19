@@ -1,24 +1,9 @@
 import { NextResponse } from 'next/server'
-import { Parser } from 'sparqljs'
 import { unauthenticatedResponse } from '@/lib/api-auth'
-import { registerQuery, unregisterQuery } from '@/lib/query-registry'
 import { getWorkbenchRuntime } from '@/lib/runtime'
-import type { SparqlQueryKind } from '@/lib/runtime/contracts'
 import { isSameOriginMutation, sameOriginError } from '@/lib/same-origin'
 import { SparqlTimeoutError } from '@/lib/sparql/errors'
-
-function detectQueryKind(query: string): SparqlQueryKind {
-  try {
-    const parsed = new Parser({ skipUngroupedVariableCheck: true }).parse(query)
-    if ('queryType' in parsed) {
-      return parsed.queryType.toLowerCase() as SparqlQueryKind
-    }
-    if ('updates' in parsed) {
-      return 'update'
-    }
-  } catch {}
-  return 'unknown'
-}
+import { detectQueryKind } from '@/lib/sparql/kind'
 
 export async function POST(request: Request) {
   try {
@@ -44,22 +29,13 @@ export async function POST(request: Request) {
       return unauthenticatedResponse()
     }
 
-    const queryId = crypto.randomUUID()
-    const controller = new AbortController()
-    registerQuery(queryId, principal?.id ?? null, query, () =>
-      controller.abort()
-    )
-
-    try {
-      const data = await runtime.sparql.execute(query, {
-        queryId,
-        kind,
-        signal: AbortSignal.any([request.signal, controller.signal])
-      })
-      return NextResponse.json(data, { status: 200 })
-    } finally {
-      unregisterQuery(queryId)
-    }
+    const data = await runtime.sparql.execute(query, {
+      kind,
+      ownerId: principal?.id ?? null,
+      origin: 'api:sparql',
+      signal: request.signal
+    })
+    return NextResponse.json(data, { status: 200 })
   } catch (error) {
     const isTimeout = error instanceof SparqlTimeoutError
     const isAbort =

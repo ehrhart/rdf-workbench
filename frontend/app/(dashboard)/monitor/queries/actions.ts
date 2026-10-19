@@ -1,20 +1,20 @@
 'use server'
 
 import { getWorkbenchRuntime } from '@/lib/runtime'
-import type { RunningQueryInfo } from '@/lib/runtime/contracts'
+import type { MonitoredQueryInfo } from '@/lib/runtime/contracts'
 
-export type RunningQuery = RunningQueryInfo
+export type MonitoredQuery = MonitoredQueryInfo
 
-export async function getRunningQueries(): Promise<RunningQuery[]> {
+export async function getMonitoredQueries(): Promise<MonitoredQuery[]> {
   try {
     const runtime = await getWorkbenchRuntime()
     if (!runtime.queryMonitor) return []
     const caller = await runtime.auth.getPrincipal()
     if (caller?.role !== 'admin') return []
-    return await runtime.queryMonitor.listRunning(caller)
+    return await runtime.queryMonitor.list(caller)
   } catch (error) {
-    console.error('Error fetching running queries:', error)
-    throw new Error('Failed to fetch running queries')
+    console.error('Error fetching monitored queries:', error)
+    throw new Error('Failed to fetch monitored queries')
   }
 }
 

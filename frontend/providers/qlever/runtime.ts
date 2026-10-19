@@ -4,7 +4,7 @@ import { buildNavigation } from '@/config/navigation'
 import { dereferenceRepository } from '@/lib/dereference/repository'
 import { localAuthAdapter } from '@/lib/local-auth'
 import { localPrefixSource } from '@/lib/local-prefixes'
-import { registryQueryMonitor } from '@/lib/query-monitor'
+import { registryQueryMonitor, withQueryMonitoring } from '@/lib/query-monitor'
 import type { FeatureId, WorkbenchRuntime } from '@/lib/runtime/contracts'
 import { computeFeatures } from '@/lib/runtime/features'
 import { savedQueryRepository } from '@/lib/saved-queries'
@@ -20,7 +20,7 @@ const navigation = buildNavigation('qlever', features)
 export const qleverRuntime: WorkbenchRuntime = {
   provider: 'qlever',
   label: 'QLever',
-  sparql: qleverSparqlTransport,
+  sparql: withQueryMonitoring(qleverSparqlTransport, 'provider:qlever'),
   graphs: qleverGraphReader,
   prefixes: localPrefixSource,
   savedQueries: savedQueryRepository,
