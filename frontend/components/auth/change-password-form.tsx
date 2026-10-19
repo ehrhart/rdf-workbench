@@ -30,6 +30,7 @@ export function ChangePasswordForm({
             name="currentPassword"
             type="password"
             autoComplete="current-password"
+            autoFocus={requireCurrentPassword}
             disabled={pending}
           />
           {state?.errors?.currentPassword && (
@@ -47,7 +48,7 @@ export function ChangePasswordForm({
           type="password"
           placeholder={`At least ${PASSWORD_MIN_LENGTH} characters`}
           minLength={PASSWORD_MIN_LENGTH}
-          autoFocus
+          autoFocus={!requireCurrentPassword}
           autoComplete="new-password"
           disabled={pending}
         />
