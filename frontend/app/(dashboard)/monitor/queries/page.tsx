@@ -113,6 +113,8 @@ export default function QueriesMonitorPage(): React.ReactElement {
   const [error, setError] = useState<string | null>(null)
   const [paused, setPaused] = useState<boolean>(false)
   const [expanded, setExpanded] = useState<Record<string, boolean>>({})
+  const [now, setNow] = useState<number>(() => Date.now())
+  const fetchedAtRef = useRef<number>(Date.now())
   const stringLimit = 100
 
   const fetchQueries = useCallback(
@@ -122,6 +124,7 @@ export default function QueriesMonitorPage(): React.ReactElement {
           setLoading(true)
         }
         const data = await getMonitoredQueries()
+        fetchedAtRef.current = Date.now()
         setQueries(sortQueries(data))
         setError(null)
       } catch (err) {
@@ -150,6 +153,20 @@ export default function QueriesMonitorPage(): React.ReactElement {
       if (intervalId) clearInterval(intervalId)
     }
   }, [paused, fetchQueries])
+
+  const hasRunningQuery = queries.some((query) => query.state === 'RUNNING')
+  const hasYoungRunningQuery = queries.some(
+    (query) =>
+      query.state === 'RUNNING' &&
+      query.lifetime + (now - fetchedAtRef.current) < 10_000
+  )
+  const tickerMs = hasYoungRunningQuery ? 100 : hasRunningQuery ? 1000 : 0
+
+  useEffect(() => {
+    if (paused || tickerMs === 0) return
+    const intervalId = setInterval(() => setNow(Date.now()), tickerMs)
+    return () => clearInterval(intervalId)
+  }, [paused, tickerMs])
 
   const togglePause = (): void => {
     setPaused(!paused)
@@ -308,12 +325,16 @@ export default function QueriesMonitorPage(): React.ReactElement {
                       <TableCell>
                         <Tooltip>
                           <TooltipTrigger>
-                            {formatDuration(query.lifetime)}
+                            {formatDuration(
+                              query.state === 'RUNNING'
+                                ? query.lifetime + (now - fetchedAtRef.current)
+                                : (query.durationMs ?? query.lifetime)
+                            )}
                           </TooltipTrigger>
                           <TooltipContent>
                             {query.durationMs !== undefined
                               ? `${query.durationMs} ms`
-                              : `${query.lifetime} ms so far`}
+                              : `${query.lifetime + (now - fetchedAtRef.current)} ms so far`}
                           </TooltipContent>
                         </Tooltip>
                       </TableCell>
