@@ -1,10 +1,14 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { ChangePasswordForm } from '@/components/auth/change-password-form'
-import RDFIcon from '@/components/rdf-icon'
+import { BrandMark } from '@/components/brand-mark'
 import { Card } from '@/components/ui/card'
 import { safeInternalRedirect } from '@/config/access'
-import { getInstanceName } from '@/lib/appearance/appearance-settings'
+import {
+  getAppearanceAssetMeta,
+  getInstanceName
+} from '@/lib/appearance/appearance-settings'
 import { getWorkbenchRuntime } from '@/lib/runtime'
 
 export const metadata: Metadata = {
@@ -26,16 +30,34 @@ export default async function ChangePasswordPage({
   const principal = await (await getWorkbenchRuntime()).auth.getPrincipal()
   if (!principal) redirect('/login')
 
-  const appName = await getInstanceName()
+  const [appName, logoMeta] = await Promise.all([
+    getInstanceName(),
+    getAppearanceAssetMeta('logo')
+  ])
   const redirectTarget = safeInternalRedirect(requestedRedirect)
+  const brand = (
+    <>
+      <BrandMark version={logoMeta?.updatedAt ?? null} className="size-5" />
+      <span className="text-base font-semibold">{appName}</span>
+    </>
+  )
 
   return (
     <div className="flex flex-col h-screen w-full bg-linear-to-br from-background to-secondary/20">
       <header className="py-5 px-6 flex items-center">
-        <div className="flex items-center space-x-2">
-          <RDFIcon className="size-5" />
-          <span className="text-base font-semibold">{appName}</span>
-        </div>
+        {principal.mustChangePassword ? (
+          // Flagged principals cannot leave this page: the proxy bounces
+          // every other path back here, and the round-trip would wipe the
+          // half-typed form.
+          <div className="flex items-center space-x-2">{brand}</div>
+        ) : (
+          <Link
+            href="/overview"
+            className="mr-6 flex items-center space-x-2 group"
+          >
+            {brand}
+          </Link>
+        )}
       </header>
       <div className="flex-1 flex items-center justify-center">
         <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[400px] animate-in fade-in slide-in-from-bottom-4 duration-500">
