@@ -38,11 +38,17 @@ export function isSparqlResultAccept(accept: string | null): boolean {
   return SPARQL_RESULT_MEDIA_TYPES.some((mime) => normalized.includes(mime))
 }
 
+function normalizeMediaType(value: string | null): string {
+  const [mime] = value?.split(';') ?? []
+  return mime?.trim().toLowerCase() ?? ''
+}
+
 export function isSparqlResultFormat(format: string | null): boolean {
-  if (!format) return false
-  const [mime] = format.split(';')
-  const normalized = mime?.trim().toLowerCase() ?? ''
-  return SPARQL_RESULT_MEDIA_TYPES.includes(normalized)
+  return SPARQL_RESULT_MEDIA_TYPES.includes(normalizeMediaType(format))
+}
+
+export function isHtmlFormat(format: string | null): boolean {
+  return normalizeMediaType(format) === 'text/html'
 }
 
 export function isSparqlQueryBody(contentType: string | null): boolean {

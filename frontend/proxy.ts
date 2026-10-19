@@ -15,6 +15,7 @@ import { isTriplestoreProvider } from '@/lib/runtime/contracts'
 import { computeFeatures } from '@/lib/runtime/features'
 import {
   acceptsHtml,
+  isHtmlFormat,
   isSparqlQueryBody,
   isSparqlResultAccept,
   isSparqlResultFormat
@@ -157,6 +158,7 @@ function classifySparqlRequest(request: NextRequest): SparqlRouting {
 
   const format = request.nextUrl.searchParams.get('format')
   if (format) {
+    if (isHtmlFormat(format)) return 'page'
     return isSparqlResultFormat(format) ? 'query' : 'not-acceptable'
   }
 
