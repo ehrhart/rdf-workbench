@@ -2,7 +2,7 @@
 
 import { cn } from 'cn'
 import { DownloadIcon, PauseIcon, PlayIcon, RefreshCwIcon } from 'lucide-react'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { DashboardHeader } from '@/components/dashboard/header'
 import { DashboardShell } from '@/components/dashboard/shell'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -58,6 +58,53 @@ function sortQueries(queries: MonitoredQuery[]): MonitoredQuery[] {
     if (byState !== 0) return byState
     return b.startedAt - a.startedAt
   })
+}
+
+function ExpandableQueryText({
+  text,
+  expanded,
+  onToggle
+}: {
+  text: string
+  expanded: boolean
+  onToggle: () => void
+}) {
+  const pressOrigin = useRef<{ x: number; y: number } | null>(null)
+
+  return (
+    // biome-ignore lint/a11y/useSemanticElements: selection requires a real pre
+    <pre
+      className="bg-muted hover:bg-muted/80 max-h-96 w-full cursor-pointer overflow-auto rounded-md p-2 font-mono text-xs wrap-break-words whitespace-pre-wrap"
+      title={expanded ? 'Click to collapse' : 'Click to expand'}
+      onMouseDown={(event) => {
+        pressOrigin.current = { x: event.clientX, y: event.clientY }
+      }}
+      onClick={(event) => {
+        const origin = pressOrigin.current
+        pressOrigin.current = null
+        if (!origin) return
+        const moved = Math.hypot(
+          event.clientX - origin.x,
+          event.clientY - origin.y
+        )
+        if (moved > 5) return
+        const selection = window.getSelection()
+        if (selection && !selection.isCollapsed) return
+        onToggle()
+      }}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault()
+          onToggle()
+        }
+      }}
+      // biome-ignore lint/a11y/noNoninteractiveElementToInteractiveRole: selection requires a real pre
+      role="button"
+      tabIndex={0}
+    >
+      {text}
+    </pre>
+  )
 }
 
 export default function QueriesMonitorPage(): React.ReactElement {
@@ -213,6 +260,7 @@ export default function QueriesMonitorPage(): React.ReactElement {
               <TableBody>
                 {queries.map((query) => {
                   const badge = STATE_BADGES[query.state]
+                  const isExpandable = query.query.length > stringLimit
                   return (
                     <TableRow key={query.id}>
                       <TableCell>
@@ -233,24 +281,22 @@ export default function QueriesMonitorPage(): React.ReactElement {
                           >
                             <DownloadIcon />
                           </Button>
-                          {query.query.length > stringLimit && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => toggleExpand(query.id)}
-                            >
-                              {expanded[query.id] ? 'Show Less' : 'Show More'}
-                            </Button>
-                          )}
                         </div>
-                        <pre
-                          className={`bg-muted max-h-96 w-full overflow-auto rounded-md p-2 text-xs wrap-break-words whitespace-pre-wrap`}
-                        >
-                          {expanded[query.id] ||
-                          query.query.length <= stringLimit
-                            ? query.query
-                            : `${query.query.substring(0, stringLimit)}...`}
-                        </pre>
+                        {isExpandable ? (
+                          <ExpandableQueryText
+                            text={
+                              expanded[query.id]
+                                ? query.query
+                                : `${query.query.substring(0, stringLimit)}...`
+                            }
+                            expanded={Boolean(expanded[query.id])}
+                            onToggle={() => toggleExpand(query.id)}
+                          />
+                        ) : (
+                          <pre className="bg-muted max-h-96 w-full overflow-auto rounded-md p-2 font-mono text-xs wrap-break-words whitespace-pre-wrap">
+                            {query.query}
+                          </pre>
+                        )}
                       </TableCell>
                       <TableCell className="font-mono text-xs">
                         {query.origin}
