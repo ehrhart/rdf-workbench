@@ -84,7 +84,8 @@ const navMain: NavItem[] = [
     icon: 'network',
     items: [
       { title: 'Graphs overview', url: '/graphs' },
-      { title: 'Visual graph', url: '/graphs-visualizations' }
+      { title: 'Visual graph', url: '/graphs-visualizations' },
+      { title: 'Namespaces', url: '/namespaces' }
     ]
   },
   {
@@ -99,7 +100,7 @@ const navMain: NavItem[] = [
     requiredFeature: 'ai-ask'
   },
   {
-    title: 'ISQL Console',
+    title: 'iSQL console',
     url: '/isql',
     icon: 'terminal',
     requiredFeature: 'virtuoso-isql',
@@ -111,7 +112,7 @@ const navMain: NavItem[] = [
     icon: 'activity',
     items: [
       {
-        title: 'Queries and update',
+        title: 'Queries and updates',
         url: '/monitor/queries',
         requiredFeature: 'query-monitor'
       },
@@ -125,7 +126,8 @@ const navMain: NavItem[] = [
     items: [
       {
         title: 'Namespaces',
-        url: '/namespaces',
+        url: '/admin/namespaces',
+        requiredRole: 'admin',
         requiredFeature: [
           'qlever-namespaces',
           'virtuoso-namespaces',
@@ -134,7 +136,7 @@ const navMain: NavItem[] = [
         ]
       },
       {
-        title: 'Full-Text Index',
+        title: 'Full-text index',
         url: '/fulltext-index',
         requiredFeature: 'virtuoso-fulltext'
       },
@@ -154,12 +156,12 @@ const navMain: NavItem[] = [
         requiredRole: 'admin'
       },
       {
-        title: 'Saved Queries',
+        title: 'Saved queries',
         url: '/admin/saved-queries',
         requiredRole: 'admin'
       },
       {
-        title: 'AI',
+        title: 'AI settings',
         url: '/admin/ai',
         requiredRole: 'admin',
         requiredFeature: 'ai-ask'

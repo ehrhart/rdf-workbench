@@ -111,7 +111,7 @@ export const ACCESS_RULES: AccessRule[] = [
     feature: 'virtuoso-fulltext'
   },
   { pattern: '/import', access: 'admin' },
-  { pattern: '/namespaces', access: 'session' },
+  { pattern: '/namespaces', access: 'anonymousRead' },
   { pattern: '/monitor/queries', access: 'session' },
   { pattern: '/monitor/system', access: 'session' },
 
