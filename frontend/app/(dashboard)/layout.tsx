@@ -42,7 +42,6 @@ export default async function DashboardLayout({
       }
     >
       <AppSidebar
-        variant="floating"
         user={user}
         updateInfo={updateInfo}
         navMainItems={getVisibleNavItems(runtime.navigation.navMain, user)}
