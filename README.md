@@ -257,6 +257,11 @@ Ask assistant variables:
 - `AI_PROFILE_MAX_SAMPLES`: maximum sample values per property; defaults to
   `3`.
 
+All seven tuning variables can also be set in the admin UI under Setup >
+AI settings; a saved value overrides the environment until reset. An
+invalid environment value affects only that setting, which falls back to
+its default.
+
 Local-account providers:
 
 - `BOOTSTRAP_ADMIN_USERNAME`

@@ -5,7 +5,7 @@ import {
   allowAnonymousReadEntry,
   type SettingEntry
 } from '@/lib/settings/registry'
-import type { SettingSource } from '@/lib/settings/resolve'
+import type { EnvResolution, SettingSource } from '@/lib/settings/resolve'
 import { getStoredResolution } from '@/lib/settings/store'
 
 export interface AccessFlags {
@@ -33,13 +33,14 @@ export async function getAccessFlags(): Promise<AccessFlags> {
 export interface AccessFlagDetail {
   key: string
   label: string
+  description: string | null
   envVar: string | null
   currentValue: boolean
   source: SettingSource
   /** Stored UI override, or null when absent or invalid. */
   storedValue: boolean | null
-  /** Parsed env value, or null when the variable is unset or invalid. */
-  envValue: boolean | null
+  /** The environment variable's contribution, including when it is set but invalid. */
+  env: EnvResolution<boolean>
 }
 
 export async function getAccessFlagDetails(): Promise<AccessFlagDetail[]> {
@@ -53,10 +54,11 @@ async function detailFor(
   return {
     key: entry.key,
     label: entry.label,
+    description: entry.description ?? null,
     envVar: entry.envVar,
     currentValue: resolution.value,
     source: resolution.source,
     storedValue: stored,
-    envValue: env
+    env
   }
 }

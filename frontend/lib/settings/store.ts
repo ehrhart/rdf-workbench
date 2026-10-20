@@ -5,6 +5,8 @@ import { z } from 'zod'
 import { getWorkbenchDatabase } from '@/lib/workbench-database'
 import { getSettingEntry, type SettingEntry } from './registry'
 import {
+  type EnvResolution,
+  resolveEnvironmentValue,
   resolveSetting,
   type SettingResolution,
   type SettingSource
@@ -20,8 +22,8 @@ export interface StoredResolution<T = unknown> {
   resolution: SettingResolution<T>
   /** The stored override alone, null when absent or invalid. */
   stored: T | null
-  /** The environment value alone, null when unset or invalid. */
-  env: T | null
+  /** The environment variable's contribution, including when it is set but invalid. */
+  env: EnvResolution<T>
 }
 
 /**
@@ -33,25 +35,50 @@ export interface StoredResolution<T = unknown> {
 export async function getStoredResolution<T>(
   entry: SettingEntry<T>
 ): Promise<StoredResolution<T>> {
-  let stored: T | null = null
+  const resolutions = await getStoredResolutions([entry])
+  return resolutions[entry.key]
+}
+
+/**
+ * Resolves several settings with one store read. Never throws for
+ * runtime problems, same contract as the single-key variant.
+ */
+export async function getStoredResolutions<T>(
+  entries: readonly SettingEntry<T>[]
+): Promise<Record<string, StoredResolution<T>>> {
+  let storedValues: Map<string, T | null>
   try {
     const db = await getWorkbenchDatabase()
     checkDrift(db)
-    const rows = selectRawStored(db, [entry.key])
-    stored = parseStoredValue(entry, rows[0]?.value ?? null)
+    const rows = selectRawStored(
+      db,
+      entries.map((entry) => entry.key)
+    )
+    const byKey = new Map(rows.map((row) => [row.key, row.value]))
+    storedValues = new Map()
+    for (const entry of entries) {
+      storedValues.set(
+        entry.key,
+        parseStoredValue(entry, byKey.get(entry.key) ?? null)
+      )
+    }
   } catch (error) {
     warnStoreUnavailable(error)
+    storedValues = new Map()
   }
 
-  const resolution = resolveSetting(entry, stored ?? undefined, process.env)
-  logOverride(entry, resolution)
-  const envResolution = resolveSetting(entry, undefined, process.env)
-
-  return {
-    resolution,
-    stored,
-    env: envResolution.source === 'environment' ? envResolution.value : null
+  const resolutions: Record<string, StoredResolution<T>> = {}
+  for (const entry of entries) {
+    const stored = storedValues.get(entry.key) ?? null
+    const resolution = resolveSetting(entry, stored ?? undefined, process.env)
+    logOverride(entry, resolution)
+    resolutions[entry.key] = {
+      resolution,
+      stored,
+      env: resolveEnvironmentValue(entry, process.env)
+    }
   }
+  return resolutions
 }
 
 /**

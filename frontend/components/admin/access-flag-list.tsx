@@ -7,7 +7,7 @@ import {
   resetAccessFlag,
   saveAccessFlag
 } from '@/app/(dashboard)/admin/access/actions'
-import { Badge } from '@/components/ui/badge'
+import { SettingSourceBadge } from '@/components/admin/setting-source-badge'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -18,22 +18,8 @@ import {
 } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger
-} from '@/components/ui/tooltip'
+import { TooltipProvider } from '@/components/ui/tooltip'
 import type { AccessFlagDetail } from '@/lib/access/access-flags'
-
-const SOURCE_BADGES: Record<
-  AccessFlagDetail['source'],
-  { label: string; variant: 'default' | 'secondary' | 'outline' }
-> = {
-  overridden: { label: 'Modified', variant: 'default' },
-  environment: { label: 'Deployment', variant: 'secondary' },
-  default: { label: 'Default', variant: 'outline' }
-}
 
 const STATE_TEXT: Record<string, { on: string; off: string }> = {
   'access.allowAnonymousRead': {
@@ -49,18 +35,6 @@ const STATE_TEXT: Record<string, { on: string; off: string }> = {
 function stateText(detail: AccessFlagDetail): string {
   const state = STATE_TEXT[detail.key]
   return detail.currentValue ? state.on : state.off
-}
-
-function badgeTooltip(detail: AccessFlagDetail): string | null {
-  if (detail.source === 'environment') {
-    return `Set by the environment variable ${detail.envVar}.`
-  }
-  if (detail.source === 'overridden') {
-    return detail.envValue === null
-      ? 'Changed in this app. Resetting returns to the built-in default.'
-      : `Changed in this app. Resetting returns to ${detail.envVar} (${detail.envValue ? 'on' : 'off'}).`
-  }
-  return null
 }
 
 function valuesFrom(details: AccessFlagDetail[]): Record<string, boolean> {
@@ -120,8 +94,6 @@ export function AccessFlagList({ details }: { details: AccessFlagDetail[] }) {
       <CardContent className="space-y-3">
         <TooltipProvider delayDuration={200}>
           {details.map((detail) => {
-            const badge = SOURCE_BADGES[detail.source]
-            const tooltip = badgeTooltip(detail)
             return (
               <div
                 key={detail.key}
@@ -130,20 +102,21 @@ export function AccessFlagList({ details }: { details: AccessFlagDetail[] }) {
                 <div className="min-w-0 space-y-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <Label htmlFor={detail.key}>{detail.label}</Label>
-                    {tooltip ? (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Badge variant={badge.variant}>{badge.label}</Badge>
-                        </TooltipTrigger>
-                        <TooltipContent>{tooltip}</TooltipContent>
-                      </Tooltip>
-                    ) : (
-                      <Badge variant={badge.variant}>{badge.label}</Badge>
-                    )}
+                    <SettingSourceBadge
+                      source={detail.source}
+                      envVar={detail.envVar}
+                      env={detail.env}
+                      currentValue={detail.currentValue}
+                    />
                   </div>
                   <p className="text-muted-foreground text-xs">
                     {stateText(detail)}
                   </p>
+                  {detail.description && (
+                    <p className="text-muted-foreground text-xs">
+                      {detail.description}
+                    </p>
+                  )}
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
                   {detail.storedValue !== null && (

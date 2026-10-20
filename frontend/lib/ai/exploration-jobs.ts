@@ -236,7 +236,7 @@ async function runExplore(
   onStep: () => void
 ): Promise<{ knowledge: string }> {
   const runtime = await getWorkbenchRuntime()
-  const aiConfig = getAiConfig()
+  const aiConfig = await getAiConfig()
   if (!aiConfig) throw new Error('AI is not configured')
 
   const [profile, settings] = await Promise.all([
@@ -308,7 +308,7 @@ async function runProfile(signal: AbortSignal): Promise<void> {
 }
 
 export async function startExploreJob(): Promise<AiJobDto> {
-  const aiConfig = getAiConfig()
+  const aiConfig = await getAiConfig()
   if (!aiConfig) throw new Error('AI is not configured')
   return startJob(
     'explore',
@@ -319,7 +319,7 @@ export async function startExploreJob(): Promise<AiJobDto> {
 }
 
 export async function startProfileJob(): Promise<AiJobDto> {
-  const aiConfig = getAiConfig()
+  const aiConfig = await getAiConfig()
   if (!aiConfig) throw new Error('AI is not configured')
   return startJob(
     'profile',

@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const aiConfig = getAiConfig()
+  const aiConfig = await getAiConfig()
   if (!aiConfig) {
     return NextResponse.json(
       {

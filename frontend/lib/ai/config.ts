@@ -2,65 +2,82 @@ import 'server-only'
 
 import { z } from 'zod'
 import { isAiConfigured } from '@/lib/runtime/features'
+import {
+  AI_TUNING_ENTRIES,
+  aiJobTimeoutMsEntry,
+  aiMaxStepsEntry,
+  aiProfileMaxClassesEntry,
+  aiProfileMaxPropertiesEntry,
+  aiProfileMaxSamplesEntry,
+  aiQueryTimeoutMsEntry,
+  aiResultLimitEntry
+} from '@/lib/settings/registry'
+import { getStoredResolutions } from '@/lib/settings/store'
 
-const aiConfigSchema = z.object({
+/**
+ * The three deployment variables that identify the assistant. They stay
+ * env-only: credentials and endpoints are structurally impossible to
+ * store. A parse failure here still disables the assistant as a whole,
+ * because without a working endpoint and model there is nothing to tune.
+ */
+const aiProviderSchema = z.object({
   AI_BASE_URL: z.string().url(),
   AI_API_KEY: z.string().min(1),
-  AI_MODEL: z.string().min(1),
-  AI_MAX_STEPS: z.coerce.number().int().min(2).max(20).default(20),
-  AI_QUERY_TIMEOUT_MS: z.coerce
-    .number()
-    .int()
-    .min(1_000)
-    .max(120_000)
-    .default(30_000),
-  AI_RESULT_LIMIT: z.coerce.number().int().min(1).max(10_000).default(1_000),
-  AI_JOB_TIMEOUT_MS: z.coerce
-    .number()
-    .int()
-    .min(30_000)
-    .max(3_600_000)
-    .default(900_000),
-  AI_PROFILE_MAX_CLASSES: z.coerce.number().int().min(1).max(500).default(60),
-  AI_PROFILE_MAX_PROPERTIES: z.coerce
-    .number()
-    .int()
-    .min(1)
-    .max(200)
-    .default(30),
-  AI_PROFILE_MAX_SAMPLES: z.coerce.number().int().min(1).max(10).default(3)
+  AI_MODEL: z.string().min(1)
 })
 
-export type AiConfig = z.infer<typeof aiConfigSchema>
+export interface AiConfig {
+  AI_BASE_URL: string
+  AI_API_KEY: string
+  AI_MODEL: string
+  AI_MAX_STEPS: number
+  AI_QUERY_TIMEOUT_MS: number
+  AI_RESULT_LIMIT: number
+  AI_JOB_TIMEOUT_MS: number
+  AI_PROFILE_MAX_CLASSES: number
+  AI_PROFILE_MAX_PROPERTIES: number
+  AI_PROFILE_MAX_SAMPLES: number
+}
 
-let cachedConfig: AiConfig | null | undefined
+let providerInvalidLogged = false
 
 /**
  * Parsed on demand so deployments without AI settings keep working and
- * the Next.js build never embeds the key.
+ * the Next.js build never embeds the key. Tuning knobs resolve through
+ * the settings store on every call, so a saved override applies without
+ * a restart. One invalid tuning variable degrades only its own knob to
+ * the registry default; the other knobs still apply.
  */
-export function getAiConfig(): AiConfig | null {
-  if (cachedConfig !== undefined) return cachedConfig
+export async function getAiConfig(): Promise<AiConfig | null> {
+  if (!isAiConfigured(process.env)) return null
 
-  if (!isAiConfigured(process.env)) {
-    cachedConfig = null
+  const provider = aiProviderSchema.safeParse(process.env)
+  if (!provider.success) {
+    if (!providerInvalidLogged) {
+      providerInvalidLogged = true
+      console.error(
+        '[ask] AI provider environment variables are invalid, assistant disabled:',
+        z.prettifyError(provider.error)
+      )
+    }
     return null
   }
 
-  const parsed = aiConfigSchema.safeParse(process.env)
-  if (!parsed.success) {
-    console.error(
-      '[ask] AI environment variables are invalid, assistant disabled:',
-      z.prettifyError(parsed.error)
-    )
-    cachedConfig = null
-    return null
+  const resolutions = await getStoredResolutions(AI_TUNING_ENTRIES)
+  return {
+    AI_BASE_URL: provider.data.AI_BASE_URL,
+    AI_API_KEY: provider.data.AI_API_KEY,
+    AI_MODEL: provider.data.AI_MODEL,
+    AI_MAX_STEPS: resolutions[aiMaxStepsEntry.key].resolution.value,
+    AI_QUERY_TIMEOUT_MS:
+      resolutions[aiQueryTimeoutMsEntry.key].resolution.value,
+    AI_RESULT_LIMIT: resolutions[aiResultLimitEntry.key].resolution.value,
+    AI_JOB_TIMEOUT_MS: resolutions[aiJobTimeoutMsEntry.key].resolution.value,
+    AI_PROFILE_MAX_CLASSES:
+      resolutions[aiProfileMaxClassesEntry.key].resolution.value,
+    AI_PROFILE_MAX_PROPERTIES:
+      resolutions[aiProfileMaxPropertiesEntry.key].resolution.value,
+    AI_PROFILE_MAX_SAMPLES:
+      resolutions[aiProfileMaxSamplesEntry.key].resolution.value
   }
-
-  cachedConfig = parsed.data
-  return parsed.data
-}
-
-export function isAiAskEnabled(): boolean {
-  return getAiConfig() !== null
 }

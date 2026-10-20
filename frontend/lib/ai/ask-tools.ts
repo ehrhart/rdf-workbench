@@ -109,7 +109,7 @@ function createRunQueryTool(
         .describe('One short line about what this query checks')
     }),
     execute: async ({ query }: { query: string }) => {
-      const aiConfig = getAiConfig()
+      const aiConfig = await getAiConfig()
       const resultLimit = aiConfig?.AI_RESULT_LIMIT ?? 1000
       const timeoutMs = aiConfig?.AI_QUERY_TIMEOUT_MS ?? 30_000
 

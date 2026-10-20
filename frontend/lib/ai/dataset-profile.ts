@@ -322,7 +322,7 @@ export async function buildDatasetProfile(
 ): Promise<DatasetProfile> {
   const runtime = await getWorkbenchRuntime()
   const runtimeConfig = getRuntimeConfig()
-  const aiConfig: AiConfig | null = getAiConfig()
+  const aiConfig: AiConfig | null = await getAiConfig()
   const maxClasses = aiConfig?.AI_PROFILE_MAX_CLASSES ?? 60
   const maxPropertiesPerClass = aiConfig?.AI_PROFILE_MAX_PROPERTIES ?? 30
   const maxSamples = aiConfig?.AI_PROFILE_MAX_SAMPLES ?? 3

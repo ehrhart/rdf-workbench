@@ -26,15 +26,33 @@ export function resolveSetting<T>(
     return { value: stored, source: 'overridden' }
   }
 
-  if (entry.envVar) {
-    const raw = env[entry.envVar]
-    if (raw !== undefined) {
-      const parsed = entry.schema.safeParse(raw)
-      if (parsed.success) {
-        return { value: parsed.data, source: 'environment' }
-      }
-    }
+  const envValue = resolveEnvironmentValue(entry, env)
+  if (envValue.state === 'valid') {
+    return { value: envValue.value, source: 'environment' }
   }
 
   return { value: entry.defaultValue, source: 'default' }
+}
+
+/**
+ * The environment contribution for one setting, including the invalid
+ * case so admin UIs can say the variable is set but unusable. An invalid
+ * value never resolves; callers fall to the default.
+ */
+export type EnvResolution<T = unknown> =
+  | { state: 'unset' }
+  | { state: 'valid'; value: T }
+  | { state: 'invalid'; raw: string }
+
+export function resolveEnvironmentValue<T>(
+  entry: SettingEntry<T>,
+  env: Record<string, string | undefined>
+): EnvResolution<T> {
+  if (!entry.envVar) return { state: 'unset' }
+  const raw = env[entry.envVar]
+  if (raw === undefined) return { state: 'unset' }
+  const parsed = entry.schema.safeParse(raw)
+  return parsed.success
+    ? { state: 'valid', value: parsed.data }
+    : { state: 'invalid', raw }
 }
