@@ -610,6 +610,15 @@ function ThinkingBlock({
   )
 }
 
+function PendingThinking() {
+  return (
+    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+      <LoaderIcon className="size-3.5 animate-spin" />
+      Thinking
+    </div>
+  )
+}
+
 type AssistantItem =
   | {
       kind: 'reasoning'
@@ -780,6 +789,7 @@ export function AssistantMessageView({
 
   return (
     <div className="group space-y-2.5">
+      {isLast && streaming && items.length === 0 && <PendingThinking />}
       {items.map((item) => {
         switch (item.kind) {
           case 'reasoning':
@@ -1095,6 +1105,7 @@ export function AskConsole({
                 />
               )
             })}
+            {streaming && lastMessage?.role === 'user' && <PendingThinking />}
             {status === 'streaming' && toolRunning && (
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <LoaderIcon className="size-3.5 animate-spin" />
