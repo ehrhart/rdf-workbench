@@ -23,10 +23,8 @@ export default async function AppearancePage() {
     <DashboardShell>
       <DashboardHeader heading="Appearance" />
       <AppearanceForm
-        initial={{
-          ...settings,
-          instanceName: settings.instanceName ?? getWorkbenchName()
-        }}
+        initial={settings}
+        fallbackInstanceName={getWorkbenchName()}
         logoVersion={logoMeta?.updatedAt ?? null}
       />
     </DashboardShell>

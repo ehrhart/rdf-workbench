@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/select'
 import {
   type AppearanceSettings,
+  BUILTIN_LIGHT_COLORS,
   DEFAULT_MODES,
   type DefaultMode,
   deriveTokens,
@@ -41,7 +42,7 @@ const DEFAULT_SETTINGS: AppearanceSettings = {
   primaryColor: null,
   accentColor: null,
   sidebarColor: null,
-  instanceName: '',
+  instanceName: null,
   radius: 'rounded',
   sidebarStyle: 'flush',
   defaultMode: 'light'
@@ -50,10 +51,12 @@ const DEFAULT_SETTINGS: AppearanceSettings = {
 function ColorField({
   label,
   value,
+  themeDefault,
   onChange
 }: {
   label: string
   value: string | null
+  themeDefault: string
   onChange: (value: string | null) => void
 }) {
   const [text, setText] = useState(value ?? '')
@@ -77,13 +80,13 @@ function ColorField({
           type="color"
           aria-label={label}
           className="size-9 cursor-pointer p-1"
-          value={value ?? '#000000'}
+          value={value ?? themeDefault}
           onChange={(event) => onChange(event.target.value)}
         />
         <Input
           aria-label={`${label} hex`}
           className="w-28 font-mono text-xs"
-          placeholder="not customized"
+          placeholder={themeDefault}
           value={text}
           onChange={(event) => {
             setText(event.target.value)
@@ -153,12 +156,16 @@ function PreviewPanel({
         <div className="rounded-lg border bg-card p-2 text-muted-foreground text-xs">
           Muted card text
         </div>
-        <div className="rounded-lg border p-1 text-xs">
-          <div className="px-2 py-1">Menu item</div>
-          <div className="rounded-md bg-accent px-2 py-1 text-accent-foreground">
-            Highlighted item
+        <div className="rounded-lg border p-1 text-sidebar-foreground text-xs">
+          <div className="rounded-md px-2 py-1 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
+            Menu item
           </div>
-          <div className="px-2 py-1">Menu item</div>
+          <div className="rounded-md bg-primary/10 px-2 py-1 font-medium text-sidebar-accent-foreground">
+            Active
+          </div>
+          <div className="rounded-md px-2 py-1 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
+            Menu item
+          </div>
         </div>
       </div>
     </div>
@@ -167,18 +174,21 @@ function PreviewPanel({
 
 export function AppearanceForm({
   initial,
+  fallbackInstanceName,
   logoVersion
 }: {
   initial: AppearanceSettings
+  fallbackInstanceName: string
   logoVersion: string | null
 }) {
   const [draft, setDraft] = useState<AppearanceSettings>(initial)
+  const [saved, setSaved] = useState<AppearanceSettings>(initial)
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [currentLogoVersion, setCurrentLogoVersion] = useState(logoVersion)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const derived = deriveTokens(draft)
-  const isDirty = JSON.stringify(draft) !== JSON.stringify(initial)
+  const isDirty = JSON.stringify(draft) !== JSON.stringify(saved)
   const isDefault = JSON.stringify(draft) === JSON.stringify(DEFAULT_SETTINGS)
 
   async function save(next: AppearanceSettings) {
@@ -190,6 +200,7 @@ export function AppearanceForm({
       return
     }
     setDraft(next)
+    setSaved(next)
     toast.success(result.message)
   }
 
@@ -251,6 +262,7 @@ export function AppearanceForm({
               id="instance-name"
               maxLength={60}
               value={draft.instanceName ?? ''}
+              placeholder={fallbackInstanceName}
               onChange={(event) =>
                 setDraft({ ...draft, instanceName: event.target.value })
               }
@@ -309,16 +321,19 @@ export function AppearanceForm({
             <ColorField
               label="Primary color"
               value={draft.primaryColor}
+              themeDefault={BUILTIN_LIGHT_COLORS.primary}
               onChange={(value) => setDraft({ ...draft, primaryColor: value })}
             />
             <ColorField
               label="Accent color"
               value={draft.accentColor}
+              themeDefault={BUILTIN_LIGHT_COLORS.accent}
               onChange={(value) => setDraft({ ...draft, accentColor: value })}
             />
             <ColorField
               label="Sidebar color"
               value={draft.sidebarColor}
+              themeDefault={BUILTIN_LIGHT_COLORS.sidebar}
               onChange={(value) => setDraft({ ...draft, sidebarColor: value })}
             />
           </div>

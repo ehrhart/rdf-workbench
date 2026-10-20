@@ -46,6 +46,12 @@ export const SIDEBAR_STYLES: readonly { id: SidebarStyle; label: string }[] = [
   { id: 'inset', label: 'Inset' }
 ]
 
+export const BUILTIN_LIGHT_COLORS = {
+  primary: '#171717',
+  accent: '#f5f5f5',
+  sidebar: '#fafafa'
+} as const
+
 function srgbToLinearChannel(c: number): number {
   return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
 }
