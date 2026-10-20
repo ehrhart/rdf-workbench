@@ -232,6 +232,10 @@ Common runtime variables:
   with the ask assistant. Applies only when the assistant is configured.
   Disabled by default.
 
+Both flags can also be managed in the admin UI under Setup > Access. A value
+saved there overrides the environment until it is reset, and every change is
+recorded in the settings history.
+
 Ask assistant variables:
 
 - `AI_BASE_URL`: base URL of an OpenAI-compatible API. The ask assistant is

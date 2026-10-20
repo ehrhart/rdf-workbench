@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server'
-import { anonymousReadEnabled } from '@/config/access'
+import { getAccessFlags } from '@/lib/access/access-flags'
 import { requirePrincipal } from '@/lib/api-auth'
 import { getProperties } from '@/lib/triplestore'
 
 export async function GET() {
-  if (!anonymousReadEnabled()) {
+  const { allowAnonymousRead } = await getAccessFlags()
+  if (!allowAnonymousRead) {
     const auth = await requirePrincipal()
     if (auth.response) return auth.response
   }

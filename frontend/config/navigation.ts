@@ -1,4 +1,5 @@
-import { anonymousAskEnabled, resolveBaseAccess } from '@/config/access'
+import { resolveBaseAccess } from '@/config/access'
+import { getAccessFlags } from '@/lib/access/access-flags'
 import type { FeatureId, TriplestoreProvider } from '@/lib/runtime/contracts'
 
 export type NavIcon =
@@ -148,6 +149,11 @@ const navMain: NavItem[] = [
         requiredRole: 'admin'
       },
       {
+        title: 'Access',
+        url: '/admin/access',
+        requiredRole: 'admin'
+      },
+      {
         title: 'Saved Queries',
         url: '/admin/saved-queries',
         requiredRole: 'admin'
@@ -208,13 +214,17 @@ export function buildNavigation(
   }
 }
 
-function isVisible(item: NavItem, user: NavUser | null): boolean {
+function isVisible(
+  item: NavItem,
+  user: NavUser | null,
+  allowAnonymousAsk: boolean
+): boolean {
   if (item.url) {
     const baseAccess = resolveBaseAccess(item.url)
     if ((baseAccess === 'session' || baseAccess === 'admin') && !user) {
       return false
     }
-    if (baseAccess === 'anonymousAsk' && !user && !anonymousAskEnabled()) {
+    if (baseAccess === 'anonymousAsk' && !user && !allowAnonymousAsk) {
       return false
     }
   }
@@ -226,16 +236,19 @@ function isVisible(item: NavItem, user: NavUser | null): boolean {
  * Filters items by access visibility. Runs on the server only: the
  * dashboard layout calls it before the lists reach the client sidebar,
  * so visibility can be derived from `config/access.ts` without sending
- * policy or env reads to the browser.
+ * policy or flag reads to the browser.
  */
-export function getVisibleNavItems(
+export async function getVisibleNavItems(
   items: NavItem[],
   user: NavUser | null
-): NavItem[] {
+): Promise<NavItem[]> {
+  const { allowAnonymousAsk } = await getAccessFlags()
   return items
-    .filter((item) => isVisible(item, user))
+    .filter((item) => isVisible(item, user, allowAnonymousAsk))
     .map((item) => ({
       ...item,
-      items: item.items?.filter((child) => isVisible(child, user))
+      items: item.items?.filter((child) =>
+        isVisible(child, user, allowAnonymousAsk)
+      )
     }))
 }

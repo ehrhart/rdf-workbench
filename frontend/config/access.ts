@@ -8,10 +8,11 @@ import type { FeatureId } from '@/lib/runtime/contracts'
 
 /**
  * - `public`: reachable without a session, flag or no flag.
- * - `anonymousRead`: reachable without a session while
- *   `ALLOW_ANONYMOUS_READ` is set; requires a session otherwise.
- * - `anonymousAsk`: reachable without a session while
- *   `ALLOW_ANONYMOUS_ASK` is set; requires a session otherwise.
+ * - `anonymousRead`: reachable without a session while the resolved
+ *   allow-anonymous-read flag is on (env or a stored UI override);
+ *   requires a session otherwise.
+ * - `anonymousAsk`: same for the allow-anonymous-ask flag; requires a
+ *   session otherwise.
  * - `session`: requires an authenticated principal (any role).
  * - `admin`: requires an authenticated principal with the admin role.
  */
@@ -96,10 +97,6 @@ export const ACCESS_RULES: AccessRule[] = [
   // enforced at the endpoint layer, not by this route-level access rule.
   { pattern: '/api/sparql', access: 'public' },
 
-  // Ask consumes the deployment's LLM budget. ALLOW_ANONYMOUS_ASK controls
-  // whether anonymous visitors can chat; otherwise, a session is required.
-  // Anonymous chats are not persisted, so /api/conversations remains
-  // session-only. Profile rebuild authorization is enforced in the route.
   { pattern: '/api/ask', access: 'anonymousAsk' },
   { pattern: '/ask', access: 'anonymousAsk' },
   { pattern: '/api/conversations', access: 'session' },
@@ -161,16 +158,6 @@ function ruleMatches(rule: AccessRule, pathname: string): boolean {
       (segment.startsWith('[') && segment.endsWith(']')) ||
       segment === pathSegments[index]
   )
-}
-
-export function anonymousReadEnabled(): boolean {
-  const value = process.env.ALLOW_ANONYMOUS_READ
-  return value === '1' || value?.toLowerCase() === 'true'
-}
-
-export function anonymousAskEnabled(): boolean {
-  const value = process.env.ALLOW_ANONYMOUS_ASK
-  return value === '1' || value?.toLowerCase() === 'true'
 }
 
 /**

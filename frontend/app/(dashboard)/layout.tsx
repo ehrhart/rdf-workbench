@@ -28,11 +28,14 @@ export default async function DashboardLayout({
       }
     : null
   const updateInfo = session ? await getUpdateInfo() : null
-  const [appName, logoMeta, appearance] = await Promise.all([
-    getInstanceName(),
-    getAppearanceAssetMeta('logo'),
-    getAppearanceSettings()
-  ])
+  const [appName, logoMeta, appearance, navMainItems, navSecondaryItems] =
+    await Promise.all([
+      getInstanceName(),
+      getAppearanceAssetMeta('logo'),
+      getAppearanceSettings(),
+      getVisibleNavItems(runtime.navigation.navMain, user),
+      getVisibleNavItems(runtime.navigation.navSecondary, user)
+    ])
 
   return (
     <SidebarProvider
@@ -51,11 +54,8 @@ export default async function DashboardLayout({
         }
         user={user}
         updateInfo={updateInfo}
-        navMainItems={getVisibleNavItems(runtime.navigation.navMain, user)}
-        navSecondaryItems={getVisibleNavItems(
-          runtime.navigation.navSecondary,
-          user
-        )}
+        navMainItems={navMainItems}
+        navSecondaryItems={navSecondaryItems}
         appName={appName}
         brandLogoVersion={logoMeta?.updatedAt ?? null}
       />

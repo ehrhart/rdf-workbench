@@ -1,7 +1,5 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import {
-  anonymousAskEnabled,
-  anonymousReadEnabled,
   isPasswordChangeAllowed,
   PASSWORD_CHANGE_PATH,
   resolveAccess
@@ -51,12 +49,15 @@ export async function proxy(request: NextRequest) {
     return NextResponse.rewrite(new URL('/api/sparql/query', request.url))
   }
 
+  const { getAccessFlags } = await import('./lib/access/access-flags')
+  const { allowAnonymousRead, allowAnonymousAsk } = await getAccessFlags()
+
   const decision = resolveAccess(pathname, {
     features: provider
       ? computeFeatures(provider, process.env)
       : new Set<FeatureId>(),
-    anonymousReadEnabled: anonymousReadEnabled(),
-    anonymousAskEnabled: anonymousAskEnabled()
+    anonymousReadEnabled: allowAnonymousRead,
+    anonymousAskEnabled: allowAnonymousAsk
   })
 
   if (decision.featureMissing) {

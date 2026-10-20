@@ -2,11 +2,8 @@ import 'server-only'
 
 import { notFound, redirect } from 'next/navigation'
 import type { AccessLevel } from '@/config/access'
-import {
-  anonymousAskEnabled,
-  anonymousReadEnabled,
-  PASSWORD_CHANGE_PATH
-} from '@/config/access'
+import { PASSWORD_CHANGE_PATH } from '@/config/access'
+import { getAccessFlags } from '@/lib/access/access-flags'
 import { getRuntimeConfig } from './config'
 import type {
   FeatureId,
@@ -70,11 +67,15 @@ export async function requirePageAccess(
   access: AccessLevel,
   redirectPath?: string
 ): Promise<void> {
-  const requiresPrincipal =
-    access === 'session' ||
-    access === 'admin' ||
-    (access === 'anonymousRead' && !anonymousReadEnabled()) ||
-    (access === 'anonymousAsk' && !anonymousAskEnabled())
+  let requiresPrincipal = access === 'session' || access === 'admin'
+  if (
+    !requiresPrincipal &&
+    (access === 'anonymousRead' || access === 'anonymousAsk')
+  ) {
+    const { allowAnonymousRead, allowAnonymousAsk } = await getAccessFlags()
+    requiresPrincipal =
+      access === 'anonymousRead' ? !allowAnonymousRead : !allowAnonymousAsk
+  }
   if (!requiresPrincipal) return
 
   const principal = await (await getWorkbenchRuntime()).auth.getPrincipal()

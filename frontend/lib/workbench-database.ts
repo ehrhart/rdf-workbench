@@ -324,6 +324,31 @@ function migrate(db: Database.Database): void {
     })()
   }
 
+  if (current.version < 15) {
+    db.transaction(() => {
+      db.exec(`
+        CREATE TABLE settings (
+          key TEXT PRIMARY KEY,
+          value TEXT NOT NULL,
+          updated_at TEXT NOT NULL
+        );
+
+        CREATE TABLE settings_history (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          key TEXT NOT NULL,
+          old_value TEXT,
+          new_value TEXT,
+          principal TEXT NOT NULL,
+          at TEXT NOT NULL
+        );
+        CREATE INDEX settings_history_key_idx ON settings_history(key, at);
+      `)
+      db.prepare(
+        'INSERT INTO schema_migrations (version, applied_at) VALUES (15, ?)'
+      ).run(new Date().toISOString())
+    })()
+  }
+
   // A job can only be running while the process that started it lives, so
   // any running row seen at open time belongs to a dead process.
   db.prepare(`
@@ -410,6 +435,12 @@ async function initialize(): Promise<Database.Database> {
 
 export async function getWorkbenchDatabase(): Promise<Database.Database> {
   if (database) return database
-  initialization ??= initialize()
+  initialization ??= initialize().catch((error) => {
+    // A failed boot (read-only filesystem, lock contention) must not
+    // poison the promise for the process lifetime: the next request
+    // retries, so a transient failure can recover.
+    initialization = undefined
+    throw error
+  })
   return initialization
 }

@@ -1,7 +1,7 @@
 import 'server-only'
 
 import { NextResponse } from 'next/server'
-import { anonymousAskEnabled } from '@/config/access'
+import { getAccessFlags } from '@/lib/access/access-flags'
 import { getWorkbenchRuntime } from '@/lib/runtime'
 import type { Principal } from '@/lib/runtime/contracts'
 
@@ -87,8 +87,11 @@ export async function requireAskPrincipal(): Promise<MaybeAnonymousGuard> {
   const principal = resolved.principal?.mustChangePassword
     ? null
     : (resolved.principal ?? null)
-  if (!principal && !anonymousAskEnabled()) {
-    return { response: unauthenticatedResponse() }
+  if (!principal) {
+    const { allowAnonymousAsk } = await getAccessFlags()
+    if (!allowAnonymousAsk) {
+      return { response: unauthenticatedResponse() }
+    }
   }
   return { principal }
 }

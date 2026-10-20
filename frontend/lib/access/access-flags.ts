@@ -1,0 +1,62 @@
+import 'server-only'
+
+import {
+  allowAnonymousAskEntry,
+  allowAnonymousReadEntry,
+  type SettingEntry
+} from '@/lib/settings/registry'
+import type { SettingSource } from '@/lib/settings/resolve'
+import { getStoredResolution } from '@/lib/settings/store'
+
+export interface AccessFlags {
+  allowAnonymousRead: boolean
+  allowAnonymousAsk: boolean
+}
+
+const accessEntries = [allowAnonymousReadEntry, allowAnonymousAskEntry]
+
+/**
+ * The two access flags, resolved through the settings store. No caching:
+ * a saved or reset override must take effect on the next request.
+ */
+export async function getAccessFlags(): Promise<AccessFlags> {
+  const [read, ask] = await Promise.all([
+    getStoredResolution(allowAnonymousReadEntry),
+    getStoredResolution(allowAnonymousAskEntry)
+  ])
+  return {
+    allowAnonymousRead: read.resolution.value,
+    allowAnonymousAsk: ask.resolution.value
+  }
+}
+
+export interface AccessFlagDetail {
+  key: string
+  label: string
+  envVar: string | null
+  currentValue: boolean
+  source: SettingSource
+  /** Stored UI override, or null when absent or invalid. */
+  storedValue: boolean | null
+  /** Parsed env value, or null when the variable is unset or invalid. */
+  envValue: boolean | null
+}
+
+export async function getAccessFlagDetails(): Promise<AccessFlagDetail[]> {
+  return Promise.all(accessEntries.map(detailFor))
+}
+
+async function detailFor(
+  entry: SettingEntry<boolean>
+): Promise<AccessFlagDetail> {
+  const { resolution, stored, env } = await getStoredResolution(entry)
+  return {
+    key: entry.key,
+    label: entry.label,
+    envVar: entry.envVar,
+    currentValue: resolution.value,
+    source: resolution.source,
+    storedValue: stored,
+    envValue: env
+  }
+}

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { anonymousReadEnabled } from '@/config/access'
+import { getAccessFlags } from '@/lib/access/access-flags'
 import { requirePrincipal, resolveOptionalViewer } from '@/lib/api-auth'
 import { AuthError, ConnectionError, QueryError } from '@/lib/errors'
 import { getWorkbenchRuntime } from '@/lib/runtime'
@@ -58,7 +58,8 @@ export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!anonymousReadEnabled()) {
+  const { allowAnonymousRead } = await getAccessFlags()
+  if (!allowAnonymousRead) {
     const auth = await requirePrincipal()
     if (auth.response) return auth.response
     const { id } = await params
