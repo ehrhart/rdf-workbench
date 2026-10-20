@@ -4,7 +4,8 @@ import { parseImageDataUrl } from '@/lib/appearance/branding'
 import type {
   AppearanceSettings,
   DefaultMode,
-  RadiusChoice
+  RadiusChoice,
+  SidebarStyle
 } from '@/lib/appearance/tokens'
 import { getWorkbenchName } from '@/lib/runtime/config'
 import { getWorkbenchDatabase } from '@/lib/workbench-database'
@@ -15,19 +16,25 @@ const HEX_PATTERN = /^#[0-9a-f]{6}$/i
 const INSTANCE_NAME_MAX = 60
 
 const RADIUS_IDS: readonly RadiusChoice[] = [
-  'default',
   'sharp',
-  'medium',
-  'large'
+  'subtle',
+  'rounded',
+  'soft'
 ]
 const DEFAULT_MODE_IDS: readonly DefaultMode[] = ['light', 'dark', 'system']
+const SIDEBAR_STYLE_IDS: readonly SidebarStyle[] = [
+  'flush',
+  'floating',
+  'inset'
+]
 
 const DEFAULTS: AppearanceSettings = {
   primaryColor: null,
   accentColor: null,
   sidebarColor: null,
   instanceName: null,
-  radius: 'default',
+  radius: 'rounded',
+  sidebarStyle: 'flush',
   defaultMode: 'light'
 }
 
@@ -37,6 +44,7 @@ interface AppearanceSettingsRow {
   sidebar_color: string | null
   instance_name: string | null
   radius: string
+  sidebar_style: string
   default_mode: string
 }
 
@@ -68,7 +76,7 @@ export async function getAppearanceSettings(): Promise<AppearanceSettings> {
     const db = await getWorkbenchDatabase()
     const row = db
       .prepare(
-        'SELECT primary_color, accent_color, sidebar_color, instance_name, radius, default_mode FROM appearance_settings WHERE id = 1'
+        'SELECT primary_color, accent_color, sidebar_color, instance_name, radius, sidebar_style, default_mode FROM appearance_settings WHERE id = 1'
       )
       .get() as AppearanceSettingsRow | undefined
     if (!row) return { ...DEFAULTS }
@@ -77,7 +85,8 @@ export async function getAppearanceSettings(): Promise<AppearanceSettings> {
       accentColor: normalizeColor(row.accent_color),
       sidebarColor: normalizeColor(row.sidebar_color),
       instanceName: normalizeInstanceName(row.instance_name),
-      radius: readChoice(row.radius, RADIUS_IDS, 'default'),
+      radius: readChoice(row.radius, RADIUS_IDS, 'rounded'),
+      sidebarStyle: readChoice(row.sidebar_style, SIDEBAR_STYLE_IDS, 'flush'),
       defaultMode: readChoice(row.default_mode, DEFAULT_MODE_IDS, 'light')
     }
   } catch {
@@ -121,6 +130,11 @@ export async function saveAppearanceSettings(
   const sidebarColor = requireColor(input.sidebarColor, 'Sidebar color')
   const instanceName = requireInstanceName(input.instanceName ?? null)
   const radius = requireChoice(input.radius, RADIUS_IDS, 'radius')
+  const sidebarStyle = requireChoice(
+    input.sidebarStyle,
+    SIDEBAR_STYLE_IDS,
+    'sidebar style'
+  )
   const defaultMode = requireChoice(
     input.defaultMode,
     DEFAULT_MODE_IDS,
@@ -130,7 +144,7 @@ export async function saveAppearanceSettings(
   const db = await getWorkbenchDatabase()
   db.prepare(
     `UPDATE appearance_settings
-     SET primary_color = ?, accent_color = ?, sidebar_color = ?, instance_name = ?, radius = ?, default_mode = ?, updated_at = ?
+     SET primary_color = ?, accent_color = ?, sidebar_color = ?, instance_name = ?, radius = ?, sidebar_style = ?, default_mode = ?, updated_at = ?
      WHERE id = 1`
   ).run(
     primaryColor,
@@ -138,6 +152,7 @@ export async function saveAppearanceSettings(
     sidebarColor,
     instanceName,
     radius,
+    sidebarStyle,
     defaultMode,
     new Date().toISOString()
   )
@@ -148,6 +163,7 @@ export async function saveAppearanceSettings(
     sidebarColor,
     instanceName,
     radius,
+    sidebarStyle,
     defaultMode
   }
 }

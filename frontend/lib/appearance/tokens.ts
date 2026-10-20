@@ -1,4 +1,5 @@
-export type RadiusChoice = 'default' | 'sharp' | 'medium' | 'large'
+export type RadiusChoice = 'sharp' | 'subtle' | 'rounded' | 'soft'
+export type SidebarStyle = 'flush' | 'floating' | 'inset'
 export type DefaultMode = 'light' | 'dark' | 'system'
 
 export interface AppearanceSettings {
@@ -7,6 +8,7 @@ export interface AppearanceSettings {
   sidebarColor: string | null
   instanceName: string | null
   radius: RadiusChoice
+  sidebarStyle: SidebarStyle
   defaultMode: DefaultMode
 }
 
@@ -24,18 +26,24 @@ interface Oklch {
 export const RADIUS_CHOICES: readonly {
   id: RadiusChoice
   label: string
-  value: string | null
+  value: string
 }[] = [
-  { id: 'default', label: 'Default', value: null },
-  { id: 'sharp', label: 'Sharp', value: '0.125rem' },
-  { id: 'medium', label: 'Medium', value: '0.625rem' },
-  { id: 'large', label: 'Large', value: '1.25rem' }
+  { id: 'sharp', label: 'Sharp', value: '0rem' },
+  { id: 'subtle', label: 'Subtle', value: '0.25rem' },
+  { id: 'rounded', label: 'Rounded', value: '0.625rem' },
+  { id: 'soft', label: 'Soft', value: '1.25rem' }
 ]
 
 export const DEFAULT_MODES: readonly { id: DefaultMode; label: string }[] = [
   { id: 'light', label: 'Light' },
   { id: 'dark', label: 'Dark' },
   { id: 'system', label: 'System' }
+]
+
+export const SIDEBAR_STYLES: readonly { id: SidebarStyle; label: string }[] = [
+  { id: 'flush', label: 'Flush' },
+  { id: 'floating', label: 'Floating' },
+  { id: 'inset', label: 'Inset' }
 ]
 
 function srgbToLinearChannel(c: number): number {

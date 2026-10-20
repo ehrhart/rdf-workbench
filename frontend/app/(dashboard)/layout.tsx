@@ -5,6 +5,7 @@ import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { getVisibleNavItems } from '@/config/navigation'
 import {
   getAppearanceAssetMeta,
+  getAppearanceSettings,
   getInstanceName
 } from '@/lib/appearance/appearance-settings'
 import { getWorkbenchRuntime } from '@/lib/runtime'
@@ -27,9 +28,10 @@ export default async function DashboardLayout({
       }
     : null
   const updateInfo = session ? await getUpdateInfo() : null
-  const [appName, logoMeta] = await Promise.all([
+  const [appName, logoMeta, appearance] = await Promise.all([
     getInstanceName(),
-    getAppearanceAssetMeta('logo')
+    getAppearanceAssetMeta('logo'),
+    getAppearanceSettings()
   ])
 
   return (
@@ -42,6 +44,11 @@ export default async function DashboardLayout({
       }
     >
       <AppSidebar
+        variant={
+          appearance.sidebarStyle === 'flush'
+            ? 'sidebar'
+            : appearance.sidebarStyle
+        }
         user={user}
         updateInfo={updateInfo}
         navMainItems={getVisibleNavItems(runtime.navigation.navMain, user)}

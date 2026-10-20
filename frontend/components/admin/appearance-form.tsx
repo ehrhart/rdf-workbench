@@ -32,7 +32,9 @@ import {
   type DefaultMode,
   deriveTokens,
   RADIUS_CHOICES,
-  type RadiusChoice
+  type RadiusChoice,
+  SIDEBAR_STYLES,
+  type SidebarStyle
 } from '@/lib/appearance/tokens'
 
 const DEFAULT_SETTINGS: AppearanceSettings = {
@@ -40,7 +42,8 @@ const DEFAULT_SETTINGS: AppearanceSettings = {
   accentColor: null,
   sidebarColor: null,
   instanceName: '',
-  radius: 'default',
+  radius: 'rounded',
+  sidebarStyle: 'flush',
   defaultMode: 'light'
 }
 
@@ -105,44 +108,57 @@ function ColorField({
 
 function PreviewPanel({
   mode,
-  variables
+  variables,
+  sidebarStyle
 }: {
   mode: 'light' | 'dark'
   variables: Record<string, string>
+  sidebarStyle: SidebarStyle
 }) {
   return (
     <div
       className={cn(
-        'space-y-3 rounded-xl border bg-background p-3 text-foreground',
-        mode === 'dark' && 'dark'
+        'flex overflow-hidden rounded-[8px] border text-foreground',
+        mode === 'dark' && 'dark',
+        sidebarStyle === 'inset' && 'bg-sidebar'
       )}
       style={{ ...variables } as React.CSSProperties}
     >
-      <div className="flex gap-2">
-        <div className="w-20 shrink-0 space-y-1 rounded-lg bg-sidebar p-1.5 text-sidebar-foreground text-xs">
-          <div className="rounded-md bg-sidebar-accent px-1.5 py-1 text-sidebar-accent-foreground">
-            Active
-          </div>
-          <div className="px-1.5 py-1 opacity-80">Item</div>
+      <div
+        className={cn(
+          'flex w-20 shrink-0 flex-col gap-1 bg-sidebar p-1.5 text-sidebar-foreground text-xs',
+          sidebarStyle === 'flush' && 'rounded-r-lg',
+          sidebarStyle === 'floating' &&
+            'm-2 rounded-lg shadow-sm ring-1 ring-sidebar-border'
+        )}
+      >
+        <div className="rounded-md bg-sidebar-accent px-1.5 py-1 text-sidebar-accent-foreground">
+          Active
         </div>
-        <div className="min-w-0 flex-1 space-y-2">
-          <div className="flex flex-wrap items-center gap-2">
-            <Button size="sm">Primary</Button>
-            <Button size="sm" variant="outline">
-              Outline
-            </Button>
-            <Badge>Badge</Badge>
+        <div className="px-1.5 py-1 opacity-80">Item</div>
+      </div>
+      <div
+        className={cn(
+          'min-w-0 flex-1 space-y-2 p-3',
+          sidebarStyle === 'inset' && 'm-2 ml-0 rounded-xl bg-background'
+        )}
+      >
+        <div className="flex flex-wrap items-center gap-2">
+          <Button size="sm">Primary</Button>
+          <Button size="sm" variant="outline">
+            Outline
+          </Button>
+          <Badge>Badge</Badge>
+        </div>
+        <div className="rounded-lg border bg-card p-2 text-muted-foreground text-xs">
+          Muted card text
+        </div>
+        <div className="rounded-lg border p-1 text-xs">
+          <div className="px-2 py-1">Menu item</div>
+          <div className="rounded-md bg-accent px-2 py-1 text-accent-foreground">
+            Highlighted item
           </div>
-          <div className="rounded-lg border bg-card p-2 text-muted-foreground text-xs">
-            Muted card text
-          </div>
-          <div className="rounded-lg border p-1 text-xs">
-            <div className="px-2 py-1">Menu item</div>
-            <div className="rounded-md bg-accent px-2 py-1 text-accent-foreground">
-              Highlighted item
-            </div>
-            <div className="px-2 py-1">Menu item</div>
-          </div>
+          <div className="px-2 py-1">Menu item</div>
         </div>
       </div>
     </div>
@@ -329,6 +345,26 @@ export function AppearanceForm({
               </Select>
             </div>
             <div className="space-y-1.5">
+              <Label>Sidebar style</Label>
+              <Select
+                value={draft.sidebarStyle}
+                onValueChange={(value) =>
+                  setDraft({ ...draft, sidebarStyle: value as SidebarStyle })
+                }
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {SIDEBAR_STYLES.map((style) => (
+                    <SelectItem key={style.id} value={style.id}>
+                      {style.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
               <Label>Default theme mode</Label>
               <Select
                 value={draft.defaultMode}
@@ -355,11 +391,19 @@ export function AppearanceForm({
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-1">
                 <p className="text-muted-foreground text-xs">Light</p>
-                <PreviewPanel mode="light" variables={derived.light} />
+                <PreviewPanel
+                  mode="light"
+                  variables={derived.light}
+                  sidebarStyle={draft.sidebarStyle}
+                />
               </div>
               <div className="space-y-1">
                 <p className="text-muted-foreground text-xs">Dark</p>
-                <PreviewPanel mode="dark" variables={derived.dark} />
+                <PreviewPanel
+                  mode="dark"
+                  variables={derived.dark}
+                  sidebarStyle={draft.sidebarStyle}
+                />
               </div>
             </div>
           </div>

@@ -3,6 +3,7 @@
 import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from 'cn'
 import { PanelLeftIcon } from 'lucide-react'
+import { usePathname } from 'next/navigation'
 import { Slot } from 'radix-ui'
 import * as React from 'react'
 import { Button } from '@/components/ui/button'
@@ -136,7 +137,7 @@ function SidebarProvider({
           } as React.CSSProperties
         }
         className={cn(
-          'group/sidebar-wrapper flex min-h-svh w-full has-data-[variant=inset]:bg-sidebar',
+          'group/sidebar-wrapper flex min-h-svh w-full has-data-[variant=inset]:bg-sidebar md:has-data-[variant=inset]:h-svh md:has-data-[variant=inset]:overflow-hidden md:has-data-[variant=inset]:pt-2 md:has-data-[variant=inset]:pr-2 md:has-data-[variant=inset]:pb-2',
           className
         )}
         {...props}
@@ -232,7 +233,7 @@ function Sidebar({
           // Adjust the padding for floating and inset variants.
           variant === 'floating' || variant === 'inset'
             ? 'p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4))+2px)]'
-            : 'group-data-[collapsible=icon]:w-(--sidebar-width-icon) group-data-[side=left]:border-r group-data-[side=right]:border-l',
+            : 'group-data-[collapsible=icon]:w-(--sidebar-width-icon) group-data-[side=left]:border-r group-data-[side=left]:rounded-r-lg group-data-[side=right]:border-l group-data-[side=right]:rounded-l-lg',
           className
         )}
         {...props}
@@ -240,7 +241,7 @@ function Sidebar({
         <div
           data-sidebar="sidebar"
           data-slot="sidebar-inner"
-          className="flex size-full flex-col bg-sidebar group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:shadow-sm group-data-[variant=floating]:ring-1 group-data-[variant=floating]:ring-sidebar-border"
+          className="flex size-full flex-col bg-sidebar group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:shadow-sm group-data-[variant=floating]:ring-1 group-data-[variant=floating]:ring-sidebar-border group-data-[side=left]:rounded-r-lg group-data-[side=right]:rounded-l-lg"
         >
           {children}
         </div>
@@ -301,11 +302,19 @@ function SidebarRail({ className, ...props }: React.ComponentProps<'button'>) {
 }
 
 function SidebarInset({ className, ...props }: React.ComponentProps<'main'>) {
+  const pathname = usePathname()
+  const insetRef = React.useRef<HTMLElement>(null)
+
+  React.useEffect(() => {
+    insetRef.current?.scrollTo({ top: 0 })
+  }, [pathname])
+
   return (
     <main
+      ref={insetRef}
       data-slot="sidebar-inset"
       className={cn(
-        'relative flex w-full flex-1 flex-col bg-background md:peer-data-[variant=inset]:m-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow-sm md:peer-data-[variant=inset]:peer-data-[state=collapsed]:ml-2',
+        'relative flex w-full flex-1 flex-col bg-background md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow-sm md:peer-data-[variant=inset]:overflow-y-auto md:peer-data-[variant=inset]:peer-data-[state=collapsed]:ml-2',
         className
       )}
       {...props}

@@ -300,6 +300,30 @@ function migrate(db: Database.Database): void {
     })()
   }
 
+  if (current.version < 13) {
+    db.transaction(() => {
+      db.exec(`
+        UPDATE appearance_settings SET radius = 'rounded' WHERE radius IN ('default', 'medium');
+        UPDATE appearance_settings SET radius = 'soft' WHERE radius IN ('large', 'pill');
+      `)
+      db.prepare(
+        'INSERT INTO schema_migrations (version, applied_at) VALUES (13, ?)'
+      ).run(new Date().toISOString())
+    })()
+  }
+
+  if (current.version < 14) {
+    db.transaction(() => {
+      db.exec(`
+        ALTER TABLE appearance_settings
+          ADD COLUMN sidebar_style TEXT NOT NULL DEFAULT 'flush';
+      `)
+      db.prepare(
+        'INSERT INTO schema_migrations (version, applied_at) VALUES (14, ?)'
+      ).run(new Date().toISOString())
+    })()
+  }
+
   // A job can only be running while the process that started it lives, so
   // any running row seen at open time belongs to a dead process.
   db.prepare(`
