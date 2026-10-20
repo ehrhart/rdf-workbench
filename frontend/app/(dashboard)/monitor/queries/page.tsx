@@ -8,6 +8,7 @@ import {
   RefreshCwIcon,
   Square
 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import {
   useCallback,
   useEffect,
@@ -219,6 +220,7 @@ function ExpandableQueryText({
 }
 
 export default function QueriesMonitorPage(): React.ReactElement {
+  const router = useRouter()
   const [queries, setQueries] = useState<MonitoredQuery[]>([])
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
@@ -300,6 +302,10 @@ export default function QueriesMonitorPage(): React.ReactElement {
     a.click()
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
+  }
+
+  const handleReuseQuery = (query: MonitoredQuery): void => {
+    router.push(`/sparql?query=${encodeURIComponent(query.query)}`)
   }
 
   const runningCount = queries.filter((q) => q.state === 'RUNNING').length
@@ -414,6 +420,23 @@ export default function QueriesMonitorPage(): React.ReactElement {
                       <DurationCell query={query} />
                       <TableCell>
                         <div className="flex items-center gap-1">
+                          {query.kind !== 'update' && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  aria-label="Open query in the SPARQL console"
+                                  onClick={() => handleReuseQuery(query)}
+                                >
+                                  <PlayIcon />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                Open in SPARQL console
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button
