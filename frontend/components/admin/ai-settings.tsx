@@ -51,7 +51,7 @@ const MAX_QUESTION_LENGTH = 200
 const MAX_KNOWLEDGE_LENGTH = 12000
 
 const CARD_LABELS = {
-  knowledge: 'Knowledge graph summary',
+  knowledge: 'Summary',
   instruction: 'Custom instruction',
   questions: 'Example questions'
 } as const
@@ -163,11 +163,11 @@ export function AiSettingsForm({
       for (const form of [knowledgeForm, instructionForm, questionsForm]) {
         form.reset(form.getValues())
       }
-      toast.success('Knowledge graph summary updated')
+      toast.success('Summary updated')
     } else if (finished.status === 'failed') {
-      toast.error(finished.error ?? 'Summary generation failed')
+      toast.error(finished.error ?? "Couldn't generate the summary.")
     } else if (finished.status === 'cancelled') {
-      toast.info('Summary generation cancelled')
+      toast.info('Summary cancelled')
     }
   })
 
@@ -219,7 +219,7 @@ export function AiSettingsForm({
   async function explore() {
     const result = await start()
     if (!result.ok) {
-      toast.error(result.error ?? 'Summary generation failed')
+      toast.error(result.error ?? "Couldn't generate the summary.")
     }
   }
 
@@ -227,10 +227,9 @@ export function AiSettingsForm({
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Knowledge graph summary</CardTitle>
+          <CardTitle>Summary</CardTitle>
           <CardDescription>
-            AI-generated notes about this dataset, injected into the Ask system
-            prompt. Edit freely.
+            Notes about this dataset that the Ask assistant uses when answering.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -258,14 +257,14 @@ export function AiSettingsForm({
             </div>
             {running ? (
               <p className="mt-2 text-muted-foreground text-sm">
-                Running in the background ({formatElapsed(elapsedSeconds)}
+                Generating the summary in the background (
+                {formatElapsed(elapsedSeconds)}
                 {job && job.stepsDone > 0 ? `, step ${job.stepsDone}` : ''}).
-                You can leave this page; the notes are saved automatically.
+                You can leave this page. The notes save automatically.
               </p>
             ) : (
               <p className="mt-2 text-muted-foreground text-sm">
-                Runs several read-only queries against the graph — this can take
-                a few minutes.
+                This can take a few minutes.
               </p>
             )}
           </div>
@@ -296,13 +295,13 @@ export function AiSettingsForm({
         <CardHeader>
           <CardTitle>Custom instruction</CardTitle>
           <CardDescription>
-            Appended to the Ask assistant&apos;s system prompt on every request.
+            Guidance the Ask assistant follows on every request.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <Textarea
             rows={4}
-            placeholder="Additional informations, behavior, style, and tone preferences"
+            placeholder="Behavior, style, and tone preferences"
             {...instructionForm.register('customInstruction')}
           />
           <div className="flex justify-start">
@@ -324,8 +323,7 @@ export function AiSettingsForm({
         <CardHeader>
           <CardTitle>Example questions</CardTitle>
           <CardDescription>
-            Shown on the Ask page when no conversation is open. Drag the handle
-            to reorder.
+            Shown on the Ask page when no conversation is open.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-2">

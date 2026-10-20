@@ -14,12 +14,12 @@ async function requireGenericAccess(): Promise<void> {
   const principal = await runtime.auth.getPrincipal()
   if (!principal) throw new AuthError('Authentication required')
   if (runtime.provider !== 'generic') {
-    throw new Error('Generic import is not available for this provider')
+    throw new Error("URL import isn't available for this provider")
   }
 }
 
 function messageFrom(error: unknown): string {
-  return error instanceof Error ? error.message : 'The import failed'
+  return error instanceof Error ? error.message : "Couldn't import the data"
 }
 
 export async function importUrlAction(

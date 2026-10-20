@@ -140,7 +140,7 @@ function readJsonOrThrow<T>(
     if (!response.ok) {
       const errorMessage = extractMessage(
         data,
-        `Request failed with status ${response.status}. ${fallbackMessage}`
+        `${fallbackMessage} The server responded with status ${response.status}.`
       )
       throw new Error(errorMessage)
     }
@@ -248,6 +248,13 @@ const getJobMessage = (job: ImportJob): string | null =>
       ? job.message
       : null
 
+const STATUS_LABELS: Record<ImportStatus, string> = {
+  queued: 'Queued',
+  'in-progress': 'Running',
+  completed: 'Done',
+  failed: 'Failed'
+}
+
 export default function VirtuosoImportManager() {
   const [activeTab, setActiveTab] = useState<'file' | 'url' | 'snippet'>('file')
   const [jobs, setJobs] = useState<ImportJob[]>([])
@@ -274,7 +281,7 @@ export default function VirtuosoImportManager() {
       const response = await fetch('/api/import')
       return readJsonOrThrow<BulkLoadJobsResponse>(
         response,
-        'Failed to fetch import jobs.'
+        "Couldn't load import jobs."
       )
     })
 
@@ -317,7 +324,7 @@ export default function VirtuosoImportManager() {
 
     return readJsonOrThrow<BulkLoadTriggerResponse>(
       loadResponse,
-      'Failed to start bulk load.'
+      "Couldn't queue the import."
     )
   }, [])
 
@@ -353,12 +360,12 @@ export default function VirtuosoImportManager() {
 
   const handleFileUpload = async () => {
     if (!file) {
-      toast.error('Please select a file to upload.')
+      toast.error('Choose a file to import')
       return
     }
 
     if (!fileGraphIri.trim()) {
-      toast.error('Please specify a target graph IRI.')
+      toast.error('Specify a target graph IRI')
       return
     }
 
@@ -376,7 +383,7 @@ export default function VirtuosoImportManager() {
       onError: (error) => {
         console.error('Chunk upload error:', error)
         const err = error as Error
-        toast.error(err.message || 'Failed to upload file')
+        toast.error(err.message || "Couldn't upload the file.")
         setUploading(false)
         setProcessing(false)
         setUploadProgress(0)
@@ -395,7 +402,7 @@ export default function VirtuosoImportManager() {
 
           const uploadData = await readJsonOrThrow<UploadResponse>(
             completeResponse,
-            'Failed to complete upload.'
+            "Couldn't finish the upload."
           )
           const savedFilename = uploadData.filename || file.name
 
@@ -405,7 +412,7 @@ export default function VirtuosoImportManager() {
             filename: savedFilename,
             graphIri: fileGraphIri
           })
-          toast.success('Bulk load job queued successfully.')
+          toast.success('Job queued')
 
           setFile(null)
           setFileGraphIri('')
@@ -418,7 +425,7 @@ export default function VirtuosoImportManager() {
         } catch (error) {
           const err = error as Error
           console.error('Error completing upload:', err)
-          toast.error(err.message || 'Failed to complete upload.')
+          toast.error(err.message || "Couldn't finish the upload.")
         } finally {
           setUploading(false)
           setProcessing(false)
@@ -431,12 +438,12 @@ export default function VirtuosoImportManager() {
 
   const handleUrlImport = async () => {
     if (!sourceUrl.trim()) {
-      toast.error('Please provide a source URL.')
+      toast.error('Enter a source URL')
       return
     }
 
     if (!urlGraphIri.trim()) {
-      toast.error('Please specify a target graph IRI.')
+      toast.error('Specify a target graph IRI')
       return
     }
 
@@ -458,11 +465,11 @@ export default function VirtuosoImportManager() {
 
       const data = await readJsonOrThrow<UploadResponse>(
         response,
-        'Failed to import from URL.'
+        "Couldn't import from the URL."
       )
       const savedFilename = data.filename || extractFilename(payload.url)
 
-      toast.success(`Fetched RDF from URL.`)
+      toast.success('Fetched from URL')
 
       await queueBulkLoad({ filename: savedFilename, graphIri: urlGraphIri })
       return savedFilename
@@ -471,9 +478,9 @@ export default function VirtuosoImportManager() {
     if (!result.success) {
       const err = result.error as Error
       console.error('Error importing from URL:', err)
-      toast.error(err.message || 'Failed to import from URL.')
+      toast.error(err.message || "Couldn't import from the URL.")
     } else {
-      toast.success('Bulk load job queued successfully.')
+      toast.success('Job queued')
       setSourceUrl('')
       setUrlGraphIri('')
       setUrlFormat('auto')
@@ -485,12 +492,12 @@ export default function VirtuosoImportManager() {
 
   const handleSnippetImport = async () => {
     if (!snippetContent.trim()) {
-      toast.error('Please paste an RDF snippet to import.')
+      toast.error('Paste an RDF snippet to import')
       return
     }
 
     if (!snippetGraphIri.trim()) {
-      toast.error('Please specify a target graph IRI.')
+      toast.error('Specify a target graph IRI')
       return
     }
 
@@ -512,13 +519,13 @@ export default function VirtuosoImportManager() {
 
       const data = await readJsonOrThrow<UploadResponse>(
         response,
-        'Failed to save RDF snippet.'
+        "Couldn't save the snippet."
       )
       const savedFilename =
         data.filename ||
         `snippet${resolveExtensionForFormat(snippetFormat) ?? '.ttl'}`
 
-      toast.success(`Saved RDF snippet.`)
+      toast.success('Snippet imported')
 
       await queueBulkLoad({
         filename: savedFilename,
@@ -530,9 +537,9 @@ export default function VirtuosoImportManager() {
     if (!result.success) {
       const err = result.error as Error
       console.error('Error importing snippet:', err)
-      toast.error(err.message || 'Failed to import snippet.')
+      toast.error(err.message || "Couldn't import the snippet.")
     } else {
-      toast.success('Bulk load job queued successfully.')
+      toast.success('Job queued')
       setSnippetContent('')
       setSnippetGraphIri('')
       await fetchJobs()
@@ -554,16 +561,16 @@ export default function VirtuosoImportManager() {
 
         await readJsonOrThrow<MutationSuccessResponse>(
           response,
-          'Failed to cancel job.'
+          "Couldn't cancel the job."
         )
       })
 
       if (!result.success) {
         const err = result.error as Error
         console.error('Error cancelling job:', err)
-        toast.error(err.message || 'Failed to cancel job.')
+        toast.error(err.message || "Couldn't cancel the job.")
       } else {
-        toast.success('Job cancelled successfully.')
+        toast.success('Job cancelled')
         await fetchJobs()
       }
     },
@@ -573,7 +580,7 @@ export default function VirtuosoImportManager() {
   const handleDeleteFile = useCallback(
     async (filename: string) => {
       if (!filename) {
-        toast.error('Filename unavailable for deletion.')
+        toast.error("Couldn't delete that file — its name is unknown.")
         return
       }
 
@@ -587,16 +594,16 @@ export default function VirtuosoImportManager() {
 
         await readJsonOrThrow<MutationSuccessResponse>(
           response,
-          'Failed to delete file.'
+          "Couldn't delete the file."
         )
       })
 
       if (!result.success) {
         const err = result.error as Error
         console.error('Error deleting file:', err)
-        toast.error(err.message || 'Failed to delete file.')
+        toast.error(err.message || "Couldn't delete the file.")
       } else {
-        toast.success('File deleted successfully.')
+        toast.success('File deleted')
         await fetchJobs()
       }
     },
@@ -606,8 +613,8 @@ export default function VirtuosoImportManager() {
   return (
     <DashboardShell>
       <DashboardHeader
-        heading="RDF Data Import"
-        text="Use the Virtuoso Bulk RDF Loader to ingest RDF datasets from files, remote URLs, or inline snippets."
+        heading="Import data"
+        text="Load RDF data into Virtuoso from files, URLs, or snippets."
       />
       <div className="flex flex-col gap-4">
         <Tabs
@@ -622,7 +629,7 @@ export default function VirtuosoImportManager() {
               className="flex items-center gap-2 truncate"
             >
               <Upload className="h-4 w-4" />
-              <span>Upload File</span>
+              <span>Upload file</span>
             </TabsTrigger>
             <TabsTrigger
               value="url"
@@ -636,14 +643,14 @@ export default function VirtuosoImportManager() {
               className="flex items-center gap-2 truncate"
             >
               <FileText className="h-4 w-4" />
-              <span>Paste Snippet</span>
+              <span>Paste snippet</span>
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="file" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Upload RDF File</CardTitle>
+                <CardTitle>Upload RDF file</CardTitle>
                 <CardDescription>
                   Drag and drop a file or browse your computer. Supported
                   formats include Turtle, TriG, N-Triples, RDF/XML, JSON-LD, and
@@ -687,7 +694,7 @@ export default function VirtuosoImportManager() {
                           : 'Drop an RDF file or click to browse'}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        Large files supported via chunked upload
+                        Large files are supported.
                       </p>
                     </div>
                   </button>
@@ -710,7 +717,7 @@ export default function VirtuosoImportManager() {
                   )}
 
                   <div className="space-y-2">
-                    <Label htmlFor="file-graph-iri">Target Graph IRI</Label>
+                    <Label htmlFor="file-graph-iri">Target graph IRI</Label>
                     <Input
                       id="file-graph-iri"
                       placeholder="http://example.org/graph"
@@ -736,7 +743,7 @@ export default function VirtuosoImportManager() {
                     ) : (
                       <>
                         <Upload className="mr-2 h-4 w-4" />
-                        Upload &amp; Import
+                        Upload and import
                       </>
                     )}
                   </Button>
@@ -750,8 +757,7 @@ export default function VirtuosoImportManager() {
               <CardHeader>
                 <CardTitle>Fetch RDF from URL</CardTitle>
                 <CardDescription>
-                  Download RDF directly from an HTTP(S) endpoint and queue it
-                  for bulk loading.
+                  Download RDF from a URL and load it into Virtuoso.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -774,7 +780,7 @@ export default function VirtuosoImportManager() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="url-graph-iri">Target Graph IRI</Label>
+                      <Label htmlFor="url-graph-iri">Target graph IRI</Label>
                       <Input
                         id="url-graph-iri"
                         placeholder="http://example.org/graph"
@@ -799,7 +805,7 @@ export default function VirtuosoImportManager() {
                     ) : (
                       <>
                         <Link2 className="mr-2 h-4 w-4" />
-                        Fetch &amp; Import
+                        Fetch and import
                       </>
                     )}
                   </Button>
@@ -811,10 +817,9 @@ export default function VirtuosoImportManager() {
           <TabsContent value="snippet" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Import RDF Snippet</CardTitle>
+                <CardTitle>Import RDF snippet</CardTitle>
                 <CardDescription>
-                  Paste an RDF fragment, choose a format, and queue it for
-                  loading.
+                  Paste an RDF fragment, choose a format, and import it.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -826,7 +831,7 @@ export default function VirtuosoImportManager() {
                   }}
                 >
                   <div className="space-y-2">
-                    <Label htmlFor="snippet-content">RDF Content</Label>
+                    <Label htmlFor="snippet-content">RDF content</Label>
                     <Textarea
                       id="snippet-content"
                       placeholder={
@@ -848,7 +853,7 @@ export default function VirtuosoImportManager() {
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-2 md:col-span-2">
                       <Label htmlFor="snippet-graph-iri">
-                        Target Graph IRI
+                        Target graph IRI
                       </Label>
                       <Input
                         id="snippet-graph-iri"
@@ -898,7 +903,7 @@ export default function VirtuosoImportManager() {
                     ) : (
                       <>
                         <FileText className="mr-2 h-4 w-4" />
-                        Save &amp; Import
+                        Save and import
                       </>
                     )}
                   </Button>
@@ -911,10 +916,8 @@ export default function VirtuosoImportManager() {
         <Card>
           <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-1">
-              <CardTitle>Import Jobs</CardTitle>
-              <CardDescription>
-                Monitor the status of your bulk load jobs.
-              </CardDescription>
+              <CardTitle>Import jobs</CardTitle>
+              <CardDescription>Track your bulk load jobs.</CardDescription>
             </div>
             <Button
               variant="outline"
@@ -988,7 +991,9 @@ export default function VirtuosoImportManager() {
                                   <RefreshCw className="size-4 text-muted-foreground" />
                                 )}
                               </TooltipTrigger>
-                              <TooltipContent>{job.status}</TooltipContent>
+                              <TooltipContent>
+                                {STATUS_LABELS[job.status]}
+                              </TooltipContent>
                             </Tooltip>
                           </TableCell>
                           <TableCell className="min-w-0 whitespace-normal wrap-break-words">

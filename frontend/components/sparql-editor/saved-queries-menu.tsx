@@ -89,7 +89,9 @@ export function SavedQueriesMenu({
       setSavedQueries(list)
     } catch (error) {
       console.error('Failed to load saved queries', error)
-      toast.error('Unable to load saved queries right now')
+      toast.error("Couldn't load saved queries", {
+        description: 'Try again in a moment.'
+      })
     } finally {
       setIsLoadingList(false)
     }
@@ -102,7 +104,7 @@ export function SavedQueriesMenu({
 
   const openCreateDialog = useCallback(() => {
     if (!currentUser) {
-      toast.info('Log in to save queries that everyone can reuse')
+      toast.info('Sign in to save queries that everyone can reuse')
       return
     }
     if (!activeQuery.trim()) {
@@ -111,7 +113,7 @@ export function SavedQueriesMenu({
     }
     setDialogMode('create')
     setEditingSavedQuery(null)
-    setDraftName(activeTabName || 'New Query')
+    setDraftName(activeTabName || 'New query')
     setDraftQuery(activeQuery)
     setIsDialogOpen(true)
   }, [activeQuery, activeTabName, currentUser])
@@ -138,7 +140,7 @@ export function SavedQueriesMenu({
 
   const handleDialogSubmit = useCallback(async () => {
     if (!currentUser) {
-      toast.error('Authentication required to save queries')
+      toast.error('Sign in to save queries')
       return
     }
 
@@ -150,7 +152,7 @@ export function SavedQueriesMenu({
       return
     }
     if (!trimmedQuery) {
-      toast.error('Query cannot be empty')
+      toast.error('Query is required')
       return
     }
 
@@ -177,7 +179,7 @@ export function SavedQueriesMenu({
     } catch (error) {
       console.error('Failed to persist saved query', error)
       const message =
-        error instanceof Error ? error.message : 'Unable to save query'
+        error instanceof Error ? error.message : "Couldn't save the query"
       toast.error(message)
     } finally {
       setIsSaving(false)
@@ -207,7 +209,7 @@ export function SavedQueriesMenu({
     } catch (error) {
       console.error('Failed to delete saved query', error)
       const message =
-        error instanceof Error ? error.message : 'Could not delete query'
+        error instanceof Error ? error.message : "Couldn't delete the query"
       toast.error(message)
     }
   }, [])
@@ -222,7 +224,7 @@ export function SavedQueriesMenu({
         setIsDropdownOpen(false)
       } catch (error) {
         console.error('Failed to load saved query before opening', error)
-        toast.error('Unable to open saved query')
+        toast.error("Couldn't open the saved query")
       }
     },
     [onOpenSavedQuery]
@@ -252,7 +254,7 @@ export function SavedQueriesMenu({
         <DropdownMenuContent className="w-[340px]" align="end">
           <div className="flex items-center justify-between px-2 py-1.5">
             <DropdownMenuLabel className="p-0">
-              Shared saved queries
+              Shared queries
             </DropdownMenuLabel>
             <Button
               variant="ghost"
@@ -275,11 +277,11 @@ export function SavedQueriesMenu({
               {isLoadingList ? (
                 <div className="flex items-center justify-center gap-2 py-6 text-sm text-muted-foreground">
                   <Loader2 className="size-4 animate-spin" />
-                  Loading…
+                  Loading saved queries…
                 </div>
               ) : savedQueries.length === 0 ? (
                 <div className="px-2 py-4 text-sm text-muted-foreground">
-                  No saved queries yet.
+                  No saved queries yet. They are shared with everyone.
                 </div>
               ) : (
                 savedQueries.map((saved) => (
@@ -331,7 +333,7 @@ export function SavedQueriesMenu({
                           tooltipText="Copy link"
                           copiedTooltipText="Link copied"
                           successMessage="Saved query link copied"
-                          errorMessage="Failed to copy link"
+                          errorMessage="Couldn't copy the link"
                           copyIcon={<LinkIcon />}
                         />
                         {saved.isOwner || isAdmin ? (
@@ -438,7 +440,7 @@ export function SavedQueriesMenu({
               {isSaving ? (
                 <Loader2 className="mr-2 size-4 animate-spin" />
               ) : null}
-              {dialogMode === 'edit' ? 'Update' : 'Save'}
+              {isSaving ? 'Saving…' : dialogMode === 'edit' ? 'Update' : 'Save'}
             </Button>
           </DialogFooter>
         </DialogContent>

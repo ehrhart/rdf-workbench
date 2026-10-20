@@ -240,7 +240,7 @@ export default function QueriesMonitorPage(): React.ReactElement {
         setError(
           err instanceof Error
             ? err.message
-            : 'Failed to fetch monitored queries'
+            : "Couldn't load recent queries and updates."
         )
       } finally {
         if (showSpinner) {
@@ -276,7 +276,7 @@ export default function QueriesMonitorPage(): React.ReactElement {
       await abortQuery(queryId)
       fetchQueries()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to abort query')
+      setError(err instanceof Error ? err.message : "Couldn't abort the query.")
     }
   }
 
@@ -306,7 +306,7 @@ export default function QueriesMonitorPage(): React.ReactElement {
 
   return (
     <DashboardShell>
-      <DashboardHeader heading="Query monitor" />
+      <DashboardHeader heading="Queries and updates" />
       <div>
         <div className="mb-4 flex items-center justify-between">
           <Button
@@ -359,7 +359,7 @@ export default function QueriesMonitorPage(): React.ReactElement {
             {runningCount === 1
               ? '1 query running'
               : `${runningCount} queries running`}{' '}
-            of {queries.length} in the recent history.
+            of {queries.length} in recent history.
           </div>
         )}
 
@@ -396,7 +396,7 @@ export default function QueriesMonitorPage(): React.ReactElement {
                             text={
                               expanded[query.id]
                                 ? query.query
-                                : `${query.query.substring(0, stringLimit)}...`
+                                : `${query.query.substring(0, stringLimit)}…`
                             }
                             expanded={Boolean(expanded[query.id])}
                             onToggle={() => toggleExpand(query.id)}

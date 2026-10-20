@@ -10,7 +10,9 @@ export interface DereferenceActionResult {
 }
 
 function messageFrom(error: unknown): string {
-  return error instanceof Error ? error.message : 'The operation failed'
+  return error instanceof Error
+    ? error.message
+    : "Couldn't complete the action."
 }
 
 async function requireDereferenceAdmin(): Promise<void> {
@@ -27,7 +29,7 @@ export async function createDereferencePathAction(
     const validated = validateDereferencePath(path, runtime.provider)
     await runtime.dereference.create(validated)
     revalidatePath('/admin/dereference')
-    return { ok: true, message: `Path "/${validated}" configured` }
+    return { ok: true, message: `Path "/${validated}" added` }
   } catch (error) {
     return { ok: false, message: messageFrom(error) }
   }

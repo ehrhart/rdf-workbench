@@ -60,7 +60,7 @@ export function NavUser({ user }: { user: NavUserType }) {
                 className="flex items-center w-full cursor-pointer"
               >
                 <LogOutIcon />
-                Log out
+                Sign out
               </a>
             </DropdownMenuItem>
           </DropdownMenuContent>

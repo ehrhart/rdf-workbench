@@ -67,6 +67,7 @@ export function FilterContent<TData extends RowData>({
             <SelectItem key={ft} value={ft}>
               {ft
                 .replace(/([A-Z])/g, ' $1')
+                .toLowerCase()
                 .replace(/^./, (str: string) => str.toUpperCase())}
             </SelectItem>
           ))}
@@ -75,7 +76,7 @@ export function FilterContent<TData extends RowData>({
 
       {showValueInput && (
         <Input
-          placeholder="Filter value..."
+          placeholder="Filter value…"
           value={value}
           onChange={(e) => setValue(e.target.value)}
           className="h-8"

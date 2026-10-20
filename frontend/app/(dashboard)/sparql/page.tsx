@@ -10,8 +10,8 @@ import { getWorkbenchRuntime, requirePageAccess } from '@/lib/runtime'
 import { cfgItemValue } from '@/providers/virtuoso/config'
 
 export const metadata: Metadata = {
-  title: 'SPARQL Query Console',
-  description: 'Execute SPARQL queries against the configured RDF endpoint'
+  title: 'SPARQL query console',
+  description: 'Write and run SPARQL queries.'
 }
 
 async function QueryConsoleContent() {
@@ -52,7 +52,7 @@ export default async function QueryPage() {
   await requirePageAccess('anonymousRead')
   return (
     <DashboardShell>
-      <DashboardHeader heading="SPARQL Query Console" />
+      <DashboardHeader heading="SPARQL query console" />
       <Suspense fallback={<QueryConsoleSkeleton />}>
         <QueryConsoleContent />
       </Suspense>

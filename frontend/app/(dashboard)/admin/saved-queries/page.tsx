@@ -6,8 +6,8 @@ import { DashboardShell } from '@/components/dashboard/shell'
 import { getWorkbenchRuntime, requirePageAccess } from '@/lib/runtime'
 
 export const metadata: Metadata = {
-  title: 'Saved Queries',
-  description: 'Manage shared saved SPARQL queries.'
+  title: 'Saved queries',
+  description: 'Manage the queries everyone can reuse.'
 }
 
 export default async function SavedQueriesAdminPage() {
@@ -19,8 +19,8 @@ export default async function SavedQueriesAdminPage() {
   return (
     <DashboardShell>
       <DashboardHeader
-        heading="Saved Queries"
-        text="Create, edit, reorder, and delete the shared saved queries used across the workbench."
+        heading="Saved queries"
+        text="The queries everyone can reuse."
       />
       <SavedQueryManager />
     </DashboardShell>

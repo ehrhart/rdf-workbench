@@ -43,9 +43,9 @@ export default function DashboardError({ error, reset }: DashboardErrorProps) {
 
   return (
     <div className="mx-auto flex max-w-xl flex-col gap-4 py-12 text-center">
-      <h2 className="text-xl font-semibold">Something went wrong</h2>
+      <h2 className="text-xl font-semibold">This page couldn&apos;t load</h2>
       <p className="text-muted-foreground text-sm">
-        {error?.message || 'An unexpected error occurred.'}
+        {error?.message || 'No details available.'}
       </p>
       <div className="flex justify-center gap-2">
         <Button onClick={reset}>Try again</Button>

@@ -8,7 +8,7 @@ import { isSameOriginMutation, sameOriginError } from '@/lib/same-origin'
 const errorResponse = (error: unknown, hasSession: boolean) => {
   if (error instanceof ConnectionError) {
     return NextResponse.json(
-      { error: 'Saved queries service is temporarily unavailable' },
+      { error: 'Saved queries are unavailable right now' },
       { status: 503 }
     )
   }
@@ -27,7 +27,7 @@ const errorResponse = (error: unknown, hasSession: boolean) => {
 
   console.error('Unexpected saved query API error:', error)
   return NextResponse.json(
-    { error: 'Unexpected server error while handling saved query' },
+    { error: 'Saved queries are unavailable right now' },
     { status: 500 }
   )
 }
@@ -43,7 +43,7 @@ async function getSavedQuery(
 
     if (!saved) {
       return NextResponse.json(
-        { error: 'Saved query not found' },
+        { error: 'That saved query does not exist' },
         { status: 404 }
       )
     }
@@ -82,7 +82,7 @@ export async function PATCH(
 
   if (!session) {
     return NextResponse.json(
-      { error: 'Authentication required to update saved queries' },
+      { error: 'Sign in to update saved queries' },
       { status: 401 }
     )
   }
@@ -116,7 +116,7 @@ export async function DELETE(
 
   if (!session) {
     return NextResponse.json(
-      { error: 'Authentication required to delete saved queries' },
+      { error: 'Sign in to delete saved queries' },
       { status: 401 }
     )
   }

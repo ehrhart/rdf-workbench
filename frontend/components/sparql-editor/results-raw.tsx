@@ -41,7 +41,7 @@ export default memo(function ResultsRaw({ results }: ResultsRawProps) {
       return JSON.stringify(results, null, 2).split('\n')
     } catch (error) {
       console.error('Error stringifying results:', error)
-      return ['Error: Unable to stringify results']
+      return ["Couldn't display these results."]
     }
   }, [results])
 
@@ -194,7 +194,7 @@ export default memo(function ResultsRaw({ results }: ResultsRawProps) {
   if (!results) {
     return (
       <div className="h-full flex items-center justify-center p-4 text-muted-foreground">
-        No results to display
+        No results yet.
       </div>
     )
   }
@@ -202,7 +202,7 @@ export default memo(function ResultsRaw({ results }: ResultsRawProps) {
   if (jsonLines.length === 0) {
     return (
       <div className="h-full flex items-center justify-center p-4 text-muted-foreground">
-        Empty results
+        The query returned no results.
       </div>
     )
   }
@@ -216,7 +216,7 @@ export default memo(function ResultsRaw({ results }: ResultsRawProps) {
           </InputGroupIcon>
           <InputGroupInput
             ref={searchInputRef}
-            placeholder="Search in results..."
+            placeholder="Search results"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10 pr-10 h-8"
@@ -251,7 +251,7 @@ export default memo(function ResultsRaw({ results }: ResultsRawProps) {
         <div className="px-2 py-1 text-sm text-muted-foreground bg-muted">
           {matches.length > 0
             ? `${currentMatchIndex + 1} of ${matches.length} matches`
-            : 'No matches found'}
+            : 'No matches'}
         </div>
       )}
 
@@ -262,7 +262,7 @@ export default memo(function ResultsRaw({ results }: ResultsRawProps) {
       >
         <CopyToClipboardButton
           textToCopy={JSON.stringify(results, null, 2)}
-          tooltipText="Copy to clipboard"
+          tooltipText="Copy"
           className="absolute top-2 right-2 z-10 group-hover:visible invisible group-hover:opacity-100 opacity-0 transition-opacity"
           variant="ghost"
           size="icon-sm"

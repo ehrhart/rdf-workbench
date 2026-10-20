@@ -137,7 +137,9 @@ export function SavedQueryManager() {
       setItems(list.map(toItem))
     } catch (error) {
       console.error('Failed to load saved queries', error)
-      toast.error('Unable to load saved queries right now')
+      toast.error("Couldn't load saved queries", {
+        description: 'Try again in a moment.'
+      })
     } finally {
       setIsLoading(false)
     }
@@ -172,7 +174,7 @@ export function SavedQueryManager() {
       return
     }
     if (!query) {
-      toast.error('Query cannot be empty')
+      toast.error('Query is required')
       return
     }
 
@@ -195,7 +197,7 @@ export function SavedQueryManager() {
     } catch (error) {
       console.error('Failed to persist saved query', error)
       const message =
-        error instanceof Error ? error.message : 'Unable to save query'
+        error instanceof Error ? error.message : "Couldn't save the query"
       toast.error(message)
     } finally {
       setIsSaving(false)
@@ -218,7 +220,7 @@ export function SavedQueryManager() {
     } catch (error) {
       console.error('Failed to delete saved query', error)
       const message =
-        error instanceof Error ? error.message : 'Could not delete query'
+        error instanceof Error ? error.message : "Couldn't delete the query"
       toast.error(message)
     } finally {
       setPending(null)
@@ -236,7 +238,7 @@ export function SavedQueryManager() {
     } catch (error) {
       console.error('Failed to reorder saved queries', error)
       const message =
-        error instanceof Error ? error.message : 'Could not reorder queries'
+        error instanceof Error ? error.message : "Couldn't reorder the queries"
       toast.error(message)
     }
   }
@@ -304,7 +306,8 @@ export function SavedQueryManager() {
                           No saved queries yet
                         </span>
                         <span className="text-sm">
-                          Create the first shared query to get started.
+                          Saved queries are shared with everyone who uses the
+                          console. Create the first one.
                         </span>
                         <Button
                           type="button"
@@ -449,7 +452,11 @@ export function SavedQueryManager() {
               {isSaving ? (
                 <Loader2 className="mr-2 size-4 animate-spin" />
               ) : null}
-              {dialogMode === 'edit' ? 'Update' : 'Create'}
+              {isSaving
+                ? 'Saving…'
+                : dialogMode === 'edit'
+                  ? 'Update'
+                  : 'Create'}
             </Button>
           </DialogFooter>
         </DialogContent>

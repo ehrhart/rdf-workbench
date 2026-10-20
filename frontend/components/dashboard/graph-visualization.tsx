@@ -362,7 +362,7 @@ export default function GraphVisualization({
           }
         }
       } catch (err) {
-        setError('Failed to load RDF data. Please check the URI and try again.')
+        setError("Couldn't load the graph. Check the URI and try again.")
         console.error(err)
       } finally {
         setIsLoading(false)
@@ -448,7 +448,7 @@ export default function GraphVisualization({
         }
       } catch (err) {
         console.error('Error expanding node:', err)
-        setError('Failed to expand node connections')
+        setError("Couldn't load this node's connections.")
 
         // Reset loading state if there's an error
         setData((prev) => ({
@@ -1092,7 +1092,7 @@ export default function GraphVisualization({
         <Card className="flex w-72 flex-col gap-2 p-2">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium">
-              Links Limit: {linksLimit}
+              Link limit: {linksLimit}
             </span>
             <div className="flex gap-1">
               <Tooltip>
@@ -1182,14 +1182,12 @@ export default function GraphVisualization({
                 >
                   {numberOfPinnedNodes > 0 ? <UnlinkIcon /> : <LinkIcon />}
                   <span>
-                    {numberOfPinnedNodes > 0 ? 'Unpin All' : 'Pin All'}
+                    {numberOfPinnedNodes > 0 ? 'Unpin all' : 'Pin all'}
                   </span>
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="bottom">
-                {numberOfPinnedNodes > 0
-                  ? 'Unpin all nodes'
-                  : 'Pin down all nodes'}
+                {numberOfPinnedNodes > 0 ? 'Unpin all nodes' : 'Pin all nodes'}
               </TooltipContent>
             </Tooltip>
 
@@ -1202,7 +1200,7 @@ export default function GraphVisualization({
                   className="flex-1"
                 >
                   <MaximizeIcon />
-                  <span>Fit Graph</span>
+                  <span>Fit graph</span>
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="bottom">
@@ -1241,7 +1239,7 @@ export default function GraphVisualization({
             className="h-full max-h-full w-full max-w-full bg-white"
             style={{ display: 'block' }}
           >
-            <title>RDF Graph Visualization</title>
+            <title>RDF graph</title>
             <rect width="100%" height="100%" fill="none" pointerEvents="all" />
           </svg>
         )}

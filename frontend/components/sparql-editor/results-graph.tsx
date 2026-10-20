@@ -13,7 +13,7 @@ function ResultsGraph({ results }: ResultsGraphProps) {
   if (results.kind !== 'graph') {
     return (
       <div className="flex h-48 items-center justify-center rounded-lg border text-sm text-muted-foreground">
-        No RDF graph to display for this result
+        No graph in this result.
       </div>
     )
   }
@@ -23,7 +23,7 @@ function ResultsGraph({ results }: ResultsGraphProps) {
   if (!graph.value) {
     return (
       <div className="flex h-48 items-center justify-center rounded-lg border text-sm text-muted-foreground">
-        The query returned an empty graph
+        The query returned an empty graph.
       </div>
     )
   }
@@ -34,7 +34,7 @@ function ResultsGraph({ results }: ResultsGraphProps) {
         <span className="text-xs text-muted-foreground">{graph.format}</span>
         <CopyToClipboardButton
           textToCopy={graph.value}
-          tooltipText="Copy RDF graph"
+          tooltipText="Copy graph"
           variant="ghost"
           size="sm"
         />

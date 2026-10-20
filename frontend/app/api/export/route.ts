@@ -125,7 +125,7 @@ async function runVirtuosoDump(
   if (!response.ok) {
     const body = await response.text()
     throw new Error(
-      body || `Virtuoso export failed with status ${response.status}`
+      body || `Virtuoso couldn't export the graph (status ${response.status}).`
     )
   }
 }
@@ -148,7 +148,7 @@ async function listArtifacts(
   if (!response.ok) {
     const message = await response.text()
     throw new Error(
-      message || `Failed to list exported files (${response.status})`
+      message || `Couldn't list the exported files (status ${response.status}).`
     )
   }
 
@@ -190,9 +190,7 @@ async function collectArtifacts(
     await sleep(pollIntervalMs)
   }
 
-  throw new Error(
-    `Virtuoso did not produce any export files for prefix ${basePrefix}`
-  )
+  throw new Error(`Virtuoso produced no export files for prefix ${basePrefix}.`)
 }
 
 async function downloadFileStream(
@@ -213,7 +211,7 @@ async function downloadFileStream(
   )
   if (!response.ok || !response.body) {
     const message = await response.text()
-    throw new Error(message || `Failed to download artifact ${relativePath}`)
+    throw new Error(message || `Couldn't download ${relativePath}.`)
   }
 
   return response.body
@@ -351,23 +349,29 @@ export async function POST(request: NextRequest) {
     )
 
     if (graphs.length === 0) {
-      return new Response(JSON.stringify({ error: 'No graph URIs provided' }), {
+      return new Response(JSON.stringify({ error: 'No graphs to export.' }), {
         status: 400
       })
     }
 
     if (!format) {
-      return new Response(JSON.stringify({ error: 'No format provided' }), {
-        status: 400
-      })
+      return new Response(
+        JSON.stringify({ error: 'No export format was specified.' }),
+        {
+          status: 400
+        }
+      )
     }
 
     const formatConfig = EXPORT_FORMATS[format]
 
     if (!formatConfig) {
-      return new Response(JSON.stringify({ error: 'Unsupported format' }), {
-        status: 400
-      })
+      return new Response(
+        JSON.stringify({ error: "That format isn't supported." }),
+        {
+          status: 400
+        }
+      )
     }
 
     const fileLengthLimit = limitParam
@@ -397,7 +401,7 @@ export async function POST(request: NextRequest) {
       const files = await collectArtifacts(basePrefix, formatConfig.extension)
 
       if (files.length === 0) {
-        throw new Error(`No export artifacts were generated for ${graphIri}`)
+        throw new Error(`Nothing was exported for ${graphIri}.`)
       }
 
       artifacts.push({
@@ -436,7 +440,7 @@ export async function POST(request: NextRequest) {
     console.error('Graph export failed', error)
     return new Response(
       JSON.stringify({
-        error: 'Graph export failed',
+        error: "Couldn't export the graph.",
         message: (error as Error).message
       }),
       {

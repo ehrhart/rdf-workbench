@@ -20,9 +20,9 @@ interface CopyToClipboardButtonProps
 export function CopyToClipboardButton({
   textToCopy,
   tooltipText,
-  copiedTooltipText = 'Copied!',
-  successMessage = 'Copied to clipboard',
-  errorMessage = 'Failed to copy',
+  copiedTooltipText = 'Copied',
+  successMessage = 'Copied',
+  errorMessage = "Couldn't copy",
   copyIcon: CopyIconComponent = <CopyIcon />,
   copiedIcon: CopiedIconComponent = <CheckIcon />,
   variant = 'ghost',

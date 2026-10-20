@@ -11,7 +11,7 @@ import { getWorkbenchName } from '@/lib/runtime/config'
 
 export const metadata: Metadata = {
   title: 'Appearance',
-  description: 'Customize the workbench colors, corner radius, and theme.'
+  description: 'Set the name, logo, colors, and theme.'
 }
 
 export default async function AppearancePage() {

@@ -95,11 +95,11 @@ export function ResourceAutocomplete({
         isLoading={isLoading}
         emptyMessage={
           enableSuggestions
-            ? 'Start typing to see suggestions...'
+            ? 'Start typing to see suggestions…'
             : 'Enter a complete resource IRI and press Enter.'
         }
         placeholder={
-          enableSuggestions ? 'Search resources...' : 'Enter a resource IRI...'
+          enableSuggestions ? 'Search resources…' : 'Enter a resource IRI…'
         }
         resetOnBlur={false}
       />
@@ -114,7 +114,7 @@ export function ResourceAutocomplete({
               variant="outline"
               onClick={() => navigateToResource(searchInput)}
             >
-              <Table /> Resource
+              <Table /> Table view
             </Button>
           )}
         </>

@@ -15,7 +15,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     if (!filename || !graphIri) {
       return NextResponse.json(
-        { error: 'Filename and graphIri are required' },
+        { error: 'Filename and graph IRI are required.' },
         { status: 400 }
       )
     }
@@ -37,7 +37,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     if (!response.ok) {
       const errorData = await response.json()
       return NextResponse.json(
-        { error: errorData.error || 'Failed to start bulk load process' },
+        { error: errorData.error || "Couldn't queue the import." },
         { status: response.status }
       )
     }
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   } catch (error: unknown) {
     console.error('Error in bulk-load API route:', error)
     return NextResponse.json(
-      { error: (error as Error).message || 'Internal server error' },
+      { error: (error as Error).message || "Couldn't queue the import." },
       { status: 500 }
     )
   }

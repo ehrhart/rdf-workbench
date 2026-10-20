@@ -114,9 +114,7 @@ export function useSparqlQuery(endpoint: string) {
 
     if (!response.ok) {
       const message = await response.text()
-      throw new Error(
-        message || 'Failed to download SPARQL query results. Please retry.'
-      )
+      throw new Error(message || "Couldn't download the results. Try again.")
     }
 
     const blob = await response.blob()

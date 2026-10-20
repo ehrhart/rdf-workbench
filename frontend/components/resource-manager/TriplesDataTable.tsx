@@ -343,7 +343,7 @@ export const TriplesDataTable = memo(function TriplesDataTable({
             <SearchIcon className="size-4" />
           </InputGroupIcon>
           <InputGroupInput
-            placeholder="Search all columns..."
+            placeholder="Search all columns…"
             value={globalFilter}
             onChange={(event) => setGlobalFilter(event.target.value)}
             className="pl-10 pr-10 h-8"
@@ -514,9 +514,9 @@ export const TriplesDataTable = memo(function TriplesDataTable({
                       </CardContent>
                     </Card>
                   ) : status === 'success' && triples.length === 0 ? (
-                    'No triples found for this resource and role.'
+                    'No triples for this resource in this role.'
                   ) : (
-                    'No results matching filters.'
+                    'No triples match this filter. Clear the filter to see all triples.'
                   )}
                 </td>
               </tr>
@@ -529,8 +529,8 @@ export const TriplesDataTable = memo(function TriplesDataTable({
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="text-muted-foreground text-sm">
           Showing {table.getPaginationRowModel().rows.length.toLocaleString()}{' '}
-          of {table.getFilteredRowModel().rows.length.toLocaleString()} row(s)
-          filtered. (Total: {triples.length.toLocaleString()})
+          of {table.getFilteredRowModel().rows.length.toLocaleString()} triples
+          ({triples.length.toLocaleString()} total)
         </div>
         <div className="flex items-center gap-2">
           <span className="text-sm">Rows per page:</span>

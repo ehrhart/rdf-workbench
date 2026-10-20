@@ -6,7 +6,7 @@ import { isSameOriginMutation, sameOriginError } from '@/lib/same-origin'
 const errorResponse = (error: unknown, hasSession: boolean) => {
   if (error instanceof ConnectionError) {
     return NextResponse.json(
-      { error: 'Saved queries service is temporarily unavailable' },
+      { error: 'Saved queries are unavailable right now' },
       { status: 503 }
     )
   }
@@ -25,7 +25,7 @@ const errorResponse = (error: unknown, hasSession: boolean) => {
 
   console.error('Unexpected saved query reorder API error:', error)
   return NextResponse.json(
-    { error: 'Unexpected server error while reordering saved queries' },
+    { error: "Couldn't save the new order" },
     { status: 500 }
   )
 }
@@ -37,14 +37,14 @@ export async function POST(request: Request) {
 
   if (!session) {
     return NextResponse.json(
-      { error: 'Authentication required to reorder saved queries' },
+      { error: 'Sign in to reorder saved queries' },
       { status: 401 }
     )
   }
 
   if (session.role !== 'admin') {
     return NextResponse.json(
-      { error: 'Only administrators can reorder saved queries' },
+      { error: 'Only admins can reorder saved queries' },
       { status: 403 }
     )
   }
@@ -66,10 +66,7 @@ export async function POST(request: Request) {
       }))
 
     if (order.length === 0) {
-      return NextResponse.json(
-        { error: 'A non-empty order is required' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Nothing to reorder' }, { status: 400 })
     }
 
     await runtime.savedQueries.reorder(order, session)

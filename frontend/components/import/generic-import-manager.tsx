@@ -45,15 +45,15 @@ export default function GenericImportManager() {
   return (
     <DashboardShell>
       <DashboardHeader
-        heading="Import Data"
-        text="Load RDF into the endpoint with a SPARQL LOAD update"
+        heading="Import data"
+        text="Load RDF into the endpoint from a URL."
       />
       <Card>
         <CardHeader>
           <CardTitle>Load from a URL</CardTitle>
           <CardDescription>
             The endpoint fetches and parses the source itself. Turtle,
-            N-Triples, and RDF/XML sources are widely supported.
+            N-Triples, and RDF/XML usually work.
           </CardDescription>
         </CardHeader>
         <CardContent>

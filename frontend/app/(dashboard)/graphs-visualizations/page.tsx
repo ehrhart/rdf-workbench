@@ -6,8 +6,8 @@ import { ResourceAutocomplete } from '@/components/resource-autocomplete'
 import { requirePageAccess } from '@/lib/runtime'
 
 export const metadata: Metadata = {
-  title: 'Graphs Visualizations',
-  description: 'Visualize RDF graphs from the configured endpoint'
+  title: 'Graph visualization',
+  description: "See a resource's connections as a graph"
 }
 
 export default async function VisualizationPage({
@@ -20,7 +20,7 @@ export default async function VisualizationPage({
 
   return (
     <DashboardShell>
-      <DashboardHeader heading="Graph Visualization" />
+      <DashboardHeader heading="Graph visualization" />
       <ResourceAutocomplete searchType="visual" defaultValue={uri} showButton />
       {uri && (
         <div className="flex h-full flex-col">

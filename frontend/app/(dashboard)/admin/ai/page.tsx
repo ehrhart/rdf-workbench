@@ -10,7 +10,7 @@ import { getProfileSummary } from '@/lib/ai/profile-store'
 import { hasAnyFeature, requirePageAccess } from '@/lib/runtime'
 
 export const metadata: Metadata = {
-  title: 'AI Settings',
+  title: 'AI settings',
   description: 'Configure the Ask assistant.'
 }
 
@@ -26,7 +26,7 @@ export default async function AiSettingsPage() {
 
   return (
     <DashboardShell>
-      <DashboardHeader heading="AI Settings" />
+      <DashboardHeader heading="AI settings" />
       <DatasetProfileCard
         initialSummary={summary}
         initialProfileJob={jobs.profile}

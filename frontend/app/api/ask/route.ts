@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
       request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
     if (isRateLimited(`ask|${clientIp}`, 10, 60_000)) {
       return NextResponse.json(
-        { error: 'Too many requests. Please try again shortly.' },
+        { error: 'Too many requests. Try again in a minute.' },
         { status: 429 }
       )
     }
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         error:
-          'AI is not configured. Set AI_BASE_URL, AI_API_KEY, and AI_MODEL to enable the ask assistant.'
+          "Ask isn't set up on this instance yet. An admin needs to connect an AI provider."
       },
       { status: 503 }
     )

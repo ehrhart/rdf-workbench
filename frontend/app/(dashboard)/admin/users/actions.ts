@@ -22,7 +22,9 @@ export type CreateUserActionResult =
   | { ok: false; message: string }
 
 function messageFrom(error: unknown): string {
-  return error instanceof Error ? error.message : 'The operation failed'
+  return error instanceof Error
+    ? error.message
+    : "Couldn't complete the action."
 }
 
 export async function createUserAction(
@@ -75,8 +77,8 @@ export async function setUserRoleAction(
       ok: true,
       message:
         role === 'admin'
-          ? 'User promoted to administrator'
-          : 'User changed to standard user'
+          ? 'Role changed to administrator'
+          : 'Role changed to user'
     }
   } catch (error) {
     return { ok: false, message: messageFrom(error) }
@@ -96,7 +98,7 @@ export async function resetUserPasswordAction(
     revalidatePath('/admin/users')
     return {
       ok: true,
-      message: 'Password reset and active sessions revoked',
+      message: 'Password reset',
       oneTimePassword
     }
   } catch (error) {

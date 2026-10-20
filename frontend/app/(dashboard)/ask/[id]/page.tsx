@@ -6,7 +6,7 @@ import { AskChatPage } from '../ask-chat-page'
 
 export const metadata: Metadata = {
   title: 'Ask',
-  description: 'Ask questions about the dataset in natural language'
+  description: 'Ask questions about this dataset in plain language.'
 }
 
 export default async function ConversationPage({

@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
 
   if (auth.principal.role !== 'admin') {
     return NextResponse.json(
-      { error: 'Only administrators can rebuild the dataset profile' },
+      { error: 'Only admins can rebuild the dataset profile.' },
       { status: 403 }
     )
   }
@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         error:
-          'AI is not configured. Set AI_BASE_URL, AI_API_KEY, and AI_MODEL to enable the ask assistant.'
+          "Ask isn't set up on this instance yet. An admin needs to connect an AI provider."
       },
       { status: 503 }
     )
@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
     }
     console.error('[ask] failed to start the profile job:', error)
     return NextResponse.json(
-      { error: 'Failed to start the profile build' },
+      { error: "Couldn't start the profile build. Try again." },
       { status: 500 }
     )
   }

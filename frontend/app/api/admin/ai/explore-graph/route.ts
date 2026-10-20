@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
 
   if (auth.principal.role !== 'admin') {
     return NextResponse.json(
-      { error: 'Only administrators can explore the graph' },
+      { error: 'Only administrators can generate the summary' },
       { status: 403 }
     )
   }
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         error:
-          'AI is not configured. Set AI_BASE_URL, AI_API_KEY, and AI_MODEL to enable the ask assistant.'
+          'AI is not configured. Set AI_BASE_URL, AI_API_KEY, and AI_MODEL to enable the Ask assistant.'
       },
       { status: 503 }
     )
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
     }
     console.error('[ask] failed to start the exploration job:', error)
     return NextResponse.json(
-      { error: 'Failed to start the exploration' },
+      { error: "Couldn't generate the summary." },
       { status: 500 }
     )
   }

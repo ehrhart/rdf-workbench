@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
       return NextResponse.json(
-        { error: errorData.error || 'Failed to import snippet' },
+        { error: errorData.error || "Couldn't import the snippet." },
         { status: response.status }
       )
     }
@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
   } catch (error: unknown) {
     const err = error as Error
     return NextResponse.json(
-      { error: err.message || 'An unknown error occurred' },
+      { error: err.message || "Couldn't import the snippet." },
       { status: 500 }
     )
   }

@@ -729,7 +729,7 @@ const BindingsResultsTable = ({
             <SearchIcon className="size-4" />
           </InputGroupIcon>
           <InputGroupInput
-            placeholder="Search in results..."
+            placeholder="Search in results…"
             value={globalFilter}
             onChange={(event) => setGlobalFilter(event.target.value)}
             className="pl-10 pr-10 h-8"

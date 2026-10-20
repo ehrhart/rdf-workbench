@@ -63,7 +63,7 @@ export default async function SharePage({
           {isOwner ? (
             <>
               <p className="text-sm text-muted-foreground">
-                This is the read-only copy that you shared of your chat
+                This is a read-only copy of the chat you shared.
               </p>
               <Button asChild size="sm">
                 <Link href={`/ask/${share.conversationId}`}>
@@ -73,8 +73,8 @@ export default async function SharePage({
             </>
           ) : (
             <p className="text-sm text-muted-foreground">
-              This is a copy of a chat. Content may include unverified or unsafe
-              content
+              This is a read-only copy of a chat. Its content may be unverified
+              or unsafe.
             </p>
           )}
         </div>

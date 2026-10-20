@@ -49,8 +49,8 @@ export const ResourceHeader = memo(function ResourceHeader({
           size="icon-xs"
           className="ml-1 align-middle"
           tooltipText="Copy source URI"
-          successMessage="Source URI copied to clipboard"
-          errorMessage="Failed to copy source URI"
+          successMessage="Source URI copied"
+          errorMessage="Couldn't copy source URI"
         />
       </p>
       {type.length > 0 && (
@@ -69,8 +69,8 @@ export const ResourceHeader = memo(function ResourceHeader({
                 size="icon-xs"
                 className="ml-1 align-middle"
                 tooltipText="Copy type URI"
-                successMessage="Type URI copied to clipboard"
-                errorMessage="Failed to copy type URI"
+                successMessage="Type URI copied"
+                errorMessage="Couldn't copy type URI"
               />
               {idx < type.length - 1 ? ', ' : ''}
             </Fragment>

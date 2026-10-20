@@ -23,7 +23,10 @@ export async function POST(
     }
 
     if (!jobId) {
-      return NextResponse.json({ error: 'Job ID is required' }, { status: 400 })
+      return NextResponse.json(
+        { error: 'Job ID is required.' },
+        { status: 400 }
+      )
     }
 
     // Forward the request to the Virtuoso adapter
@@ -41,21 +44,21 @@ export async function POST(
     if (!response.ok) {
       const errorData = await response
         .json()
-        .catch(() => ({ error: 'Failed to cancel job' }))
+        .catch(() => ({ error: "Couldn't cancel the job." }))
       return NextResponse.json(
-        { error: errorData.error || 'Failed to cancel job' },
+        { error: errorData.error || "Couldn't cancel the job." },
         { status: response.status }
       )
     }
 
     const data = await response
       .json()
-      .catch(() => ({ message: 'Job cancelled successfully' }))
+      .catch(() => ({ message: 'Job cancelled' }))
     return NextResponse.json(data)
   } catch (error: unknown) {
     console.error('Error in cancel API route:', error)
     return NextResponse.json(
-      { error: (error as Error).message || 'Internal server error' },
+      { error: (error as Error).message || "Couldn't cancel the job." },
       { status: 500 }
     )
   }

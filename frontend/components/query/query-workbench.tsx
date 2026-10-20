@@ -148,10 +148,10 @@ export function QueryWorkbench<TResults>({
   resultViews = [],
   initialResultViewId,
   queryNoun = DEFAULT_QUERY_NOUN,
-  runButtonLabel = 'Run Query',
-  exportButtonLabel = 'Export',
+  runButtonLabel = 'Run query',
+  exportButtonLabel = 'Download',
   exportFilename,
-  emptyResultsMessage = 'No results to display',
+  emptyResultsMessage = 'No results yet.',
   urlSync,
   exportGroups,
   enableSavedQueries = false,
@@ -244,7 +244,7 @@ export function QueryWorkbench<TResults>({
   )
 
   const createDefaultTab = useCallback(() => {
-    const newTab = createTab('New Query', defaultQuery)
+    const newTab = createTab('New query', defaultQuery)
     setTabs([newTab])
     setActiveTabId(newTab.id)
     return newTab
@@ -267,7 +267,7 @@ export function QueryWorkbench<TResults>({
 
       if (tabToClose.query.trim() !== '') {
         const confirmClose = window.confirm(
-          `Are you sure you want to close "${tabToClose.name}"? It has unsaved ${queryNoun}s.`
+          `Close "${tabToClose.name}"? This tab has an unsaved ${queryNoun}.`
         )
         if (!confirmClose) return
       }
@@ -277,7 +277,7 @@ export function QueryWorkbench<TResults>({
         const newTabs = prev.filter((tab) => tab.id !== tabId)
 
         if (newTabs.length === 0) {
-          const fallback = createTab('New Query', defaultQuery)
+          const fallback = createTab('New query', defaultQuery)
           setActiveTabId(fallback.id)
           return [fallback]
         }
@@ -459,7 +459,7 @@ export function QueryWorkbench<TResults>({
         setIsCopied(true)
         setTimeout(() => setIsCopied(false), 2000)
       } catch (err) {
-        toast.error('Failed to copy', {
+        toast.error("Couldn't copy", {
           description: err instanceof Error ? err.message : String(err)
         })
       }
@@ -557,15 +557,15 @@ export function QueryWorkbench<TResults>({
         try {
           const saved = await fetchSavedQuery(savedQueryId)
           if (saved) {
-            const savedTab = createTab(saved.name || 'Saved Query', saved.query)
+            const savedTab = createTab(saved.name || 'Saved query', saved.query)
             setTabs([...parsedTabs, savedTab])
             setActiveTabId(savedTab.id)
             return
           }
-          toast.error('Saved query not found')
+          toast.error('That saved query no longer exists.')
         } catch (error) {
           console.error('Failed to load saved query from URL', error)
-          toast.error('Unable to load saved query link')
+          toast.error("Couldn't open the saved query link.")
         }
       }
 
@@ -577,7 +577,7 @@ export function QueryWorkbench<TResults>({
           return
         }
 
-        const urlTab = createTab('URL Query', urlQuery)
+        const urlTab = createTab('URL query', urlQuery)
         setTabs([...parsedTabs, urlTab])
         setActiveTabId(urlTab.id)
         return
@@ -718,7 +718,7 @@ export function QueryWorkbench<TResults>({
                 >
                   {isExporting ? <Spinner /> : <DownloadIcon />}
                   <span className="hidden sm:inline-block">
-                    {isExporting ? 'Exporting…' : exportButtonLabel}
+                    {isExporting ? 'Downloading…' : exportButtonLabel}
                   </span>
                   <span className="hidden sm:inline-block">▾</span>
                 </Button>
@@ -757,7 +757,7 @@ export function QueryWorkbench<TResults>({
               >
                 {isCopied ? <CheckIcon /> : <CopyIcon />}
                 <span className="hidden sm:inline-block">
-                  {isCopied ? 'Copied!' : 'Copy'}
+                  {isCopied ? 'Copied' : 'Copy'}
                 </span>
                 <span className="hidden sm:inline-block">▾</span>
               </Button>
@@ -779,7 +779,7 @@ export function QueryWorkbench<TResults>({
           {enableSavedQueries ? (
             <SavedQueriesMenu
               currentUser={currentUser}
-              activeTabName={activeTab?.name ?? 'New Query'}
+              activeTabName={activeTab?.name ?? 'New query'}
               activeQuery={activeTab?.query ?? ''}
               onOpenSavedQuery={handleOpenSavedQuery}
               onSaved={handleSavedQuerySaved}
@@ -879,28 +879,28 @@ export function QueryWorkbench<TResults>({
                   <DropdownMenuContent>
                     <DropdownMenuItem onClick={() => addTab()}>
                       <PlusIcon />
-                      New Tab
+                      New tab
                       <Kbd>⌘/Ctrl+T</Kbd>
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => startEditingTabName(tab.id)}
                     >
                       <EditIcon />
-                      Rename Tab
+                      Rename tab
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => duplicateTab(tab.id)}>
                       <CopyIcon />
-                      Duplicate Tab
+                      Duplicate tab
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={() => closeTab(tab.id)}>
                       <XIcon />
-                      Close Tab
+                      Close tab
                       <Kbd>Ctrl+W</Kbd>
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => closeOtherTabs(tab.id)}>
                       <XIcon />
-                      Close Other Tabs
+                      Close other tabs
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
@@ -908,7 +908,7 @@ export function QueryWorkbench<TResults>({
                       disabled={closedTabs.length === 0}
                     >
                       <UndoIcon />
-                      Undo Close Tab
+                      Undo close tab
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -947,7 +947,7 @@ export function QueryWorkbench<TResults>({
               <div className="flex h-64 flex-col items-center justify-center gap-2 p-10">
                 <div className="flex items-center gap-2">
                   <Spinner className="h-8 w-8" />
-                  <span>Executing {queryNoun}...</span>
+                  <span>Running {queryNoun}…</span>
                 </div>
                 <div className="text-sm text-muted-foreground">
                   {(elapsedTime / 1000).toFixed(2)}s
@@ -957,7 +957,7 @@ export function QueryWorkbench<TResults>({
               <>
                 {activeTabId && executionTimes[activeTabId] !== undefined && (
                   <div className="mb-2 px-2 text-sm text-muted-foreground">
-                    Query executed in{' '}
+                    Ran in{' '}
                     <span className="font-medium text-foreground">
                       {(executionTimes[activeTabId] / 1000).toFixed(3)}s
                     </span>

@@ -32,7 +32,7 @@ export async function changePasswordAction(
       return { message: error.message }
     }
     console.error('Unexpected password change error:', error)
-    return { message: 'Unable to change the password. Please try again.' }
+    return { message: "Couldn't change your password. Try again in a moment." }
   }
 
   // redirect() throws, so it stays outside the try/catch. Lands on the

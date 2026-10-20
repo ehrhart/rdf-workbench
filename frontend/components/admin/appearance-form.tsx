@@ -219,7 +219,7 @@ export function AppearanceForm({
       reader.readAsDataURL(file)
     }).catch(() => null)
     if (dataUrl === null) {
-      toast.error('Could not read the logo file')
+      toast.error("Couldn't read the logo file")
       return
     }
     setUploading(true)
@@ -251,8 +251,7 @@ export function AppearanceForm({
         <CardHeader>
           <CardTitle>Branding</CardTitle>
           <CardDescription>
-            The logo shows in the sidebar, on the login page, and as the browser
-            tab icon. PNG, JPEG, WEBP, or SVG up to 256 KB.
+            PNG, JPEG, WEBP, or SVG up to 256 KB.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -301,7 +300,7 @@ export function AppearanceForm({
                   disabled={uploading}
                   onClick={removeLogo}
                 >
-                  Remove
+                  Remove logo
                 </Button>
               )}
             </div>
@@ -310,10 +309,9 @@ export function AppearanceForm({
       </Card>
       <Card>
         <CardHeader>
-          <CardTitle>Appearance</CardTitle>
+          <CardTitle>Colors and layout</CardTitle>
           <CardDescription>
-            Changes here apply to the whole app after saving. The accent shows
-            up on hovers, menus, and selected rows.
+            Changes apply to the whole app after saving.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">

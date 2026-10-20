@@ -40,7 +40,7 @@ export function TemporaryPasswordDialog({
   async function copy() {
     await navigator.clipboard.writeText(reveal.password)
     setCopied(true)
-    toast('Copied to clipboard')
+    toast('Password copied')
   }
 
   return (

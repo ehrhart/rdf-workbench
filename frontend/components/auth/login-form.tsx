@@ -19,7 +19,6 @@ export function LoginForm({ redirectUrl }: { redirectUrl?: string }) {
         <Input
           id="username"
           name="username"
-          placeholder="username"
           autoFocus
           autoComplete="username"
           disabled={pending}
@@ -35,7 +34,6 @@ export function LoginForm({ redirectUrl }: { redirectUrl?: string }) {
           id="password"
           name="password"
           type="password"
-          placeholder="•••"
           autoComplete="current-password"
           disabled={pending}
         />
@@ -49,7 +47,7 @@ export function LoginForm({ redirectUrl }: { redirectUrl?: string }) {
       )}
 
       <Button type="submit" className="w-full" disabled={pending}>
-        {pending ? 'Logging in...' : 'Login'}
+        {pending ? 'Signing in…' : 'Sign in'}
       </Button>
     </form>
   )

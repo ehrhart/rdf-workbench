@@ -139,7 +139,7 @@ export default function ResourceManager({
         toast.success(`Export started for ${fileType.name}`)
       } catch (e) {
         console.error('Download failed:', e)
-        toast.error('Download failed', {
+        toast.error("Couldn't start the download", {
           description: e instanceof Error ? e.message : undefined
         })
       }
@@ -152,7 +152,7 @@ export default function ResourceManager({
   if (!uri && status === 'idle') {
     return (
       <div className="text-muted-foreground container mx-auto p-6">
-        Please provide a resource URI in the URL (e.g., ?uri=...).
+        View a resource by adding ?uri=… to the URL.
       </div>
     )
   }
@@ -212,17 +212,17 @@ export default function ResourceManager({
             variant={showBlankNodes ? 'secondary' : 'outline'}
             size="sm"
             onClick={handleToggleBlankNodes}
-            aria-label="Toggle blank nodes visibility"
+            aria-label="Show or hide blank nodes"
           >
             {showBlankNodes ? <EyeIcon /> : <EyeOffIcon />}
-            <span className="hidden sm:inline">Blank Nodes</span>
+            <span className="hidden sm:inline">Blank nodes</span>
             <span className="sm:hidden">BNodes</span>
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm">
                 <DownloadIcon />
-                <span className="hidden sm:inline">Download As</span>
+                <span className="hidden sm:inline">Download as</span>
                 <span className="sm:hidden">Download</span>
               </Button>
             </DropdownMenuTrigger>
@@ -239,7 +239,7 @@ export default function ResourceManager({
           </DropdownMenu>
           <Button size="sm" onClick={handleVisualize}>
             <ExternalLinkIcon />
-            <span className="hidden sm:inline">Visual Graph</span>
+            <span className="hidden sm:inline">Visual graph</span>
             <span className="sm:hidden">Graph</span>
           </Button>
         </div>

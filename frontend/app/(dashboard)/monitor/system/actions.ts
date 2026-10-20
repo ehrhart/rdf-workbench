@@ -33,6 +33,6 @@ export async function sysStat(
     }, {})
   } catch (error) {
     console.error('Error executing sys_stat:', error)
-    throw new Error('Failed to execute sys_stat')
+    throw new Error("Couldn't read system statistics.")
   }
 }

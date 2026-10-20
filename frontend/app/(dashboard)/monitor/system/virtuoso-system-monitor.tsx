@@ -54,7 +54,7 @@ export default function SystemPage() {
         setStats(result)
       } catch (err) {
         console.error('Error fetching system stats:', err)
-        setError('Failed to fetch system statistics')
+        setError('Refresh the page to try again.')
       } finally {
         setLoading(false)
       }
@@ -143,7 +143,7 @@ export default function SystemPage() {
       <DashboardShell>
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Error</AlertTitle>
+          <AlertTitle>Couldn't load system statistics</AlertTitle>
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       </DashboardShell>
@@ -152,7 +152,7 @@ export default function SystemPage() {
 
   return (
     <DashboardShell>
-      <DashboardHeader heading="System Monitoring">
+      <DashboardHeader heading="System monitor">
         <div className="text-muted-foreground text-sm">
           Last updated: {new Date().toLocaleTimeString()}
         </div>
@@ -161,10 +161,7 @@ export default function SystemPage() {
         {/* System Overview Card */}
         <Card>
           <CardHeader>
-            <CardTitle>System Overview</CardTitle>
-            <CardDescription>
-              General information about the Virtuoso server
-            </CardDescription>
+            <CardTitle>System overview</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -187,7 +184,7 @@ export default function SystemPage() {
                 </p>
               </div>
               <div>
-                <p className="text-sm font-medium">Database Size</p>
+                <p className="text-sm font-medium">Database size</p>
                 <p className="text-2xl font-bold">
                   {formatValue('st_db_file_size', stats?.st_db_file_size || 0)}
                 </p>
@@ -202,14 +199,14 @@ export default function SystemPage() {
         {/* Memory Usage Card */}
         <Card>
           <CardHeader>
-            <CardTitle>Memory Usage</CardTitle>
+            <CardTitle>Memory usage</CardTitle>
             <CardDescription>Database buffer utilization</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div>
                 <div className="mb-2 flex items-center justify-between">
-                  <span className="text-sm font-medium">Buffer Usage</span>
+                  <span className="text-sm font-medium">Buffer usage</span>
                   <span className="text-muted-foreground text-sm">
                     {stats?.st_db_used_buffers || 0} /{' '}
                     {stats?.st_db_buffers || 0} buffers
@@ -220,19 +217,19 @@ export default function SystemPage() {
 
               <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <div className="bg-secondary/50 rounded-md p-3">
-                  <p className="text-sm font-medium">Total Buffers</p>
+                  <p className="text-sm font-medium">Total buffers</p>
                   <p className="text-xl font-semibold">
                     {stats?.st_db_buffers || 0}
                   </p>
                 </div>
                 <div className="bg-secondary/50 rounded-md p-3">
-                  <p className="text-sm font-medium">Used Buffers</p>
+                  <p className="text-sm font-medium">Used buffers</p>
                   <p className="text-xl font-semibold">
                     {stats?.st_db_used_buffers || 0}
                   </p>
                 </div>
                 <div className="bg-secondary/50 rounded-md p-3">
-                  <p className="text-sm font-medium">Dirty Buffers</p>
+                  <p className="text-sm font-medium">Dirty buffers</p>
                   <p className="text-xl font-semibold">
                     {stats?.st_db_dirty_buffers || 0}
                   </p>
@@ -251,9 +248,9 @@ export default function SystemPage() {
         {/* Performance Metrics Chart */}
         <Card>
           <CardHeader>
-            <CardTitle>Performance Metrics</CardTitle>
+            <CardTitle>Performance metrics</CardTitle>
             <CardDescription>
-              Key database operations and their counts
+              Counts of key database operations.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -288,10 +285,7 @@ export default function SystemPage() {
           <TabsContent value="database">
             <Card>
               <CardHeader>
-                <CardTitle>Database Information</CardTitle>
-                <CardDescription>
-                  Details about the database configuration
-                </CardDescription>
+                <CardTitle>Database information</CardTitle>
               </CardHeader>
               <CardContent>
                 <Table>
@@ -320,7 +314,7 @@ export default function SystemPage() {
           <TabsContent value="processes">
             <Card>
               <CardHeader>
-                <CardTitle>Process Information</CardTitle>
+                <CardTitle>Process information</CardTitle>
                 <CardDescription>System process statistics</CardDescription>
               </CardHeader>
               <CardContent>
@@ -350,7 +344,7 @@ export default function SystemPage() {
           <TabsContent value="connections">
             <Card>
               <CardHeader>
-                <CardTitle>Connection Statistics</CardTitle>
+                <CardTitle>Connection statistics</CardTitle>
                 <CardDescription>Client connection information</CardDescription>
               </CardHeader>
               <CardContent>
@@ -380,10 +374,7 @@ export default function SystemPage() {
           <TabsContent value="performance">
             <Card>
               <CardHeader>
-                <CardTitle>Performance Metrics</CardTitle>
-                <CardDescription>
-                  Detailed performance statistics
-                </CardDescription>
+                <CardTitle>Performance metrics</CardTitle>
               </CardHeader>
               <CardContent>
                 <Table>
@@ -412,7 +403,7 @@ export default function SystemPage() {
           <TabsContent value="locks">
             <Card>
               <CardHeader>
-                <CardTitle>Lock Statistics</CardTitle>
+                <CardTitle>Lock statistics</CardTitle>
                 <CardDescription>Database lock information</CardDescription>
               </CardHeader>
               <CardContent>
@@ -442,10 +433,7 @@ export default function SystemPage() {
           <TabsContent value="memory">
             <Card>
               <CardHeader>
-                <CardTitle>Memory Statistics</CardTitle>
-                <CardDescription>
-                  Detailed memory usage information
-                </CardDescription>
+                <CardTitle>Memory statistics</CardTitle>
               </CardHeader>
               <CardContent>
                 <Table>
@@ -474,10 +462,7 @@ export default function SystemPage() {
           <TabsContent value="rdf">
             <Card>
               <CardHeader>
-                <CardTitle>RDF Configuration</CardTitle>
-                <CardDescription>
-                  RDF and SPARQL related settings
-                </CardDescription>
+                <CardTitle>RDF configuration</CardTitle>
               </CardHeader>
               <CardContent>
                 <Table>

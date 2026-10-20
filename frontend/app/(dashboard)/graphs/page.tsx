@@ -8,8 +8,8 @@ import { GraphListSkeleton } from '@/components/skeletons'
 import { getWorkbenchRuntime, requirePageAccess } from '@/lib/runtime'
 
 export const metadata: Metadata = {
-  title: 'Named Graphs',
-  description: 'Browse named graphs in the configured RDF store'
+  title: 'Graphs',
+  description: 'Browse the graphs in this dataset'
 }
 
 // Async component for graph data
@@ -41,7 +41,7 @@ export default async function GraphsPage() {
   await requirePageAccess('anonymousRead')
   return (
     <DashboardShell>
-      <DashboardHeader heading="Named Graphs" />
+      <DashboardHeader heading="Graphs" />
       <Suspense fallback={<GraphListSkeleton />}>
         <GraphsContent />
       </Suspense>

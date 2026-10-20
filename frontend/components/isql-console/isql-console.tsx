@@ -22,7 +22,7 @@ export function IsqlConsole({ defaultQuery }: IsqlConsoleProps) {
         <TabsList className="overflow-x-auto justify-start mb-2">
           <TabsTrigger value="editor" className="flex items-center gap-2">
             <Database />
-            ISQL Console
+            iSQL console
           </TabsTrigger>
           <TabsTrigger value="history" className="flex items-center gap-2">
             <Clock />
@@ -38,8 +38,8 @@ export function IsqlConsole({ defaultQuery }: IsqlConsoleProps) {
           <TabsContent value="history" className="h-full">
             <QueryHistory
               service={isqlQueryHistoryService}
-              queryNoun="ISQL command"
-              emptyHistoryMessage="Run an ISQL command and it will be saved here for quick access."
+              queryNoun="iSQL command"
+              emptyHistoryMessage="Run an iSQL command and it is saved here."
               onSelectQueryAction={(query) => {
                 setActiveTab('editor')
                 router.push(`/isql?query=${encodeURIComponent(query)}`)

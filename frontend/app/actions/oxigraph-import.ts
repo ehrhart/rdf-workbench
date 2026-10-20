@@ -18,12 +18,12 @@ async function requireOxigraphAccess(): Promise<void> {
   const principal = await runtime.auth.getPrincipal()
   if (!principal) throw new AuthError('Authentication required')
   if (runtime.provider !== 'oxigraph') {
-    throw new Error('Oxigraph import is not available for this provider')
+    throw new Error("Oxigraph import isn't available for this provider")
   }
 }
 
 function messageFrom(error: unknown): string {
-  return error instanceof Error ? error.message : 'The import failed'
+  return error instanceof Error ? error.message : "Couldn't import the data"
 }
 
 export async function importFileAction(

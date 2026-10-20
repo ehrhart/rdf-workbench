@@ -95,7 +95,7 @@ function ResultsTriples({ results }: { results: SparqlQueryResult }) {
   if (results.kind !== 'graph') {
     return (
       <div className="flex h-48 items-center justify-center rounded-lg border text-sm text-muted-foreground">
-        No triples to display for this result
+        No triples in this result.
       </div>
     )
   }
@@ -103,7 +103,7 @@ function ResultsTriples({ results }: { results: SparqlQueryResult }) {
   if (error) {
     return (
       <div className="flex h-48 items-center justify-center rounded-lg border text-sm text-destructive">
-        Failed to parse RDF graph: {error}
+        Couldn't read the graph: {error}
       </div>
     )
   }
@@ -111,7 +111,7 @@ function ResultsTriples({ results }: { results: SparqlQueryResult }) {
   if (rows.length === 0) {
     return (
       <div className="flex h-48 items-center justify-center rounded-lg border text-sm text-muted-foreground">
-        The query returned an empty graph
+        The query returned an empty graph.
       </div>
     )
   }

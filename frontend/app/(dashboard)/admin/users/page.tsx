@@ -11,8 +11,8 @@ import {
 } from '@/lib/runtime'
 
 export const metadata: Metadata = {
-  title: 'User Administration',
-  description: 'Manage RDF Workbench user accounts.'
+  title: 'Users',
+  description: 'Create accounts and reset passwords.'
 }
 
 export default async function UsersPage() {
@@ -29,8 +29,8 @@ export default async function UsersPage() {
   return (
     <DashboardShell>
       <DashboardHeader
-        heading="User Administration"
-        text="Manage local RDF Workbench accounts and access."
+        heading="Users"
+        text="Create accounts and reset passwords."
       />
       <UserManager users={users} currentUserId={principal.id} />
     </DashboardShell>

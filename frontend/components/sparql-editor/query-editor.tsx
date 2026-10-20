@@ -147,7 +147,7 @@ const QueryEditor = ({
 
     if (failures.length > 0) {
       setAutocompleteError(
-        `Could not load ${failures.join(' and ')} for autocomplete.`
+        `Couldn't load ${failures.join(' and ')} for autocomplete.`
       )
     }
   }, [])
@@ -363,14 +363,14 @@ const QueryEditor = ({
             className="h-7 gap-1.5 px-2 text-xs"
           >
             <ScanSearch className="size-3.5" />
-            Check
+            Check syntax
           </Button>
           <div className="ml-auto flex items-center gap-1">
             {autocompleteError && (
               <>
                 <span className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400">
                   <TriangleAlert className="size-3.5" />
-                  Autocomplete data unavailable
+                  Autocomplete unavailable
                 </span>
                 <Button
                   variant="ghost"

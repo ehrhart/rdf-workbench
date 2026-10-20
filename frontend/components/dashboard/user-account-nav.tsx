@@ -25,7 +25,7 @@ export function UserAccountNav({ user }: UserAccountNavProps) {
   if (!user) {
     return (
       <Button asChild variant="default" size="sm">
-        <Link href="/login">Log in</Link>
+        <Link href="/login">Sign in</Link>
       </Button>
     )
   }
@@ -58,7 +58,7 @@ export function UserAccountNav({ user }: UserAccountNavProps) {
         <DropdownMenuItem className="cursor-pointer" asChild>
           <a href="/logout" className="flex items-center w-full">
             <LogOutIcon />
-            <span>Log out</span>
+            <span>Sign out</span>
           </a>
         </DropdownMenuItem>
       </DropdownMenuContent>

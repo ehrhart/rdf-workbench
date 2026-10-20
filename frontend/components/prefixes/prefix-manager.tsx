@@ -31,13 +31,7 @@ import { toast } from 'sonner'
 import * as z from 'zod'
 import { CopyToClipboardButton } from '@/components/prefixes/copy-to-clipboard-button'
 import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle
-} from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
   Dialog,
@@ -133,8 +127,8 @@ const findConflicts = (
 }
 
 const formSchema = z.object({
-  prefix: z.string().min(1, 'Prefix is required'),
-  namespace: z.string().url('Namespace must be a valid URI')
+  prefix: z.string().min(1, 'Prefix is required.'),
+  namespace: z.string().url('Namespace must be a valid URI.')
 })
 
 export function PrefixManager({
@@ -179,12 +173,12 @@ export function PrefixManager({
   const hasPrefixConflict = Boolean(prefixConflict)
   const hasNamespaceConflict = namespaceConflicts.length > 0
   const dialogTitle = !overwriteState
-    ? 'Resolve Prefix Conflict'
+    ? 'Resolve prefix conflict'
     : hasPrefixConflict && hasNamespaceConflict
-      ? 'Prefix and Namespace Already Exist'
+      ? 'Prefix and namespace already exist'
       : hasPrefixConflict
-        ? 'Prefix Already Exists'
-        : 'Namespace Already Exists'
+        ? 'Prefix already exists'
+        : 'Namespace already exists'
   const dialogDescription = !overwriteState
     ? ''
     : [
@@ -199,12 +193,12 @@ export function PrefixManager({
                 .join(', ')
               const prefixLabel =
                 namespaceConflicts.length === 1 ? 'prefix' : 'prefixes'
-              return `The namespace URI "${namespaceValue}" is already associated with the ${prefixLabel} ${conflictPrefixes}.`
+              return `The namespace URI "${namespaceValue}" is already used by ${prefixLabel} ${conflictPrefixes}.`
             })()
           : null,
-        `Confirming will delete the existing ${
+        `Confirming deletes the existing ${
           overwriteState.conflicts.length > 1 ? 'pairs' : 'pair'
-        } before saving the new values.`
+        }.`
       ]
         .filter(Boolean)
         .join(' ')
@@ -216,7 +210,7 @@ export function PrefixManager({
       setPrefixes(latest)
     } catch (error) {
       console.error('Failed to refresh prefixes:', error)
-      toast.error('Failed to refresh prefixes.')
+      toast.error("Couldn't refresh prefixes.")
     }
   }
 
@@ -291,10 +285,10 @@ export function PrefixManager({
       setPrefixes((prev) => ({ ...prev, ...created }))
       await reloadPrefixes()
       form.reset()
-      toast.success(`Prefix ${entry.prefix} has been added successfully.`)
+      toast.success(`Prefix ${entry.prefix} added`)
     } catch (error) {
       console.error('Failed to add prefix:', error)
-      toast.error('Failed to add prefix. It might already exist.')
+      toast.error("Couldn't add the prefix — it may already exist.")
     }
   }
 
@@ -306,7 +300,7 @@ export function PrefixManager({
       mode === 'edit' ? (originalPrefix ?? editingPrefix?.prefix ?? null) : null
 
     if (mode === 'edit' && !sourcePrefix) {
-      toast.error('Unable to determine the prefix to update.')
+      toast.error("Couldn't determine which prefix to update.")
       setOverwriteState(null)
       return
     }
@@ -344,9 +338,7 @@ export function PrefixManager({
         setEditDialogOpen(false)
         setEditingPrefix(null)
         editForm.reset()
-        toast.success(
-          `Prefix ${newEntry.prefix} has been updated successfully.`
-        )
+        toast.success(`Prefix ${newEntry.prefix} updated`)
       } else {
         const created = await addPrefix(newEntry.prefix, newEntry.namespace)
         setPrefixes((prev) => {
@@ -362,11 +354,11 @@ export function PrefixManager({
         })
         await reloadPrefixes()
         form.reset()
-        toast.success(`Prefix ${newEntry.prefix} has been added successfully.`)
+        toast.success(`Prefix ${newEntry.prefix} added`)
       }
     } catch (error) {
       console.error('Failed to overwrite prefix:', error)
-      toast.error('Failed to overwrite prefix.')
+      toast.error("Couldn't save the prefix.")
     } finally {
       setIsOverwriteSubmitting(false)
       setOverwriteState(null)
@@ -392,7 +384,7 @@ export function PrefixManager({
       setEditDialogOpen(false)
       setEditingPrefix(null)
       editForm.reset()
-      toast.info('No changes detected.')
+      toast.info('Nothing to change')
       return
     }
 
@@ -431,11 +423,11 @@ export function PrefixManager({
       setEditDialogOpen(false)
       setEditingPrefix(null)
       editForm.reset()
-      toast.success(`Prefix ${entry.prefix} has been updated successfully.`)
+      toast.success(`Prefix ${entry.prefix} updated`)
     } catch (error) {
       console.error('Failed to update prefix:', error)
       setEditingPrefix(previousEntry)
-      toast.error('Failed to update prefix.')
+      toast.error("Couldn't update the prefix.")
     }
   }
 
@@ -449,7 +441,11 @@ export function PrefixManager({
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm(`Are you sure you want to delete the prefix: ${id}?`)) {
+    if (
+      !confirm(
+        `Delete prefix ${id}? It will no longer be available in queries.`
+      )
+    ) {
       return
     }
 
@@ -460,10 +456,10 @@ export function PrefixManager({
         delete newPrefixes[id]
         return newPrefixes
       })
-      toast.success('The prefix has been deleted successfully.')
+      toast.success('Prefix deleted')
     } catch (error) {
       console.error('Failed to delete prefix:', error)
-      toast.error('Failed to delete prefix.')
+      toast.error("Couldn't delete the prefix.")
     }
   }
 
@@ -475,7 +471,7 @@ export function PrefixManager({
 
     if (
       !confirm(
-        `Are you sure you want to delete ${selectedPrefixes.length} selected prefixes?`
+        `Delete ${selectedPrefixes.length} prefixes? They will no longer be available in queries.`
       )
     ) {
       return
@@ -495,12 +491,10 @@ export function PrefixManager({
       })
       setRowSelection({})
 
-      toast.success(
-        `${selectedPrefixes.length} prefixes have been deleted successfully.`
-      )
+      toast.success(`Deleted ${selectedPrefixes.length} prefixes`)
     } catch (error) {
       console.error('Failed to delete selected prefixes:', error)
-      toast.error('Failed to delete one or more prefixes.')
+      toast.error("Couldn't delete all of the selected prefixes.")
     }
   }
 
@@ -555,6 +549,7 @@ export function PrefixManager({
             <CopyToClipboardButton
               textToCopy={`${prefix}:`}
               tooltipText="Copy prefix"
+              successMessage="Prefix copied"
               className="opacity-0 group-hover:opacity-100 transition-opacity"
             />
           </div>
@@ -583,7 +578,8 @@ export function PrefixManager({
             </code>
             <CopyToClipboardButton
               textToCopy={namespace}
-              tooltipText="Copy namespace"
+              tooltipText="Copy URI"
+              successMessage="URI copied"
               className="opacity-0 group-hover:opacity-100 transition-opacity"
             />
           </div>
@@ -607,38 +603,38 @@ export function PrefixManager({
               <DropdownMenuItem
                 onClick={() => {
                   navigator.clipboard.writeText(`${entry.prefix}:`)
-                  toast.success(`Copied prefix to clipboard`)
+                  toast.success('Prefix copied')
                 }}
               >
                 <CopyIcon />
-                Copy Prefix
+                Copy prefix
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => {
                   navigator.clipboard.writeText(entry.namespace)
-                  toast.success(`Copied namespace URI to clipboard`)
+                  toast.success('URI copied')
                 }}
               >
                 <CopyIcon />
-                Copy Namespace
+                Copy URI
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => {
                   navigator.clipboard.writeText(
                     `PREFIX ${entry.prefix}: <${entry.namespace}>`
                   )
-                  toast.success(`Copied SPARQL declaration to clipboard`)
+                  toast.success('SPARQL declaration copied')
                 }}
               >
                 <CopyIcon />
-                Copy SPARQL Declaration
+                Copy SPARQL declaration
               </DropdownMenuItem>
               {canManage && (
                 <>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => handleEdit(entry)}>
                     <PencilIcon />
-                    Edit Prefix
+                    Edit prefix
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
@@ -646,7 +642,7 @@ export function PrefixManager({
                     className="text-destructive focus:text-destructive"
                   >
                     <TrashIcon className="stroke-destructive" />
-                    Delete Prefix
+                    Delete prefix
                   </DropdownMenuItem>
                 </>
               )}
@@ -693,10 +689,7 @@ export function PrefixManager({
       {canManage && (
         <Card>
           <CardHeader>
-            <CardTitle>Add New Prefix</CardTitle>
-            <CardDescription>
-              Add a new namespace prefix for use in SPARQL queries
-            </CardDescription>
+            <CardTitle>Add a prefix</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -728,7 +721,7 @@ export function PrefixManager({
                 ) : (
                   <PlusIcon />
                 )}
-                Add Prefix
+                Add prefix
               </Button>
             </form>
           </CardContent>
@@ -737,17 +730,12 @@ export function PrefixManager({
 
       <Card>
         <CardHeader>
-          <CardTitle>{canManage ? 'Manage Prefixes' : 'Prefixes'}</CardTitle>
-          <CardDescription>
-            {canManage
-              ? 'View, edit, and delete existing namespace prefixes'
-              : 'View and copy namespace prefixes available to SPARQL queries'}
-          </CardDescription>
+          <CardTitle>{canManage ? 'Manage prefixes' : 'Prefixes'}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-2 mb-4">
             <Input
-              placeholder="Filter prefixes..."
+              placeholder="Filter prefixes…"
               value={table.getState().globalFilter ?? ''}
               onChange={(event) => table.setGlobalFilter(event.target.value)}
               className="max-w-sm"
@@ -800,9 +788,7 @@ export function PrefixManager({
                       <div className="flex flex-col items-center justify-center text-muted-foreground">
                         <p>No prefixes found</p>
                         {canManage && (
-                          <p className="text-sm mt-1">
-                            Add a prefix above to get started
-                          </p>
+                          <p className="text-sm mt-1">Add a prefix above.</p>
                         )}
                       </div>
                     </TableCell>
@@ -815,8 +801,8 @@ export function PrefixManager({
           <div className="flex items-center justify-between pt-4">
             <div className="text-sm text-muted-foreground">
               {canManage
-                ? `${table.getFilteredSelectedRowModel().rows.length} of ${table.getFilteredRowModel().rows.length} row(s) selected.`
-                : `${table.getFilteredRowModel().rows.length} prefix(es).`}
+                ? `${table.getFilteredSelectedRowModel().rows.length} of ${table.getFilteredRowModel().rows.length} selected.`
+                : `${table.getFilteredRowModel().rows.length} ${table.getFilteredRowModel().rows.length === 1 ? 'prefix' : 'prefixes'}.`}
             </div>
             <div className="flex items-center space-x-2">
               <Button
@@ -893,9 +879,7 @@ export function PrefixManager({
                         )
                         .join('\n')
                       navigator.clipboard.writeText(sparqlDeclarations)
-                      toast.success(
-                        `Copied ${selectedRows.length} SPARQL declarations to clipboard`
-                      )
+                      toast.success('SPARQL declarations copied')
                     }}
                     className="gap-2"
                   >
@@ -910,7 +894,7 @@ export function PrefixManager({
                     className="gap-2"
                   >
                     <TrashIcon />
-                    Delete
+                    Delete selected
                   </Button>
 
                   <div className="h-8 w-px bg-border mx-1" />
@@ -935,9 +919,9 @@ export function PrefixManager({
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit Prefix</DialogTitle>
+            <DialogTitle>Edit prefix</DialogTitle>
             <DialogDescription>
-              Update the prefix name and/or namespace URI.
+              Change the prefix name, the URI, or both.
             </DialogDescription>
           </DialogHeader>
           <form
@@ -983,7 +967,7 @@ export function PrefixManager({
                 {isEditSubmitting ? (
                   <Loader2Icon className="animate-spin" />
                 ) : null}
-                Save Changes
+                Save changes
               </Button>
             </DialogFooter>
           </form>

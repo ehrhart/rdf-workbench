@@ -8,7 +8,7 @@ import { getWorkbenchRuntime, requirePageAccess } from '@/lib/runtime'
 
 export const metadata: Metadata = {
   title: 'Dereferencing',
-  description: 'Manage dereferenceable resource paths.'
+  description: 'Choose which resource paths open in the workbench.'
 }
 
 export default async function DereferenceAdminPage() {
@@ -26,7 +26,7 @@ export default async function DereferenceAdminPage() {
     <DashboardShell>
       <DashboardHeader
         heading="Dereferencing"
-        text="Configure which resource paths are dereferenceable. Each path maps /path/<id> to the matching resource on the data endpoint."
+        text="Choose which resource paths open in the workbench."
       />
       <DereferenceManager paths={paths} reservedPaths={reservedPaths} />
     </DashboardShell>

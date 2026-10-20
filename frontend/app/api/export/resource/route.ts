@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     const defaultFormat = supportedFormats[0]
     if (!defaultFormat) {
       return Response.json(
-        { error: 'Resource exports are unavailable for this provider' },
+        { error: 'Resource export is not available for this provider.' },
         { status: 404 }
       )
     }
@@ -40,14 +40,14 @@ export async function POST(request: NextRequest) {
 
     if (!resourceUri) {
       return new Response(
-        JSON.stringify({ error: 'Missing URI for resource export' }),
+        JSON.stringify({ error: 'A resource URI is required to export.' }),
         { status: 400 }
       )
     }
 
     if (resourceUri.includes('<') || resourceUri.includes('>')) {
       return new Response(
-        JSON.stringify({ error: 'Invalid URI supplied for export' }),
+        JSON.stringify({ error: "This URI can't be used for export." }),
         { status: 400 }
       )
     }
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
     )
     if (!formatConfig) {
       return new Response(
-        JSON.stringify({ error: `Unsupported format: ${format}` }),
+        JSON.stringify({ error: `The format ${format} isn't supported.` }),
         { status: 400 }
       )
     }
@@ -72,7 +72,9 @@ export async function POST(request: NextRequest) {
 
     if (!response.ok || !response.body) {
       return new Response(
-        JSON.stringify({ error: (await response.text()) || 'Export failed' }),
+        JSON.stringify({
+          error: (await response.text()) || "Couldn't export the resource."
+        }),
         { status: 500 }
       )
     }
@@ -88,9 +90,12 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error('Error exporting resource:', error)
-    return new Response(JSON.stringify({ error: 'Server error' }), {
-      status: 500
-    })
+    return new Response(
+      JSON.stringify({ error: "Couldn't export the resource." }),
+      {
+        status: 500
+      }
+    )
   }
 }
 

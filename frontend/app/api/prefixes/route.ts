@@ -16,7 +16,7 @@ export async function GET() {
   } catch (error) {
     console.error('Error fetching prefixes:', error)
     return NextResponse.json(
-      { error: 'Failed to fetch prefixes' },
+      { error: "Couldn't load prefixes." },
       { status: 500 }
     )
   }

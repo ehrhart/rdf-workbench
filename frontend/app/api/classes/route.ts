@@ -16,7 +16,7 @@ export async function GET() {
   } catch (error) {
     console.error('Error fetching classes:', error)
     return NextResponse.json(
-      { error: 'Failed to fetch classes' },
+      { error: "Couldn't load classes." },
       { status: 500 }
     )
   }

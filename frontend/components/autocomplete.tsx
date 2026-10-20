@@ -49,7 +49,7 @@ export function AutoComplete<T extends string>({
   items,
   isLoading,
   emptyMessage = 'No items.',
-  placeholder = 'Search...',
+  placeholder = 'Search…',
   resetOnBlur = true
 }: Props<T>) {
   const [open, setOpen] = useState(false)

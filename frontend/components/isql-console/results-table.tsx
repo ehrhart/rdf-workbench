@@ -62,7 +62,7 @@ function StatementResultTable({ rows }: { rows: SqlQueryRow[] }) {
   if (rows.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
-        The statement execution did not return a result set.
+        The statement did not return a result set.
       </div>
     )
   }
@@ -101,7 +101,7 @@ export function IsqlResultsTable({ statements }: ResultsTableProps) {
   if (!statements || statements.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-10 text-center text-sm text-muted-foreground">
-        Query executed successfully but returned no statements.
+        The command returned no statements.
       </div>
     )
   }
@@ -140,7 +140,7 @@ export function IsqlResultsTable({ statements }: ResultsTableProps) {
                 <span className="text-muted-foreground">
                   {statement.rowCount <= 0
                     ? 'No result set'
-                    : `${statement.rowCount} row(s)`}
+                    : `${statement.rowCount} ${statement.rowCount === 1 ? 'row' : 'rows'}`}
                 </span>
               </div>
             </div>
@@ -149,7 +149,7 @@ export function IsqlResultsTable({ statements }: ResultsTableProps) {
           {statement.status === 'error' && (
             <div className="rounded-md border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
               <p className="font-medium">
-                {statement.errorMessage ?? 'Statement execution failed.'}
+                {statement.errorMessage ?? 'The statement failed.'}
               </p>
               {statement.errorCode ? (
                 <p className="text-xs opacity-75">
@@ -164,8 +164,8 @@ export function IsqlResultsTable({ statements }: ResultsTableProps) {
           ) : statement.status !== 'error' ? (
             <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
               {statement.rowCount > 0
-                ? `Statement affected ${statement.rowCount} row(s) but did not return a result set.`
-                : 'The statement execution did not return a result set.'}
+                ? `This statement affected ${statement.rowCount} ${statement.rowCount === 1 ? 'row' : 'rows'} but returned no result set.`
+                : 'The statement did not return a result set.'}
             </div>
           ) : null}
         </div>

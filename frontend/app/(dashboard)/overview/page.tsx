@@ -18,7 +18,7 @@ import {
 
 export const metadata: Metadata = {
   title: 'Overview',
-  description: 'Overview of the configured RDF store'
+  description: 'Graphs, triples, and recent queries at a glance'
 }
 
 async function StatsSection() {
@@ -45,7 +45,8 @@ async function StatsSection() {
         >
           <AlertCircle className="h-4 w-4 text-yellow-500" />
           <AlertDescription className="text-sm text-muted-foreground">
-            Unable to fetch real-time statistics from the configured endpoint.
+            Statistics are unavailable right now. Check that the triplestore is
+            running.
           </AlertDescription>
         </Alert>
       )}

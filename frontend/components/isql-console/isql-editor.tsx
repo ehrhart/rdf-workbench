@@ -86,8 +86,8 @@ export function IsqlEditor({ defaultQuery = '' }: IsqlEditorProps) {
         headers: { 'Content-Type': 'application/json' },
         bodyMode: 'json'
       }}
-      queryNoun="ISQL command"
-      runButtonLabel="Run Command"
+      queryNoun="iSQL command"
+      runButtonLabel="Run command"
       exportFilename="isql-results"
       exportGroups={ISQL_EXPORT_GROUPS}
       urlSync={{ enabled: true, paramKey: 'query' }}
@@ -96,7 +96,7 @@ export function IsqlEditor({ defaultQuery = '' }: IsqlEditorProps) {
       )}
       resultViews={resultViews}
       initialResultViewId="table"
-      emptyResultsMessage="Command executed successfully."
+      emptyResultsMessage="The command ran."
     />
   )
 }

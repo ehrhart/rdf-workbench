@@ -80,12 +80,12 @@ export function IndexStatusCard() {
     setDialogOpen(false)
     try {
       await rebuildFTIndex()
-      toast.success(
-        'Full-text index rebuild initiated. This may take some time for large datasets.'
-      )
+      toast.success('Rebuild started', {
+        description: 'This can take a while on large datasets.'
+      })
     } catch (error) {
       console.error('Failed to rebuild FT index:', error)
-      toast.error('Failed to rebuild full-text index.')
+      toast.error("Couldn't rebuild the index.")
     } finally {
       setIsRebuilding(false)
     }
@@ -102,10 +102,10 @@ export function IndexStatusCard() {
       await loadStatus() // Reload to confirm changes
       setConfigDialogOpen(false)
 
-      toast.success('Batch mode configuration updated successfully.')
+      toast.success('Batch mode updated')
     } catch (error) {
       console.error('Failed to update batch mode:', error)
-      toast.error('Failed to update batch mode configuration.')
+      toast.error("Couldn't update batch mode.")
     } finally {
       setIsSaving(false)
     }
@@ -136,29 +136,29 @@ export function IndexStatusCard() {
   const getModeDescription = (mode: string) => {
     switch (mode) {
       case 'auto':
-        return 'Index updates automatically at scheduled intervals.'
+        return 'The index updates on a schedule.'
       case 'off':
-        return 'Index updates in real-time with each change (not recommended for production).'
+        return 'The index updates in real time with every change. Not recommended for production.'
       default:
-        return 'Index updates must be triggered manually. Use the rebuild button after adding rules or importing data.'
+        return 'The index updates only when you rebuild it. Rebuild after adding rules or importing data.'
     }
   }
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Index Status & Maintenance</CardTitle>
+        <CardTitle>Index status</CardTitle>
         <CardDescription>
-          Manage full-text index updates and batch processing mode
+          How the index stays current with the dataset.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex items-center justify-between">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-medium">Batch Update Mode:</span>
+              <span className="text-sm font-medium">Batch update mode</span>
               {isLoading ? (
-                <Badge variant="outline">Loading...</Badge>
+                <Badge variant="outline">Loading status…</Badge>
               ) : status ? (
                 <Badge variant={getBadgeVariant(status.batchMode)}>
                   {getModeLabel(status.batchMode, status.interval)}
@@ -170,7 +170,7 @@ export function IndexStatusCard() {
             <p className="text-xs text-muted-foreground">
               {status
                 ? getModeDescription(status.batchMode)
-                : 'Unable to determine index status.'}
+                : "Couldn't load the index status."}
             </p>
           </div>
         </div>
@@ -182,16 +182,15 @@ export function IndexStatusCard() {
                 <RefreshCw
                   className={`mr-2 h-4 w-4 ${isRebuilding ? 'animate-spin' : ''}`}
                 />
-                {isRebuilding ? 'Rebuilding...' : 'Rebuild Index'}
+                {isRebuilding ? 'Rebuilding…' : 'Rebuild index'}
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Rebuild Full-Text Index?</DialogTitle>
+                <DialogTitle>Rebuild the full-text index?</DialogTitle>
                 <DialogDescription>
-                  This will synchronize the full-text index with the current RDF
-                  data based on active indexing rules. This operation may take
-                  several minutes for large datasets.
+                  The index is rebuilt from the current data following the
+                  active rules. This can take several minutes on large datasets.
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter>
@@ -212,7 +211,7 @@ export function IndexStatusCard() {
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Configure Batch Update Mode</DialogTitle>
+                <DialogTitle>Configure batch update mode</DialogTitle>
                 <DialogDescription>
                   Choose how the full-text index is updated when RDF data
                   changes.
@@ -221,7 +220,7 @@ export function IndexStatusCard() {
 
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
-                  <Label htmlFor="mode">Update Mode</Label>
+                  <Label htmlFor="mode">Update mode</Label>
                   <Select
                     value={selectedMode}
                     onValueChange={(value) =>
@@ -238,18 +237,17 @@ export function IndexStatusCard() {
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-muted-foreground">
-                    {selectedMode === 'manual' &&
-                      'Rebuild index manually after changes'}
+                    {selectedMode === 'manual' && 'Rebuild after changes.'}
                     {selectedMode === 'auto' &&
-                      'Index updates automatically at intervals'}
+                      'The index updates on a schedule.'}
                     {selectedMode === 'off' &&
-                      'Index updates immediately (performance impact)'}
+                      'The index updates with every change, at a performance cost.'}
                   </p>
                 </div>
 
                 {selectedMode === 'auto' && (
                   <div className="space-y-2">
-                    <Label htmlFor="interval">Update Interval (minutes)</Label>
+                    <Label htmlFor="interval">Update interval (minutes)</Label>
                     <Input
                       id="interval"
                       type="number"
@@ -260,7 +258,7 @@ export function IndexStatusCard() {
                       }
                     />
                     <p className="text-xs text-muted-foreground">
-                      How often the index should be updated automatically
+                      How often the index updates.
                     </p>
                   </div>
                 )}
@@ -268,9 +266,9 @@ export function IndexStatusCard() {
                 {selectedMode === 'off' && (
                   <Alert>
                     <AlertDescription>
-                      <strong>Warning:</strong> Real-time mode can significantly
-                      impact performance, especially with frequent data changes.
-                      Recommended only for development or small datasets.
+                      <strong>Warning:</strong> Real-time updates slow down
+                      every write. Use them only in development or for small
+                      datasets.
                     </AlertDescription>
                   </Alert>
                 )}
@@ -284,7 +282,7 @@ export function IndexStatusCard() {
                   Cancel
                 </Button>
                 <Button onClick={handleSaveConfig} disabled={isSaving}>
-                  {isSaving ? 'Saving...' : 'Save Changes'}
+                  {isSaving ? 'Saving…' : 'Save changes'}
                 </Button>
               </DialogFooter>
             </DialogContent>

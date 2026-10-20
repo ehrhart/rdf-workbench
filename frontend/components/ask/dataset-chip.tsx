@@ -33,8 +33,8 @@ export function DatasetChip({ summary }: DatasetChipProps) {
         .catch(() => {
           setFull({
             profile: null,
-            text: '(failed to load profile text)',
-            systemPrompt: '(failed to load system prompt)'
+            text: "Couldn't load the dataset profile.",
+            systemPrompt: "Couldn't load the system prompt."
           })
         })
         .finally(() => setLoadingFull(false))
@@ -65,7 +65,9 @@ export function DatasetChip({ summary }: DatasetChipProps) {
             </div>
           </SheetHeader>
           <pre className="mx-4 mb-4 min-h-0 min-w-0 flex-1 overflow-y-auto break-words rounded-md bg-muted p-3 text-xs whitespace-pre-wrap">
-            {full ? (full.systemPrompt ?? '(none)') : 'Loading…'}
+            {full
+              ? (full.systemPrompt ?? '(none)')
+              : 'Loading the system prompt…'}
           </pre>
         </SheetContent>
       </Sheet>

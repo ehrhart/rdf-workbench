@@ -119,7 +119,7 @@ export default function NodeInfoPanel({
                 size="icon"
                 onClick={() => {
                   navigator.clipboard.writeText(node.id)
-                  toast.success(`Copied node URI to clipboard`)
+                  toast.success('Node URI copied')
                 }}
               >
                 <LinkIcon />
@@ -162,7 +162,7 @@ export default function NodeInfoPanel({
 
         <Input
           type="text"
-          placeholder="Search properties..."
+          placeholder="Search properties…"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="w-full h-auto"
@@ -177,7 +177,7 @@ export default function NodeInfoPanel({
                   <div className="space-y-2 pr-2">
                     {isLoading ? (
                       <div className="text-muted-foreground py-4 text-center text-sm">
-                        Loading properties...
+                        Loading properties…
                       </div>
                     ) : filteredProperties.length > 0 ? (
                       filteredProperties.map((prop) => (
@@ -193,7 +193,7 @@ export default function NodeInfoPanel({
                       ))
                     ) : (
                       <div className="text-muted-foreground py-4 text-center text-sm">
-                        No properties found
+                        No properties found.
                       </div>
                     )}
                   </div>

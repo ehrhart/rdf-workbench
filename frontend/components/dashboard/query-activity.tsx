@@ -25,7 +25,7 @@ export function QueryActivity() {
       } catch (err) {
         if (cancelled) return
         setError(
-          err instanceof Error ? err.message : 'Failed to load running queries'
+          err instanceof Error ? err.message : "Couldn't load running queries."
         )
       } finally {
         if (!cancelled) {

@@ -98,7 +98,7 @@ export function UserManager({ users, currentUserId }: UserManagerProps) {
 
   async function resetPassword(user: LocalUser) {
     const confirmed = window.confirm(
-      `Reset ${user.username}'s password? Active sessions are revoked, and the user must sign in with the new temporary password and set their own.`
+      `Reset ${user.username}'s password? Their active sessions end, and they set a new password at the next sign-in.`
     )
     if (!confirmed) return
     setPending(user.id)
@@ -113,11 +113,7 @@ export function UserManager({ users, currentUserId }: UserManagerProps) {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Create User</CardTitle>
-          <CardDescription>
-            Workbench accounts are stored locally and are independent from
-            QLever UI accounts.
-          </CardDescription>
+          <CardTitle>Create user</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={createUser} className="space-y-4">
@@ -166,9 +162,8 @@ export function UserManager({ users, currentUserId }: UserManagerProps) {
               <div className="space-y-1">
                 <Label htmlFor="temporary-password">Temporary password</Label>
                 <p className="text-muted-foreground text-xs">
-                  Generate a temporary password. The user must set a new
-                  password at first login and cannot access the workbench until
-                  then.
+                  The user signs in with it once, then sets their own password.
+                  They can&apos;t use the workbench until then.
                 </p>
               </div>
             </div>
@@ -180,8 +175,7 @@ export function UserManager({ users, currentUserId }: UserManagerProps) {
         <CardHeader>
           <CardTitle>Users</CardTitle>
           <CardDescription>
-            Disabling users or resetting passwords revokes their active
-            sessions.
+            Disabling an account or resetting its password signs the user out.
           </CardDescription>
         </CardHeader>
         <CardContent>

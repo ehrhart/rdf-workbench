@@ -80,7 +80,7 @@ export function ChangePasswordForm({
       )}
 
       <Button type="submit" className="w-full" disabled={pending}>
-        {pending ? 'Saving...' : 'Set new password'}
+        {pending ? 'Saving…' : 'Set new password'}
       </Button>
 
       <p className="text-muted-foreground text-center text-sm">
@@ -90,7 +90,7 @@ export function ChangePasswordForm({
           href="/logout"
           className="underline underline-offset-4 hover:text-foreground"
         >
-          Log out
+          Sign out
         </a>
       </p>
     </form>

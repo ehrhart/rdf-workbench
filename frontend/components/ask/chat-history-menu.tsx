@@ -145,7 +145,9 @@ function ConversationRow({
           size="icon-xs"
           aria-label={`Delete ${label}`}
           onClick={() => {
-            if (window.confirm('Delete this conversation?')) {
+            if (
+              window.confirm("Delete this conversation? This can't be undone.")
+            ) {
               onDelete(conversation.id)
             }
           }}
@@ -311,12 +313,12 @@ export function ChatHistoryMenu() {
             <div ref={contentRef}>
               {conversationsLoading && conversations.length === 0 ? (
                 <p className="px-2 py-1.5 text-xs text-muted-foreground">
-                  Loading…
+                  Loading conversations…
                 </p>
               ) : buckets.length === 0 ? (
                 <p className="px-2 py-1.5 text-xs text-muted-foreground">
                   {query
-                    ? 'No matching conversations.'
+                    ? 'No conversations match your search.'
                     : 'No conversations yet.'}
                 </p>
               ) : (

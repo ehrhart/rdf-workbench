@@ -125,7 +125,7 @@ export function QueryHistory({
       return
     }
 
-    if (confirm('Are you sure you want to clear all query history?')) {
+    if (confirm('Clear all query history? This cannot be undone.')) {
       service.clear()
       setExpandedId(null)
       toast.success('Query history cleared')
@@ -136,7 +136,7 @@ export function QueryHistory({
     (id: string) => {
       service.delete(id)
       setExpandedId((current) => (current === id ? null : current))
-      toast.success('Query removed from history')
+      toast.success('Query deleted from history')
     },
     [service]
   )
@@ -155,7 +155,7 @@ export function QueryHistory({
       toast.success('Query copied to clipboard')
     } catch (error) {
       console.error('Failed to copy query:', error)
-      toast.error('Failed to copy query')
+      toast.error("Couldn't copy the query")
     }
   }, [])
 
@@ -166,10 +166,7 @@ export function QueryHistory({
     const pluralize = (count: number) => (count === 1 ? 'query' : 'queries')
 
     if (totalCount === 0) {
-      return (
-        emptyHistoryMessage ??
-        `We keep every ${queryNoun} you run so you can revisit them later.`
-      )
+      return emptyHistoryMessage ?? `Every ${queryNoun} you run is saved here.`
     }
 
     if (searchTerm.trim()) {
@@ -204,7 +201,7 @@ export function QueryHistory({
               onClick={handleClearAll}
               disabled={!history.length}
             >
-              Clear All
+              Clear all
             </Button>
           </div>
         </div>
@@ -217,7 +214,7 @@ export function QueryHistory({
             <Input
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
-              placeholder="Search saved queries"
+              placeholder="Search history"
               className="pl-10"
             />
           </div>
@@ -241,13 +238,12 @@ export function QueryHistory({
       <CardContent className="flex flex-1 flex-col gap-4 px-6 pb-6">
         {totalCount === 0 ? (
           <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed p-10 text-center text-sm text-muted-foreground">
-            {emptyHistoryMessage ??
-              `Run a ${queryNoun} and we will save it here automatically.`}
+            {emptyHistoryMessage ?? `Run a ${queryNoun} and it is saved here.`}
           </div>
         ) : filteredHistory.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-3 rounded-lg border border-dashed p-10 text-center">
             <p className="text-sm text-muted-foreground">
-              No saved queries match your filters.
+              No queries match your search.
             </p>
             {searchTerm.trim() ? (
               <Button
@@ -328,7 +324,7 @@ export function QueryHistory({
                               onClick={() => onSelectQueryAction(item.query)}
                             >
                               <Play className="mr-2 size-4" aria-hidden />
-                              Use in Editor
+                              Use in editor
                             </Button>
                           ) : null}
                         </div>

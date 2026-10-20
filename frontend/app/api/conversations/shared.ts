@@ -12,7 +12,7 @@ export function errorResponse(scope: string, error: unknown): NextResponse {
 
   console.error(`Unexpected ${scope} API error:`, error)
   return NextResponse.json(
-    { error: `Unexpected server error while handling ${scope}` },
+    { error: 'The server hit an unexpected error. Try again.' },
     { status: 500 }
   )
 }

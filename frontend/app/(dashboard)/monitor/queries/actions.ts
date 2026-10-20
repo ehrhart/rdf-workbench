@@ -14,7 +14,7 @@ export async function getMonitoredQueries(): Promise<MonitoredQuery[]> {
     return await runtime.queryMonitor.list(caller)
   } catch (error) {
     console.error('Error fetching monitored queries:', error)
-    throw new Error('Failed to fetch monitored queries')
+    throw new Error("Couldn't load recent queries and updates.")
   }
 }
 
@@ -26,6 +26,6 @@ export async function abortQuery(id?: string): Promise<void> {
     await runtime.queryMonitor.cancel(id ?? '', caller)
   } catch (error) {
     console.error('Error aborting query:', error)
-    throw new Error('Failed to abort query')
+    throw new Error("Couldn't abort the query.")
   }
 }

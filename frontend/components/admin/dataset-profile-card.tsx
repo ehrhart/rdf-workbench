@@ -47,19 +47,21 @@ export function DatasetProfileCard({
           toast.success('Dataset profile rebuilt')
         }
       } catch {
-        toast.error('Profile rebuilt, but the summary could not be refreshed')
+        toast.error(
+          "Couldn't refresh the summary. The rebuilt profile is saved."
+        )
       }
     } else if (finished.status === 'failed') {
-      toast.error(finished.error ?? 'Profile rebuild failed')
+      toast.error(finished.error ?? "Couldn't rebuild the profile.")
     } else if (finished.status === 'cancelled') {
-      toast.info('Profile rebuild cancelled')
+      toast.info('Rebuild cancelled')
     }
   })
 
   async function rebuild() {
     const result = await start()
     if (!result.ok) {
-      toast.error(result.error ?? 'Profile rebuild failed')
+      toast.error(result.error ?? "Couldn't rebuild the profile.")
     }
   }
 
@@ -68,15 +70,13 @@ export function DatasetProfileCard({
       <CardHeader>
         <CardTitle>Dataset profile</CardTitle>
         <CardDescription>
-          Snapshot of the dataset&apos;s classes, properties, and prefixes
-          introspected from the SPARQL endpoint and injected into the system
-          prompt.
+          The classes, properties, and prefixes Ask uses when answering.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {running ? (
           <p className="text-muted-foreground text-sm">
-            Building in the background ({elapsedSeconds}s elapsed). You can
+            Building the profile in the background ({elapsedSeconds}s). You can
             leave this page.
           </p>
         ) : summary ? (
@@ -86,8 +86,7 @@ export function DatasetProfileCard({
           </p>
         ) : (
           <p className="text-muted-foreground text-sm">
-            No profile built yet. It is built automatically the first time Ask
-            runs.
+            No profile yet. It builds automatically the first time Ask runs.
           </p>
         )}
         <div className="flex justify-start">

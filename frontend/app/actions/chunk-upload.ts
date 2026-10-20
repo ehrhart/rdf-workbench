@@ -28,22 +28,24 @@ export const chunkUploadAction: ChunkUploadHandler<ChunkMetadata> = async (
   const runtime = await getWorkbenchRuntime()
   const principal = await runtime.auth.getPrincipal()
   if (!principal) {
-    throw new Error('Authentication required to upload files')
+    throw new Error('Sign in to upload files.')
   }
 
   const blob = chunkFormData.get('blob')
   if (!blob || !(blob instanceof Blob)) {
-    throw new Error('Invalid chunk data')
+    throw new Error("Part of the upload didn't transfer. Try again.")
   }
 
   // Validate chunk size
   if (blob.size > MAX_CHUNK_SIZE) {
-    throw new Error(`Chunk size ${blob.size} exceeds maximum ${MAX_CHUNK_SIZE}`)
+    throw new Error(
+      `A chunk was larger than the ${MAX_CHUNK_SIZE / (1024 * 1024)} MB limit.`
+    )
   }
 
   const offset = Number(chunkFormData.get('offset'))
   if (Number.isNaN(offset) || offset < 0) {
-    throw new Error('Invalid offset')
+    throw new Error("The upload didn't line up. Try again.")
   }
 
   const totalSize = Number(metadata.totalSize)
@@ -52,10 +54,10 @@ export const chunkUploadAction: ChunkUploadHandler<ChunkMetadata> = async (
     totalSize < 0 ||
     totalSize > MAX_STAGED_SIZE
   ) {
-    throw new Error('Invalid total size')
+    throw new Error('The file size looks wrong. Try again.')
   }
   if (offset + blob.size > totalSize) {
-    throw new Error('Chunk exceeds the declared total size')
+    throw new Error("The upload doesn't match the file size. Try again.")
   }
 
   const buffer = Buffer.from(await blob.arrayBuffer())

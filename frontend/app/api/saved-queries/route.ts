@@ -9,7 +9,7 @@ import { isSameOriginMutation, sameOriginError } from '@/lib/same-origin'
 const errorResponse = (error: unknown, hasSession: boolean) => {
   if (error instanceof ConnectionError) {
     return NextResponse.json(
-      { error: 'Saved queries service is temporarily unavailable' },
+      { error: 'Saved queries are unavailable right now' },
       { status: 503 }
     )
   }
@@ -28,7 +28,7 @@ const errorResponse = (error: unknown, hasSession: boolean) => {
 
   console.error('Unexpected saved queries API error:', error)
   return NextResponse.json(
-    { error: 'Unexpected server error while handling saved queries' },
+    { error: 'Saved queries are unavailable right now' },
     { status: 500 }
   )
 }
@@ -72,7 +72,7 @@ export async function POST(request: Request) {
 
   if (!session) {
     return NextResponse.json(
-      { error: 'Authentication required to save queries' },
+      { error: 'Sign in to save queries' },
       { status: 401 }
     )
   }

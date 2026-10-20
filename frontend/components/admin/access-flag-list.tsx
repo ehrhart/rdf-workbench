@@ -18,27 +18,49 @@ import {
 } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
+} from '@/components/ui/tooltip'
 import type { AccessFlagDetail } from '@/lib/access/access-flags'
 
 const SOURCE_BADGES: Record<
   AccessFlagDetail['source'],
   { label: string; variant: 'default' | 'secondary' | 'outline' }
 > = {
-  overridden: { label: 'Overridden', variant: 'default' },
-  environment: { label: 'Environment', variant: 'secondary' },
+  overridden: { label: 'Modified', variant: 'default' },
+  environment: { label: 'Deployment', variant: 'secondary' },
   default: { label: 'Default', variant: 'outline' }
 }
 
-function sourceText(detail: AccessFlagDetail): string {
+const STATE_TEXT: Record<string, { on: string; off: string }> = {
+  'access.allowAnonymousRead': {
+    on: 'Visitors can browse without an account.',
+    off: 'Visitors need an account to browse.'
+  },
+  'access.allowAnonymousAsk': {
+    on: 'Visitors can chat without an account.',
+    off: 'Visitors need an account to chat.'
+  }
+}
+
+function stateText(detail: AccessFlagDetail): string {
+  const state = STATE_TEXT[detail.key]
+  return detail.currentValue ? state.on : state.off
+}
+
+function badgeTooltip(detail: AccessFlagDetail): string | null {
+  if (detail.source === 'environment') {
+    return `Set by the environment variable ${detail.envVar}.`
+  }
   if (detail.source === 'overridden') {
     return detail.envValue === null
-      ? 'Overridden here, env unset'
-      : `Overridden here, env says ${detail.envValue ? 'on' : 'off'}`
+      ? 'Changed in this app. Resetting returns to the built-in default.'
+      : `Changed in this app. Resetting returns to ${detail.envVar} (${detail.envValue ? 'on' : 'off'}).`
   }
-  if (detail.source === 'environment') {
-    return `Following ${detail.envVar ?? 'the environment'} (currently ${detail.envValue ? 'on' : 'off'})`
-  }
-  return `Following the default (${detail.currentValue ? 'on' : 'off'})`
+  return null
 }
 
 function valuesFrom(details: AccessFlagDetail[]): Record<string, boolean> {
@@ -76,10 +98,6 @@ export function AccessFlagList({ details }: { details: AccessFlagDetail[] }) {
   }
 
   async function reset(detail: AccessFlagDetail) {
-    const confirmed = window.confirm(
-      `Reset ${detail.label}? The environment value or the default applies again.`
-    )
-    if (!confirmed) return
     setPending(detail.key)
     const result = await resetAccessFlag(detail.key)
     setPending(null)
@@ -94,51 +112,61 @@ export function AccessFlagList({ details }: { details: AccessFlagDetail[] }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Anonymous access</CardTitle>
+        <CardTitle>Visitor access</CardTitle>
         <CardDescription>
-          Changes apply to logged-out visitors immediately. A value saved here
-          overrides the environment until it is reset, and every change is
-          recorded in the settings history.
+          What visitors can do without signing in. Changes apply immediately.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
-        {details.map((detail) => {
-          const badge = SOURCE_BADGES[detail.source]
-          return (
-            <div
-              key={detail.key}
-              className="flex items-start justify-between gap-4 rounded-md border p-4"
-            >
-              <div className="min-w-0 space-y-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <Label htmlFor={detail.key}>{detail.label}</Label>
-                  <Badge variant={badge.variant}>{badge.label}</Badge>
+        <TooltipProvider delayDuration={200}>
+          {details.map((detail) => {
+            const badge = SOURCE_BADGES[detail.source]
+            const tooltip = badgeTooltip(detail)
+            return (
+              <div
+                key={detail.key}
+                className="flex items-start justify-between gap-4 rounded-md border p-4"
+              >
+                <div className="min-w-0 space-y-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Label htmlFor={detail.key}>{detail.label}</Label>
+                    {tooltip ? (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Badge variant={badge.variant}>{badge.label}</Badge>
+                        </TooltipTrigger>
+                        <TooltipContent>{tooltip}</TooltipContent>
+                      </Tooltip>
+                    ) : (
+                      <Badge variant={badge.variant}>{badge.label}</Badge>
+                    )}
+                  </div>
+                  <p className="text-muted-foreground text-xs">
+                    {stateText(detail)}
+                  </p>
                 </div>
-                <p className="text-muted-foreground text-xs">
-                  {sourceText(detail)}
-                </p>
-              </div>
-              <div className="flex shrink-0 items-center gap-2">
-                {detail.storedValue !== null && (
-                  <Button
-                    variant="outline"
-                    size="sm"
+                <div className="flex shrink-0 items-center gap-2">
+                  {detail.storedValue !== null && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={pending !== null}
+                      onClick={() => reset(detail)}
+                    >
+                      Reset
+                    </Button>
+                  )}
+                  <Switch
+                    id={detail.key}
+                    checked={values[detail.key] ?? detail.currentValue}
+                    onCheckedChange={(checked) => toggle(detail, checked)}
                     disabled={pending !== null}
-                    onClick={() => reset(detail)}
-                  >
-                    Reset
-                  </Button>
-                )}
-                <Switch
-                  id={detail.key}
-                  checked={values[detail.key] ?? detail.currentValue}
-                  onCheckedChange={(checked) => toggle(detail, checked)}
-                  disabled={pending !== null}
-                />
+                  />
+                </div>
               </div>
-            </div>
-          )
-        })}
+            )
+          })}
+        </TooltipProvider>
       </CardContent>
     </Card>
   )

@@ -97,7 +97,7 @@ export function RecentQueries() {
             <div className="flex items-center space-x-2">
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <span className="cursor-default font-mono text-xs">{`${query.substring(0, 50)}...`}</span>
+                  <span className="cursor-default font-mono text-xs">{`${query.substring(0, 50)}…`}</span>
                 </TooltipTrigger>
                 <TooltipContent className="max-w-md p-0">
                   <div className="relative">
@@ -109,8 +109,8 @@ export function RecentQueries() {
                     <CopyToClipboardButton
                       textToCopy={query}
                       className="absolute top-1 right-3 h-8 w-8"
-                      successMessage="Full query copied to clipboard"
-                      errorMessage="Failed to copy full query"
+                      successMessage="Full query copied"
+                      errorMessage="Couldn't copy the query."
                     />
                   </div>
                 </TooltipContent>
@@ -119,8 +119,8 @@ export function RecentQueries() {
                 textToCopy={query}
                 className="h-8 w-8"
                 tooltipText="Copy query"
-                successMessage="Query copied to clipboard"
-                errorMessage="Failed to copy query"
+                successMessage="Query copied"
+                errorMessage="Couldn't copy the query."
               />
             </div>
           )
@@ -168,7 +168,7 @@ export function RecentQueries() {
               onClick={() => handleRunQuery(row.original.query)}
             >
               <PlayIcon />
-              <span className="sr-only">Run</span>
+              <span className="sr-only">Run query</span>
             </Button>
           </div>
         )
@@ -191,8 +191,8 @@ export function RecentQueries() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Recent Queries</CardTitle>
-        <CardDescription>Your recently executed SPARQL queries</CardDescription>
+        <CardTitle>Recent queries</CardTitle>
+        <CardDescription>Your most recent SPARQL queries.</CardDescription>
       </CardHeader>
       <CardContent>
         {isLoading ? (
@@ -201,7 +201,7 @@ export function RecentQueries() {
           </div>
         ) : queries.length === 0 ? (
           <p className="text-muted-foreground py-6 text-center">
-            No recent queries found
+            No queries yet.
           </p>
         ) : (
           <div className="rounded-md border overflow-x-auto">

@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
     if (!response.ok) {
       const errorData = await response.json()
       return NextResponse.json(
-        { error: errorData.error || 'Failed to fetch import jobs' },
+        { error: errorData.error || "Couldn't load import jobs." },
         { status: response.status }
       )
     }
@@ -43,7 +43,7 @@ export async function GET(req: NextRequest) {
   } catch (error: unknown) {
     const err = error as Error
     return NextResponse.json(
-      { error: err.message || 'An unknown error occurred' },
+      { error: err.message || "Couldn't load import jobs." },
       { status: 500 }
     )
   }
@@ -63,7 +63,7 @@ export async function DELETE(req: NextRequest) {
 
     if (!filename) {
       return NextResponse.json(
-        { error: 'Filename is required' },
+        { error: 'Filename is required.' },
         { status: 400 }
       )
     }
@@ -82,7 +82,7 @@ export async function DELETE(req: NextRequest) {
     if (!response.ok) {
       const errorData = await response.json()
       return NextResponse.json(
-        { error: errorData.error || 'Failed to delete file' },
+        { error: errorData.error || "Couldn't delete the file." },
         { status: response.status }
       )
     }
@@ -92,7 +92,7 @@ export async function DELETE(req: NextRequest) {
   } catch (error: unknown) {
     const err = error as Error
     return NextResponse.json(
-      { error: err.message || 'An unknown error occurred' },
+      { error: err.message || "Couldn't delete the file." },
       { status: 500 }
     )
   }

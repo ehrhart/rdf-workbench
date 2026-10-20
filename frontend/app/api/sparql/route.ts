@@ -10,10 +10,7 @@ export async function POST(request: Request) {
     const query = await request.text()
 
     if (!query) {
-      return NextResponse.json(
-        { error: 'No query provided in the request' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Query is required.' }, { status: 400 })
     }
 
     const runtime = await getWorkbenchRuntime()

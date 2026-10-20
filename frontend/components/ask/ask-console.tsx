@@ -227,9 +227,9 @@ function ResultTable({ output }: { output: QuerySuccessOutput }) {
   const copyCsv = async () => {
     try {
       await navigator.clipboard.writeText(buildCsv(variables, allRows))
-      toast.success('Copied results as CSV')
+      toast.success('Copied as CSV')
     } catch {
-      toast.error('Failed to copy CSV')
+      toast.error("Couldn't copy the results. Try again.")
     }
   }
 
@@ -348,13 +348,13 @@ function QueryBlock({
         const payload = (await response.json().catch(() => null)) as {
           error?: string
         } | null
-        throw new Error(payload?.error ?? 'Failed to save query')
+        throw new Error(payload?.error ?? "Couldn't save the query")
       }
       setSaved(true)
-      toast.success('Saved to saved queries')
+      toast.success('Query saved')
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : 'Failed to save query'
+        error instanceof Error ? error.message : "Couldn't save the query"
       )
     }
   }
@@ -406,7 +406,7 @@ function CopyButton({ text }: { text: string }) {
           setCopied(true)
           setTimeout(() => setCopied(false), 1500)
         } catch {
-          toast.error('Failed to copy message')
+          toast.error("Couldn't copy the message")
         }
       }}
     >
@@ -492,14 +492,14 @@ function RunQueryCard({
               </span>
             </TooltipTrigger>
             <TooltipContent>
-              The query had no LIMIT or asked for more rows than allowed, so the
-              tool capped it automatically.
+              The result was cut off at the row limit. Add a LIMIT to the query
+              to choose which rows appear.
             </TooltipContent>
           </Tooltip>
         )}
         {output && !output.ok && (
           <span className="flex items-center gap-1 text-destructive">
-            <AlertTriangleIcon className="size-3.5" /> needs revision
+            <AlertTriangleIcon className="size-3.5" /> Query failed
           </span>
         )}
       </div>
@@ -538,7 +538,9 @@ function RunQueryCard({
       )}
       {diff.length > 0 && (
         <div className="space-y-0.5">
-          <p className="text-muted-foreground">Changes from previous attempt</p>
+          <p className="text-muted-foreground">
+            Changes from the previous attempt
+          </p>
           <div className="overflow-x-auto rounded-md bg-muted p-2">
             {visibleDiff.map((line) => (
               <div
@@ -564,7 +566,7 @@ function RunQueryCard({
       <Collapsible>
         <CollapsibleTrigger className="group flex items-center gap-1 text-muted-foreground hover:text-foreground">
           <ChevronRightIcon className="size-3.5 transition-transform group-data-[state=open]:rotate-90" />{' '}
-          query
+          Query
         </CollapsibleTrigger>
         <CollapsibleContent>
           <HighlightedQueryBlock query={query} className="mt-1.5 p-2" />
@@ -818,8 +820,8 @@ export function AssistantMessageView({
         <div className="flex items-start gap-2 rounded-md border border-amber-600/40 bg-amber-600/10 p-2.5 text-xs text-amber-700 dark:border-amber-400/40 dark:bg-amber-400/10 dark:text-amber-400">
           <AlertTriangleIcon className="mt-0.5 size-3.5 shrink-0" />
           <span>
-            Reached the tool-step limit before finishing. The last working query
-            is kept above.
+            The assistant hit its step limit before finishing. The last working
+            query is kept above.
           </span>
         </div>
       )}
@@ -1050,7 +1052,7 @@ export function AskConsole({
             {messages.length === 0 && (
               <div className="mx-auto flex max-w-md flex-col items-center gap-3 py-16 text-center">
                 <p className="text-sm text-muted-foreground">
-                  Ask anything about this Knowledge Graph.
+                  Ask a question about this dataset in plain language.
                 </p>
                 <div className="flex w-full flex-col gap-2">
                   {initialExampleQuestions.map((question) => (
@@ -1096,7 +1098,7 @@ export function AskConsole({
             {status === 'streaming' && toolRunning && (
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <LoaderIcon className="size-3.5 animate-spin" />
-                Working, {toolCallCount} tool{' '}
+                Working on your answer, {toolCallCount} tool{' '}
                 {toolCallCount === 1 ? 'call' : 'calls'}
               </div>
             )}

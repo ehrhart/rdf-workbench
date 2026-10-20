@@ -56,7 +56,7 @@ async function cancelOnEngine(id: string): Promise<void> {
     }
     socket.onerror = () => {
       clearTimeout(timeout)
-      finish(new Error('Failed to open QLever watch socket'))
+      finish(new Error("Couldn't connect to the QLever monitor."))
     }
   })
 }

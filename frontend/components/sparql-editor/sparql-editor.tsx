@@ -113,7 +113,7 @@ export default function SparqlEditor({
       },
       {
         id: 'raw',
-        label: 'Raw Response',
+        label: 'Raw',
         render: (value) => <ResultsRaw results={value} />
       }
     ],

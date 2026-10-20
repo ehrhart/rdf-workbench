@@ -159,7 +159,7 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 const shortGraphName = (uri: string): string => {
   const local = uri.split(/[/#:]/).filter(Boolean).pop() ?? uri
-  return local.length > 40 ? `${local.slice(0, 37)}...` : local
+  return local.length > 40 ? `${local.slice(0, 37)}…` : local
 }
 
 const calculateTotals = (
@@ -338,22 +338,19 @@ export function GraphManager({
       }))
 
       toast.success(
-        uris.length === 1
-          ? 'Graph deleted successfully.'
-          : `${uris.length} graphs have been deleted successfully.`
+        uris.length === 1 ? 'Graph deleted' : `${uris.length} graphs deleted`
       )
     } catch (error) {
       console.error('Failed during graph deletion', error)
+      const detail =
+        error instanceof Error && error.message ? error.message : undefined
       setDeleteDialogState((prev) => ({
         ...prev,
         status: 'error',
         currentUri: undefined,
-        errorMessage:
-          error instanceof Error
-            ? error.message
-            : 'Failed to delete the graph(s).'
+        errorMessage: detail ?? "Couldn't delete graph."
       }))
-      toast.error('Failed to delete the graph(s).')
+      toast.error("Couldn't delete graph.", { description: detail })
     }
   }
 
@@ -424,21 +421,18 @@ export function GraphManager({
       document.body.removeChild(a)
 
       toast.success(
-        uris.length === 1
-          ? 'Graph exported successfully.'
-          : `${uris.length} graphs exported successfully.`
+        uris.length === 1 ? 'Graph exported' : `${uris.length} graphs exported`
       )
     } catch (error) {
       console.error('Failed during graph export', error)
+      const detail =
+        error instanceof Error && error.message ? error.message : undefined
       setExportDialogState((prev) => ({
         ...prev,
         status: 'error',
-        errorMessage:
-          error instanceof Error
-            ? error.message
-            : 'Failed to export the graph(s).'
+        errorMessage: detail ?? "Couldn't export graph."
       }))
-      toast.error('Failed to export the graph(s).')
+      toast.error("Couldn't export graph.", { description: detail })
     }
   }
 
@@ -481,7 +475,7 @@ export function GraphManager({
 
     const label = shortGraphName(uri)
     const controller = new AbortController()
-    const toastId = toast.loading(`Exporting ${label} as ${format.label}...`, {
+    const toastId = toast.loading(`Exporting ${label} as ${format.label}…`, {
       action: {
         label: 'Cancel',
         onClick: () => controller.abort()
@@ -519,12 +513,12 @@ export function GraphManager({
         return
       }
       console.error('Failed during graph export', error)
-      toast.error(
-        `${label}: ${
-          error instanceof Error ? error.message : 'Graph export failed'
-        }`,
-        { id: toastId }
-      )
+      const detail =
+        error instanceof Error && error.message ? error.message : undefined
+      toast.error(`Couldn't export ${label}.`, {
+        description: detail,
+        id: toastId
+      })
     }
   }
 
@@ -549,7 +543,9 @@ export function GraphManager({
 
   const handleExportRepository = (fileType: GraphExportFileType) => {
     if (graphs.length === 0) {
-      toast.error('There are no graphs to export.')
+      toast.error('Nothing to export', {
+        description: 'Import data first.'
+      })
       return
     }
 
@@ -590,18 +586,17 @@ export function GraphManager({
         status: 'done'
       }))
 
-      toast.success('Repository has been cleared successfully.')
+      toast.success('Repository cleared')
     } catch (error) {
       console.error('Failed to clear repository:', error)
+      const detail =
+        error instanceof Error && error.message ? error.message : undefined
       setClearDialogState((prev) => ({
         ...prev,
         status: 'error',
-        errorMessage:
-          error instanceof Error
-            ? error.message
-            : 'Failed to clear the repository.'
+        errorMessage: detail ?? "Couldn't clear the repository."
       }))
-      toast.error('Failed to clear the repository.')
+      toast.error("Couldn't clear the repository.", { description: detail })
     }
   }
 
@@ -703,11 +698,11 @@ export function GraphManager({
               <DropdownMenuItem
                 onClick={() => {
                   navigator.clipboard.writeText(graph.uri)
-                  toast.success(`Copied graph URI to clipboard`)
+                  toast.success('Graph URI copied')
                 }}
               >
                 <CopyIcon />
-                Copy Graph URI
+                Copy graph URI
               </DropdownMenuItem>
               {portableExportFormats.length > 0 && (
                 <>
@@ -715,7 +710,7 @@ export function GraphManager({
                   <DropdownMenuSub>
                     <DropdownMenuSubTrigger>
                       <DownloadIcon />
-                      Download Graph
+                      Download graph
                     </DropdownMenuSubTrigger>
                     <DropdownMenuPortal>
                       <DropdownMenuSubContent>
@@ -740,7 +735,7 @@ export function GraphManager({
                   <DropdownMenuSub>
                     <DropdownMenuSubTrigger>
                       <UploadIcon />
-                      Export Graph
+                      Export graph
                     </DropdownMenuSubTrigger>
                     <DropdownMenuPortal>
                       <DropdownMenuSubContent>
@@ -761,7 +756,7 @@ export function GraphManager({
                     className="text-destructive focus:text-destructive"
                   >
                     <TrashIcon className="stroke-destructive" />
-                    Delete Graph
+                    Delete graph
                   </DropdownMenuItem>
                 </>
               )}
@@ -827,8 +822,10 @@ export function GraphManager({
             </DialogTitle>
             <DialogDescription>
               {deleteDialogState.status === 'confirm'
-                ? 'This will permanently delete all data in the selected graph(s). This action cannot be undone.'
-                : 'Deleting your data. This may take a few moments for large graphs.'}
+                ? deleteDialogState.uris.length === 1
+                  ? 'All data in this graph is permanently deleted. This cannot be undone.'
+                  : 'All data in these graphs is permanently deleted. This cannot be undone.'
+                : 'Deleting data. This may take a few moments for large graphs.'}
             </DialogDescription>
           </DialogHeader>
 
@@ -840,7 +837,7 @@ export function GraphManager({
                   <span className="text-muted-foreground text-xs">
                     {overallProgress !== undefined
                       ? `${overallProgress}%`
-                      : 'Starting...'}
+                      : 'Starting…'}
                   </span>
                 </div>
                 <Progress value={overallProgress ?? 15} />
@@ -855,7 +852,7 @@ export function GraphManager({
                       </span>
                     </>
                   ) : (
-                    'Preparing deletion...'
+                    'Preparing deletion…'
                   )}
                 </p>
               </div>
@@ -909,7 +906,7 @@ export function GraphManager({
                               ? remaining === 0
                                 ? 'Complete'
                                 : `${remaining.toLocaleString()} triples left`
-                              : 'Calculating...'}
+                              : 'Counting triples…'}
                           </span>
                           {percent !== undefined && <span>{percent}%</span>}
                         </div>
@@ -925,17 +922,16 @@ export function GraphManager({
 
             {deleteDialogState.status === 'error' && (
               <div className="border-destructive/40 bg-destructive/10 text-destructive rounded-md border p-3 text-sm">
-                <p className="font-semibold mb-1">Deletion failed</p>
+                <p className="font-semibold mb-1">Couldn't delete graph</p>
                 <p className="text-xs">
-                  {deleteDialogState.errorMessage ||
-                    'Unable to delete the selected graph(s). Please try again.'}
+                  {deleteDialogState.errorMessage || 'Try again.'}
                 </p>
               </div>
             )}
 
             {deleteDialogState.status === 'done' && (
               <div className="border-green-500/40 bg-green-500/10 text-green-600 rounded-md border p-3 text-sm">
-                <p className="font-semibold">✓ Successfully deleted</p>
+                <p className="font-semibold">Deleted</p>
                 <p className="text-xs mt-1">
                   {deleteDialogState.uris.length === 1
                     ? 'The graph has been permanently removed.'
@@ -972,7 +968,7 @@ export function GraphManager({
                 </Button>
                 <Button variant="destructive" disabled>
                   <Loader2Icon className="animate-spin" />
-                  Deleting...
+                  Deleting…
                 </Button>
               </>
             )}
@@ -1005,10 +1001,10 @@ export function GraphManager({
       >
         <DialogContent showCloseButton={!clearingInProgress}>
           <DialogHeader>
-            <DialogTitle>Clear entire repository?</DialogTitle>
+            <DialogTitle>Clear the entire repository?</DialogTitle>
             <DialogDescription>
               {clearDialogState.status === 'confirm'
-                ? 'This will permanently delete all RDF data from the repository. This action cannot be undone.'
+                ? 'This permanently deletes all RDF data in the repository. This cannot be undone.'
                 : 'Clearing the repository. This may take a few moments.'}
             </DialogDescription>
           </DialogHeader>
@@ -1017,27 +1013,26 @@ export function GraphManager({
             {clearDialogState.status === 'clearing' && (
               <div className="flex items-center justify-center space-x-3 rounded-md border bg-muted/60 p-6">
                 <Loader2Icon className="h-5 w-5 animate-spin text-muted-foreground" />
-                <p className="text-sm font-medium">Clearing repository...</p>
+                <p className="text-sm font-medium">Clearing repository…</p>
               </div>
             )}
 
             {clearDialogState.status === 'error' && (
               <div className="border-destructive/40 bg-destructive/10 text-destructive rounded-md border p-3 text-sm">
-                <p className="font-semibold mb-1">Clear failed</p>
+                <p className="font-semibold mb-1">
+                  Couldn't clear the repository
+                </p>
                 <p className="text-xs">
-                  {clearDialogState.errorMessage ||
-                    'Unable to clear the repository. Please try again.'}
+                  {clearDialogState.errorMessage || 'Try again.'}
                 </p>
               </div>
             )}
 
             {clearDialogState.status === 'done' && (
               <div className="border-green-500/40 bg-green-500/10 text-green-600 rounded-md border p-3 text-sm">
-                <p className="font-semibold">
-                  ✓ Repository cleared successfully
-                </p>
+                <p className="font-semibold">Repository cleared</p>
                 <p className="text-xs mt-1">
-                  All RDF data has been permanently removed from the repository.
+                  All RDF data has been permanently removed.
                 </p>
               </div>
             )}
@@ -1051,7 +1046,7 @@ export function GraphManager({
                 </Button>
                 <Button variant="destructive" onClick={startClearRepository}>
                   <TrashIcon />
-                  Clear Repository
+                  Clear repository
                 </Button>
               </>
             )}
@@ -1063,7 +1058,7 @@ export function GraphManager({
                 </Button>
                 <Button variant="destructive" disabled>
                   <Loader2Icon className="animate-spin" />
-                  Clearing...
+                  Clearing…
                 </Button>
               </>
             )}
@@ -1098,12 +1093,14 @@ export function GraphManager({
           <DialogHeader>
             <DialogTitle>
               {exportDialogState.status === 'confirm'
-                ? 'Export graphs?'
+                ? exportDialogState.uris.length > 1
+                  ? `Export ${exportDialogState.uris.length} graphs?`
+                  : 'Export graph?'
                 : exportDialogState.status === 'exporting'
-                  ? 'Exporting graphs...'
+                  ? 'Exporting graphs…'
                   : exportDialogState.status === 'done'
-                    ? 'Export complete'
-                    : 'Export failed'}
+                    ? 'Export ready'
+                    : "Couldn't export graph"}
             </DialogTitle>
             <DialogDescription>
               {exportDialogState.status === 'confirm' &&
@@ -1111,9 +1108,9 @@ export function GraphManager({
               {exportDialogState.status === 'exporting' &&
                 'Preparing your export. This may take a few moments for large graphs.'}
               {exportDialogState.status === 'done' &&
-                'Your export has been prepared and the download should start automatically.'}
+                'The download should start automatically.'}
               {exportDialogState.status === 'error' &&
-                'An error occurred while preparing your export.'}
+                "Couldn't prepare the export."}
             </DialogDescription>
           </DialogHeader>
 
@@ -1122,12 +1119,12 @@ export function GraphManager({
               <div className="rounded-md border bg-muted/60 p-4 space-y-3">
                 <div className="flex items-center justify-center space-x-3">
                   <Loader2Icon className="h-5 w-5 animate-spin text-primary" />
-                  <p className="text-sm font-medium">Preparing export...</p>
+                  <p className="text-sm font-medium">Preparing export…</p>
                 </div>
                 <Progress value={undefined} className="h-2" />
                 <p className="text-muted-foreground text-xs text-center">
-                  Processing {exportDialogState.uris.length} graph
-                  {exportDialogState.uris.length === 1 ? '' : 's'}
+                  Exporting {exportDialogState.uris.length} graph
+                  {exportDialogState.uris.length === 1 ? '' : 's'}…
                 </p>
               </div>
             )}
@@ -1153,22 +1150,18 @@ export function GraphManager({
 
             {exportDialogState.status === 'error' && (
               <div className="border-destructive/40 bg-destructive/10 text-destructive rounded-md border p-3 text-sm">
-                <p className="font-semibold mb-1">Export failed</p>
+                <p className="font-semibold mb-1">Couldn't export graph</p>
                 <p className="text-xs">
-                  {exportDialogState.errorMessage ||
-                    'Unable to export the selected graph(s). Please try again.'}
+                  {exportDialogState.errorMessage || 'Try again.'}
                 </p>
               </div>
             )}
 
             {exportDialogState.status === 'done' && (
               <div className="border-green-500/40 bg-green-500/10 text-green-600 rounded-md border p-3 text-sm">
-                <p className="font-semibold">✓ Export successful</p>
+                <p className="font-semibold">Export ready</p>
                 <p className="text-xs mt-1">
-                  {exportDialogState.uris.length === 1
-                    ? 'The graph has been exported.'
-                    : `All ${exportDialogState.uris.length} graphs have been exported.`}{' '}
-                  Your download should start automatically.
+                  The download should start automatically.
                 </p>
               </div>
             )}
@@ -1197,7 +1190,7 @@ export function GraphManager({
                 </Button>
                 <Button disabled>
                   <Loader2Icon className="animate-spin" />
-                  Exporting...
+                  Exporting…
                 </Button>
               </>
             )}
@@ -1226,14 +1219,14 @@ export function GraphManager({
             <div className="mb-4 rounded-full bg-yellow-100 p-3">
               <SearchIcon className="h-6 w-6 text-yellow-600" />
             </div>
-            <h3 className="mb-2 text-lg font-semibold">No graphs found</h3>
+            <h3 className="mb-2 text-lg font-semibold">No graphs yet</h3>
             <p className="text-muted-foreground mb-4 max-w-md text-center">
-              The endpoint currently exposes no named graphs.
+              Import data to create the first one.
             </p>
             {canManage && (
               <div className="flex gap-2">
                 <Button onClick={() => router.push('/import')}>
-                  <DownloadIcon /> Import Data
+                  <DownloadIcon /> Import data
                 </Button>
               </div>
             )}
@@ -1243,7 +1236,7 @@ export function GraphManager({
         <>
           <div className="flex flex-wrap items-center gap-2">
             <Input
-              placeholder="Filter graph URIs..."
+              placeholder="Filter by URI…"
               value={(table.getColumn('uri')?.getFilterValue() as string) ?? ''}
               onChange={(event) =>
                 table.getColumn('uri')?.setFilterValue(event.target.value)
@@ -1256,7 +1249,7 @@ export function GraphManager({
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" size="sm" disabled={!canManage}>
-                      <UploadIcon /> Export Repository
+                      <UploadIcon /> Export repository
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent>
@@ -1276,7 +1269,7 @@ export function GraphManager({
                   variant="outline"
                   size="sm"
                 >
-                  <DownloadIcon /> Import Data
+                  <DownloadIcon /> Import data
                 </Button>
 
                 <Button
@@ -1285,7 +1278,7 @@ export function GraphManager({
                   onClick={openClearDialog}
                   disabled={!canManage}
                 >
-                  <TrashIcon /> Clear Repository
+                  <TrashIcon /> Clear repository
                 </Button>
               </div>
             )}
@@ -1334,7 +1327,7 @@ export function GraphManager({
                       colSpan={columns.length}
                       className="h-24 text-center"
                     >
-                      No results.
+                      No graphs match this filter. Clear it to see all graphs.
                     </TableCell>
                   </TableRow>
                 )}
@@ -1345,7 +1338,7 @@ export function GraphManager({
           <div className="flex items-center justify-between">
             <div className="text-muted-foreground text-sm">
               {table.getFilteredSelectedRowModel().rows.length} of{' '}
-              {table.getFilteredRowModel().rows.length} row(s) selected.
+              {table.getFilteredRowModel().rows.length} graphs selected
             </div>
             <div className="flex items-center space-x-2">
               <Button
@@ -1401,9 +1394,6 @@ export function GraphManager({
                         : 'graphs'}{' '}
                       selected
                     </p>
-                    <p className="text-muted-foreground text-xs">
-                      Ready for bulk actions
-                    </p>
                   </div>
                 </div>
 
@@ -1422,7 +1412,7 @@ export function GraphManager({
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>Export Format</DropdownMenuLabel>
+                      <DropdownMenuLabel>Export format</DropdownMenuLabel>
                       <DropdownMenuSeparator />
                       {GRAPH_EXPORT_FILE_TYPES.map((type) => (
                         <DropdownMenuItem

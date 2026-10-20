@@ -25,7 +25,7 @@ export async function generateMetadata(): Promise<Metadata> {
       default: appName,
       template: `%s | ${appName}`
     },
-    description: 'A workbench for exploring RDF triplestores'
+    description: 'Explore, query, and manage RDF data'
   }
   if (logoMeta) {
     const url = `/api/appearance/logo?v=${logoMeta.updatedAt}`

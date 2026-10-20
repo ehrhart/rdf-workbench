@@ -44,11 +44,11 @@ export function ChatShareButton() {
         setShare(null)
         return
       }
-      if (!response.ok) throw new Error('Failed to load share status')
+      if (!response.ok) throw new Error("Couldn't load sharing settings")
       const payload = (await response.json()) as { share?: ShareInfo | null }
       setShare(payload.share ?? null)
     } catch {
-      toast.error('Failed to load share status')
+      toast.error("Couldn't load sharing settings. Try again.")
     } finally {
       setLoaded(true)
     }
@@ -76,7 +76,7 @@ export function ChatShareButton() {
       )
       toast.success('Link copied')
     } catch {
-      toast.error('Failed to copy link')
+      toast.error("Couldn't copy the link. Try again.")
     }
   }
 
@@ -91,12 +91,12 @@ export function ChatShareButton() {
           body: JSON.stringify({ messages })
         }
       )
-      if (!response.ok) throw new Error('Failed to create share link')
+      if (!response.ok) throw new Error("Couldn't create the share link")
       const payload = (await response.json()) as { share: ShareInfo }
       setShare(payload.share)
       await copyShareLink(payload.share)
     } catch {
-      toast.error('Failed to create share link')
+      toast.error("Couldn't create the share link. Try again.")
     } finally {
       setCreating(false)
     }
@@ -113,11 +113,11 @@ export function ChatShareButton() {
           body: JSON.stringify({ messages })
         }
       )
-      if (!response.ok) throw new Error('Failed to update share')
+      if (!response.ok) throw new Error("Couldn't update the shared copy")
       const payload = (await response.json()) as { share: ShareInfo }
       setShare(payload.share)
     } catch {
-      toast.error('Failed to update share')
+      toast.error("Couldn't update the shared copy. Try again.")
     } finally {
       setUpdating(false)
     }
@@ -130,10 +130,10 @@ export function ChatShareButton() {
         `/api/conversations/${conversationId}/share`,
         { method: 'DELETE' }
       )
-      if (!response.ok) throw new Error('Failed to stop sharing')
+      if (!response.ok) throw new Error("Couldn't stop sharing")
       setShare(null)
     } catch {
-      toast.error('Failed to stop sharing')
+      toast.error("Couldn't stop sharing. Try again.")
     } finally {
       setStopping(false)
     }
@@ -167,10 +167,10 @@ export function ChatShareButton() {
             <PopoverTitle>Share chat</PopoverTitle>
             <PopoverDescription>
               {share === null || !stale ? (
-                'Only messages up until now will be shared'
+                'Anyone with this link can read a copy of this conversation.'
               ) : (
                 <>
-                  There are new messages since last share.{' '}
+                  The shared copy is out of date.{' '}
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <button
@@ -181,17 +181,15 @@ export function ChatShareButton() {
                         Update
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent>
-                      Share the most recent content
-                    </TooltipContent>
+                    <TooltipContent>Share the latest messages</TooltipContent>
                   </Tooltip>
                 </>
               )}
             </PopoverDescription>
           </PopoverHeader>
           <p className="text-xs text-muted-foreground">
-            Don't share personal information or third-party content without
-            permission
+            Don&apos;t share personal information or third-party content without
+            permission.
           </p>
           <div className="flex items-center justify-end gap-2">
             {share && (

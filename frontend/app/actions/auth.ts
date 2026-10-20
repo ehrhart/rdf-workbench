@@ -39,7 +39,7 @@ export async function login(
     headerList.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
   const throttleKey = loginThrottleKey(username, clientIp)
   if (isLoginBlocked(throttleKey)) {
-    return { message: 'Too many attempts. Please try again later.' }
+    return { message: 'Too many attempts. Try again in 15 minutes.' }
   }
 
   let principal: Principal
@@ -58,7 +58,7 @@ export async function login(
     }
     console.error('Unexpected login error:', error)
     return {
-      message: 'Unable to authenticate. Please try again.'
+      message: "Couldn't sign you in. Try again in a moment."
     }
   }
 

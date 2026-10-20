@@ -99,7 +99,7 @@ export const savedQueryRepository: SavedQueryRepository = {
       nextPosition.next
     )
     const created = await getSavedQuery(id, owner.id)
-    if (!created) throw new QueryError('Failed to persist saved query')
+    if (!created) throw new QueryError("Couldn't save the query")
     return created
   },
 
@@ -118,7 +118,7 @@ export const savedQueryRepository: SavedQueryRepository = {
       WHERE id = ?
     `).run(value.name, value.query, new Date().toISOString(), id)
     const updated = await getSavedQuery(id, owner.id)
-    if (!updated) throw new QueryError('Failed to update saved query')
+    if (!updated) throw new QueryError("Couldn't update the query")
     return updated
   },
 

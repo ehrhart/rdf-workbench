@@ -9,8 +9,8 @@ import { requirePageAccess } from '@/lib/runtime'
 import { getFTRules } from '@/providers/virtuoso/fulltext'
 
 export const metadata: Metadata = {
-  title: 'Full-Text Index Management',
-  description: 'Manage full-text indexing rules for RDF object values'
+  title: 'Full-text index',
+  description: 'Choose which RDF values are searchable in full text'
 }
 
 // Async component for full-text index data
@@ -32,7 +32,7 @@ export default async function FullTextIndexPage() {
   await requirePageAccess('session')
   return (
     <DashboardShell>
-      <DashboardHeader heading="Full-Text Index Management" />
+      <DashboardHeader heading="Full-text index" />
       <Suspense fallback={<FullTextIndexSkeleton />}>
         <FullTextIndexContent />
       </Suspense>

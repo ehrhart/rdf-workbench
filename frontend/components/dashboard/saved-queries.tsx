@@ -22,14 +22,14 @@ export async function SavedQueriesCard() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <div>
-            <CardTitle>Saved SPARQL Queries</CardTitle>
+            <CardTitle>Saved queries</CardTitle>
           </div>
           <FolderOpen className="size-5 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           {savedQueries.length === 0 ? (
             <p className="text-muted-foreground text-sm">
-              No saved queries yet.
+              No saved queries yet. Save one from the SPARQL editor.
             </p>
           ) : (
             <ScrollArea className="pr-2" viewportClassName="max-h-96">
@@ -54,7 +54,7 @@ export async function SavedQueriesCard() {
                           textToCopy={`${baseUrl}/sparql?savedQueryId=${encodeURIComponent(saved.id)}`}
                           tooltipText="Copy link"
                           successMessage="Saved query link copied"
-                          errorMessage="Failed to copy link"
+                          errorMessage="Couldn't copy the link."
                           copyIcon={<LinkIcon />}
                           className="h-8 w-8"
                         />
@@ -73,14 +73,12 @@ export async function SavedQueriesCard() {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Saved Queries</CardTitle>
-          <CardDescription>
-            Shared queries available to everyone
-          </CardDescription>
+          <CardTitle>Saved queries</CardTitle>
+          <CardDescription>Saved queries everyone can use.</CardDescription>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground text-sm">
-            Unable to load saved queries right now. Please try again later.
+            Couldn&apos;t load saved queries. Try again in a moment.
           </p>
         </CardContent>
       </Card>

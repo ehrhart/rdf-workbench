@@ -26,7 +26,7 @@ const booleanSetting: z.ZodType<boolean> = z.preprocess((input) => {
 export const allowAnonymousReadEntry: SettingEntry<boolean> = {
   key: 'access.allowAnonymousRead',
   group: 'access',
-  label: 'Allow anonymous read',
+  label: 'Browse without an account',
   schema: booleanSetting,
   envVar: 'ALLOW_ANONYMOUS_READ',
   defaultValue: false
@@ -35,7 +35,7 @@ export const allowAnonymousReadEntry: SettingEntry<boolean> = {
 export const allowAnonymousAskEntry: SettingEntry<boolean> = {
   key: 'access.allowAnonymousAsk',
   group: 'access',
-  label: 'Allow anonymous ask',
+  label: 'Chat without an account',
   schema: booleanSetting,
   envVar: 'ALLOW_ANONYMOUS_ASK',
   defaultValue: false

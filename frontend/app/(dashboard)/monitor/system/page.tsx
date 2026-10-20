@@ -20,8 +20,8 @@ import { getWorkbenchRuntime } from '@/lib/runtime'
 import VirtuosoSystemMonitor from './virtuoso-system-monitor'
 
 export const metadata: Metadata = {
-  title: 'Endpoint Monitoring',
-  description: 'Runtime information for the configured RDF endpoint'
+  title: 'Endpoint monitoring',
+  description: 'Status and settings of the RDF endpoint'
 }
 
 function label(value: string): string {
@@ -77,9 +77,9 @@ async function EndpointOverviewMonitor() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Runtime Settings</CardTitle>
+            <CardTitle>Runtime settings</CardTitle>
             <CardDescription>
-              Public settings reported by the {runtime.label} server
+              Settings the {runtime.label} server reports
             </CardDescription>
           </CardHeader>
           <CardContent>

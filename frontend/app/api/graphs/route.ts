@@ -24,7 +24,7 @@ export async function DELETE(req: NextRequest) {
 
     if (!graphUri) {
       return NextResponse.json(
-        { error: 'Graph URI is required' },
+        { error: 'A graph URI is required.' },
         { status: 400 }
       )
     }
@@ -42,7 +42,7 @@ export async function DELETE(req: NextRequest) {
     if (!response.ok) {
       const errorData = await response.json()
       return NextResponse.json(
-        { error: errorData.error || 'Failed to delete graph' },
+        { error: errorData.error || "Couldn't delete the graph." },
         { status: response.status }
       )
     }
@@ -52,7 +52,7 @@ export async function DELETE(req: NextRequest) {
   } catch (error: unknown) {
     const err = error as Error
     return NextResponse.json(
-      { error: err.message || 'An unknown error occurred' },
+      { error: err.message || "Couldn't delete the graph." },
       { status: 500 }
     )
   }

@@ -42,7 +42,7 @@ interface FullTextIndexManagerProps {
 const formSchema = z.object({
   graph: z.string().optional(),
   predicate: z.string().optional(),
-  reason: z.string().min(1, 'Reason is required')
+  reason: z.string().min(1, 'Reason is required.')
 })
 
 export function FullTextIndexManager({
@@ -85,13 +85,13 @@ export function FullTextIndexManager({
           }
         ])
         form.reset()
-        toast.success('Full-text indexing rule added successfully.')
+        toast.success('Rule added')
       } else {
-        toast.info('This rule already exists.')
+        toast.info('Rule already exists')
       }
     } catch (error) {
       console.error('Failed to add FT rule:', error)
-      toast.error('Failed to add full-text indexing rule.')
+      toast.error("Couldn't add the rule.")
     } finally {
       setIsSubmitting(false)
     }
@@ -116,13 +116,13 @@ export function FullTextIndexManager({
               )
           )
         )
-        toast.success('Full-text indexing rule deleted successfully.')
+        toast.success('Rule deleted')
       } else {
-        toast.error('Rule not found.')
+        toast.error("Couldn't find that rule — it may already be gone.")
       }
     } catch (error) {
       console.error('Failed to delete FT rule:', error)
-      toast.error('Failed to delete full-text indexing rule.')
+      toast.error("Couldn't delete the rule.")
     }
   }
 
@@ -130,17 +130,15 @@ export function FullTextIndexManager({
     <div className="space-y-6">
       <Alert>
         <Info className="h-4 w-4" />
-        <AlertTitle>About Full-Text Indexing</AlertTitle>
+        <AlertTitle>About full-text indexing</AlertTitle>
         <AlertDescription>
           <div>
-            Full-text indexing enables fast text search on RDF object values
-            using{' '}
+            Indexes RDF object values for{' '}
             <code className="bg-muted relative rounded px-[0.3rem] py-[0.2rem] font-mono text-xs">
               bif:contains
             </code>{' '}
-            in SPARQL queries. Configure which triples to index by specifying
-            graph and predicate combinations. Leave fields empty to use
-            wildcards (all graphs or all predicates).
+            text search. Rules pick which graph and predicate pairs to index;
+            leave a field empty to match all graphs or predicates.
           </div>
         </AlertDescription>
       </Alert>
@@ -149,10 +147,10 @@ export function FullTextIndexManager({
 
       <Card>
         <CardHeader>
-          <CardTitle>Add New Indexing Rule</CardTitle>
+          <CardTitle>Add a rule</CardTitle>
           <CardDescription>
-            Configure which RDF triples should be indexed for full-text search.
-            Empty fields will match all graphs or all predicates.
+            One rule per graph and predicate pair. Leave a field empty to match
+            all graphs or all predicates.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -166,7 +164,7 @@ export function FullTextIndexManager({
                   {...register('graph')}
                 />
                 <FieldDescription>
-                  Optional: specific graph to index
+                  Limit the rule to one graph.
                 </FieldDescription>
                 <FieldError errors={[errors.graph]} />
               </Field>
@@ -178,7 +176,7 @@ export function FullTextIndexManager({
                   {...register('predicate')}
                 />
                 <FieldDescription>
-                  Optional: specific predicate to index
+                  Limit the rule to one predicate.
                 </FieldDescription>
                 <FieldError errors={[errors.predicate]} />
               </Field>
@@ -190,14 +188,14 @@ export function FullTextIndexManager({
                   {...register('reason')}
                 />
                 <FieldDescription>
-                  Application or purpose identifier
+                  A note on why the rule exists, shown in the list.
                 </FieldDescription>
                 <FieldError errors={[errors.reason]} />
               </Field>
             </div>
             <Button type="submit" disabled={isSubmitting}>
               <Plus className="mr-2 h-4 w-4" />
-              {isSubmitting ? 'Adding...' : 'Add Rule'}
+              {isSubmitting ? 'Adding…' : 'Add rule'}
             </Button>
           </form>
         </CardContent>
@@ -205,7 +203,7 @@ export function FullTextIndexManager({
 
       <Card>
         <CardHeader>
-          <CardTitle>Active Indexing Rules</CardTitle>
+          <CardTitle>Indexing rules</CardTitle>
           <CardDescription>
             {rules.length} rule{rules.length !== 1 ? 's' : ''} configured
           </CardDescription>
@@ -225,7 +223,8 @@ export function FullTextIndexManager({
                 {rules.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={4} className="text-center">
-                      No full-text indexing rules configured
+                      No rules yet. Index the values of rdfs:label by adding a
+                      rule.
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -237,14 +236,14 @@ export function FullTextIndexManager({
                         {rule.ROFR_G ? (
                           rule.ROFR_G
                         ) : (
-                          <Badge variant="secondary">All Graphs</Badge>
+                          <Badge variant="secondary">All graphs</Badge>
                         )}
                       </TableCell>
                       <TableCell className="font-mono text-xs">
                         {rule.ROFR_P ? (
                           rule.ROFR_P
                         ) : (
-                          <Badge variant="secondary">All Predicates</Badge>
+                          <Badge variant="secondary">All predicates</Badge>
                         )}
                       </TableCell>
                       <TableCell>

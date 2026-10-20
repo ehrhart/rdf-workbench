@@ -9,8 +9,8 @@ import { requirePageAccess } from '@/lib/runtime'
 import { cfgItemValue } from '@/providers/virtuoso/config'
 
 export const metadata: Metadata = {
-  title: 'ISQL Console',
-  description: 'Execute SQL commands directly against Virtuoso'
+  title: 'iSQL console',
+  description: 'Run SQL commands against Virtuoso.'
 }
 
 async function IsqlConsoleContent() {
@@ -22,7 +22,7 @@ export default async function IsqlPage() {
   await requirePageAccess('admin')
   return (
     <DashboardShell>
-      <DashboardHeader heading="ISQL Console" />
+      <DashboardHeader heading="iSQL console" />
       <Suspense fallback={<QueryConsoleSkeleton />}>
         <IsqlConsoleContent />
       </Suspense>

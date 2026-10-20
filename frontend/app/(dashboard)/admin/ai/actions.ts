@@ -24,7 +24,10 @@ export async function saveAiSettingsAction(
   } catch (error) {
     return {
       ok: false,
-      message: error instanceof Error ? error.message : 'The operation failed'
+      message:
+        error instanceof Error
+          ? error.message
+          : "Couldn't save the AI settings."
     }
   }
 }

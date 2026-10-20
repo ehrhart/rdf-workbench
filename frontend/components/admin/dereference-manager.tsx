@@ -115,7 +115,7 @@ export function DereferenceManager({
 
   const handleRemove = async (entry: DereferencePath) => {
     const confirmed = window.confirm(
-      `Remove "/${entry.path}"? Dereferenceable URLs under this path will stop working.`
+      `Remove "/${entry.path}"? URLs under this path stop working.`
     )
     if (!confirmed) return
 
@@ -139,9 +139,10 @@ export function DereferenceManager({
         <CardHeader>
           <CardTitle>Add a path</CardTitle>
           <CardDescription>
-            A path is a lowercase URL path segment.{' '}
-            <span className="font-mono">/person/&lt;id&gt;</span> resolves to
-            the resource{' '}
+            Lowercase URL segments. Adding{' '}
+            <span className="font-mono">person</span> makes{' '}
+            <span className="font-mono">/person/&lt;id&gt;</span> show the
+            resource{' '}
             <span className="font-mono">
               &lt;resource-base&gt;/person/&lt;id&gt;
             </span>
@@ -156,9 +157,9 @@ export function DereferenceManager({
             <Input
               value={newPath}
               onChange={(event) => setNewPath(event.target.value)}
-              placeholder="e.g. person"
+              placeholder="person"
               className="max-w-xs font-mono"
-              aria-label="New dereference path"
+              aria-label="New path"
             />
             <Button type="submit" disabled={isCreating || !newPath.trim()}>
               {isCreating ? (
@@ -176,11 +177,11 @@ export function DereferenceManager({
         <CardHeader>
           <CardTitle>Configured paths</CardTitle>
           <CardDescription>
-            These paths are dereferenceable. Add a resource such as{' '}
+            Opening{' '}
             <span className="font-mono">
               /{'<path>'}/{'<id>'}
             </span>{' '}
-            to view it in the workbench.
+            shows that resource in the workbench.
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
@@ -198,7 +199,8 @@ export function DereferenceManager({
                     colSpan={2}
                     className="py-12 text-center text-muted-foreground"
                   >
-                    No dereference paths configured yet.
+                    No paths yet. Add one above, such as person, to open
+                    /person/&lt;id&gt; in the workbench.
                   </TableCell>
                 </TableRow>
               ) : (
@@ -258,8 +260,8 @@ export function DereferenceManager({
         <CardHeader>
           <CardTitle>Reserved paths</CardTitle>
           <CardDescription>
-            These paths are used by the workbench or the triplestore and cannot
-            be added.
+            The workbench and the triplestore use these paths, so they
+            can&apos;t be added.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-2">

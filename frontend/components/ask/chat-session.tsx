@@ -103,13 +103,13 @@ export function ChatSessionProvider({
       if (response.status === 401) {
         return
       }
-      if (!response.ok) throw new Error('Failed to load conversations')
+      if (!response.ok) throw new Error("Couldn't load conversations")
       const payload = (await response.json()) as {
         conversations: ConversationDto[]
       }
       setConversations(payload.conversations ?? [])
     } catch {
-      toast.error('Failed to load conversations')
+      toast.error("Couldn't load conversations. Try again.")
     } finally {
       setConversationsLoading(false)
     }
@@ -192,7 +192,7 @@ export function ChatSessionProvider({
         if (persistErrorNotifiedRef.current !== id) {
           persistErrorNotifiedRef.current = id
           toast.error(
-            'This conversation could not be saved. New messages will not be stored.'
+            "Couldn't save this conversation. New messages won't be kept."
           )
         }
         return
@@ -321,13 +321,13 @@ export function ChatSessionProvider({
           body: JSON.stringify({ title: next })
         })
         if (response.status === 401) return
-        if (!response.ok) throw new Error('Failed to rename conversation')
+        if (!response.ok) throw new Error("Couldn't rename the conversation")
         void refreshConversations()
       } catch (error) {
         toast.error(
           error instanceof Error
             ? error.message
-            : 'Failed to rename conversation'
+            : "Couldn't rename the conversation"
         )
         setTitle(previous)
       }
@@ -353,7 +353,7 @@ export function ChatSessionProvider({
         if (response.status === 401) {
           return
         }
-        if (!response.ok) throw new Error('Failed to load conversation')
+        if (!response.ok) throw new Error("Couldn't load the conversation")
         const payload = (await response.json()) as {
           conversation: ConversationDto
           messages: UIMessage[]
@@ -366,7 +366,7 @@ export function ChatSessionProvider({
         toast.error(
           loadError instanceof Error
             ? loadError.message
-            : 'Failed to load conversation'
+            : "Couldn't load the conversation"
         )
       }
     },
@@ -390,14 +390,14 @@ export function ChatSessionProvider({
           body: JSON.stringify({ title: next })
         })
         if (response.status === 401) return
-        if (!response.ok) throw new Error('Failed to rename conversation')
+        if (!response.ok) throw new Error("Couldn't rename the conversation")
         if (id === conversationId) setTitle(next)
         void refreshConversations()
       } catch (error) {
         toast.error(
           error instanceof Error
             ? error.message
-            : 'Failed to rename conversation'
+            : "Couldn't rename the conversation"
         )
       }
     },
@@ -413,7 +413,7 @@ export function ChatSessionProvider({
         if (response.status === 401) {
           return
         }
-        if (!response.ok) throw new Error('Failed to delete conversation')
+        if (!response.ok) throw new Error("Couldn't delete the conversation")
         if (conversationId === id) {
           clearSession()
           window.history.replaceState(null, '', '/ask')
@@ -424,7 +424,7 @@ export function ChatSessionProvider({
         toast.error(
           error instanceof Error
             ? error.message
-            : 'Failed to delete conversation'
+            : "Couldn't delete the conversation"
         )
       }
     },

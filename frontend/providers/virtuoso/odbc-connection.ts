@@ -116,7 +116,7 @@ async function fetchVirtuosoAdapterResponse<T = Record<string, unknown>>(
         errorMessage
       )
       throw new ConnectionError(
-        `Unable to connect to the Virtuoso adapter (${errorMessage}). The service may be temporarily unavailable.`
+        `Couldn't connect to the Virtuoso adapter (${errorMessage}). The service may be temporarily unavailable.`
       )
     }
   }

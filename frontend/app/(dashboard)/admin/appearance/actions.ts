@@ -31,11 +31,12 @@ export async function saveAppearanceSettingsAction(
     await saveAppearanceSettings(input)
     revalidatePath('/admin/appearance')
     revalidatePath('/', 'layout')
-    return { ok: true, message: 'Appearance settings saved' }
+    return { ok: true, message: 'Appearance saved' }
   } catch (error) {
     return {
       ok: false,
-      message: error instanceof Error ? error.message : 'The operation failed'
+      message:
+        error instanceof Error ? error.message : "Couldn't save the appearance."
     }
   }
 }
@@ -55,7 +56,8 @@ export async function uploadLogoAction(
   } catch (error) {
     return {
       ok: false,
-      message: error instanceof Error ? error.message : 'The operation failed'
+      message:
+        error instanceof Error ? error.message : "Couldn't upload the logo."
     }
   }
 }
@@ -73,7 +75,8 @@ export async function removeLogoAction(): Promise<LogoActionResult> {
   } catch (error) {
     return {
       ok: false,
-      message: error instanceof Error ? error.message : 'The operation failed'
+      message:
+        error instanceof Error ? error.message : "Couldn't remove the logo."
     }
   }
 }

@@ -6,7 +6,7 @@ import type { WorkbenchRuntime } from '@/lib/runtime/contracts'
 export async function GET(request: NextRequest) {
   const query = request.nextUrl.searchParams.get('query')
   if (!query) {
-    return jsonError('No query provided', 400)
+    return jsonError('Query is required.', 400)
   }
   const format = request.nextUrl.searchParams.get('format')
   const accept = format ?? request.headers.get('accept')
@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const query = await readQueryBody(request)
   if (!query) {
-    return jsonError('No query provided', 400)
+    return jsonError('Query is required.', 400)
   }
   return runPublicQuery(request, query, request.headers.get('accept'))
 }
@@ -47,7 +47,7 @@ async function streamDownload(
 
     if (!upstream.ok) {
       const body = await upstream.text()
-      return new Response(body || 'SPARQL query failed', {
+      return new Response(body || "Couldn't run the query.", {
         status: upstream.status,
         headers: { 'Content-Type': contentType }
       })
@@ -59,7 +59,7 @@ async function streamDownload(
     })
   } catch (error) {
     const message =
-      error instanceof Error ? error.message : 'SPARQL query failed'
+      error instanceof Error ? error.message : "Couldn't run the query."
     return jsonError(message, 400)
   }
 }

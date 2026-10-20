@@ -83,9 +83,9 @@ export function useAiJobs(
           error: response.ok ? undefined : payload.error
         }
       }
-      return { ok: false, error: payload?.error ?? 'Failed to start the job' }
+      return { ok: false, error: payload?.error ?? "Couldn't start the job" }
     } catch {
-      return { ok: false, error: 'Failed to start the job' }
+      return { ok: false, error: "Couldn't start the job" }
     }
   }, [kind])
 

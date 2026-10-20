@@ -17,7 +17,10 @@ export async function POST(request: Request) {
     const format = payload.format?.trim()
 
     if (!format) {
-      return NextResponse.json({ error: 'Format is required' }, { status: 400 })
+      return NextResponse.json(
+        { error: 'Format is required.' },
+        { status: 400 }
+      )
     }
 
     const filename = sanitizeFilename(payload.filename)
@@ -38,7 +41,7 @@ export async function POST(request: Request) {
     }
 
     if (!query) {
-      return NextResponse.json({ error: 'Query is required' }, { status: 400 })
+      return NextResponse.json({ error: 'Query is required.' }, { status: 400 })
     }
 
     const runtime = await getWorkbenchRuntime()
@@ -50,7 +53,7 @@ export async function POST(request: Request) {
 
     if (!upstream.ok) {
       const errorBody = await upstream.text()
-      return new Response(errorBody || 'Download failed', {
+      return new Response(errorBody || "Couldn't download the results.", {
         status: upstream.status,
         headers: {
           'Content-Type': upstreamContentType || 'text/plain'
@@ -78,7 +81,8 @@ export async function POST(request: Request) {
       headers
     })
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Download failed'
+    const message =
+      error instanceof Error ? error.message : "Couldn't download the results."
     return NextResponse.json({ error: message }, { status: 400 })
   }
 }

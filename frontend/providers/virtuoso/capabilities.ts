@@ -84,7 +84,7 @@ export async function getPrefixes(): Promise<Record<string, string>> {
     'SELECT NS_PREFIX, NS_URL FROM DB.DBA.SYS_XML_PERSISTENT_NS_DECL ORDER BY LOWER(NS_PREFIX)'
   )
   if (!result || !Array.isArray(result)) {
-    throw new Error('Failed to retrieve prefixes')
+    throw new Error("Couldn't load prefixes.")
   }
   return result.reduce(
     (acc, { NS_PREFIX, NS_URL }) => {
@@ -232,7 +232,7 @@ export async function getGraphTripleCount(uri: string): Promise<number> {
   )
 
   if (!result || !Array.isArray(result)) {
-    throw new Error('Failed to retrieve triple count for graph')
+    throw new Error("Couldn't count the graph's triples.")
   }
 
   const triples = result[0]?.triples ?? 0
@@ -256,7 +256,7 @@ export async function deleteGraph(uri: string): Promise<void> {
   if (!response.ok) {
     const error = await response.json().catch(() => ({}))
     throw new Error(
-      error.error || `Failed to initiate graph deletion: ${response.status}`
+      error.error || `Couldn't delete the graph (${response.status}).`
     )
   }
 }

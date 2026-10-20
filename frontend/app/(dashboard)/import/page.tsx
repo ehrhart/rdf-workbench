@@ -10,7 +10,7 @@ import {
 
 export const metadata: Metadata = {
   title: 'Import',
-  description: 'Load RDF data into the configured triplestore'
+  description: 'Load RDF data into the triplestore'
 }
 
 export default async function ImportPage() {

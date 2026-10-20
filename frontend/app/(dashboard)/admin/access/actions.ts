@@ -29,11 +29,12 @@ export async function saveAccessFlag(
     await saveSettingValues([{ key, value }], principal.username)
     revalidatePath('/admin/access')
     revalidatePath('/', 'layout')
-    return { ok: true, message: 'Access setting saved' }
+    return { ok: true, message: 'Access updated' }
   } catch (error) {
     return {
       ok: false,
-      message: error instanceof Error ? error.message : 'The operation failed'
+      message:
+        error instanceof Error ? error.message : "Couldn't update access."
     }
   }
 }
@@ -52,11 +53,11 @@ export async function resetAccessFlag(
     await resetSettingValue(key, principal.username)
     revalidatePath('/admin/access')
     revalidatePath('/', 'layout')
-    return { ok: true, message: 'Access setting reset' }
+    return { ok: true, message: 'Access reset' }
   } catch (error) {
     return {
       ok: false,
-      message: error instanceof Error ? error.message : 'The operation failed'
+      message: error instanceof Error ? error.message : "Couldn't reset access."
     }
   }
 }

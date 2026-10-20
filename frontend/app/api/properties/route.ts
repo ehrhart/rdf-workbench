@@ -16,7 +16,7 @@ export async function GET() {
   } catch (error) {
     console.error('Error fetching properties:', error)
     return NextResponse.json(
-      { error: 'Failed to fetch properties' },
+      { error: "Couldn't load properties." },
       { status: 500 }
     )
   }

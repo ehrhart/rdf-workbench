@@ -7,7 +7,7 @@ import { requirePageAccess } from '@/lib/runtime'
 
 export const metadata: Metadata = {
   title: 'Access',
-  description: 'Control what logged-out visitors can open and use.'
+  description: 'Choose what visitors can do without an account.'
 }
 
 export default async function AccessPage() {

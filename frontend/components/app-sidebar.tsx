@@ -76,7 +76,7 @@ export function AppSidebar({
               href={updateInfo.releaseUrl}
               target="_blank"
               rel="noreferrer"
-              title={`v${updateInfo.latestVersion} available (running v${updateInfo.currentVersion})`}
+              title={`v${updateInfo.latestVersion} available (you are running v${updateInfo.currentVersion})`}
               className="flex items-center gap-1.5 rounded-md font-medium text-sidebar-foreground transition-colors hover:text-sidebar-accent-foreground"
             >
               <span

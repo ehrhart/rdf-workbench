@@ -141,8 +141,8 @@ export default function OxigraphImportManager() {
   return (
     <DashboardShell>
       <DashboardHeader
-        heading="Import Data"
-        text="Load RDF into Oxigraph through the Graph Store HTTP protocol"
+        heading="Import data"
+        text="Load RDF into Oxigraph from a file, a URL, or a snippet."
       />
       <Tabs defaultValue="file">
         <TabsList>
