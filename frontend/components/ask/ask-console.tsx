@@ -1136,7 +1136,7 @@ export function AskConsole({
         <div className="mb-1.5 flex items-center">
           <DatasetChip summary={initialProfileSummary} />
         </div>
-        <div className="rounded-3xl border border-input bg-background p-2 shadow-sm transition-colors focus-within:border-ring">
+        <div className="rounded-xl border border-input bg-background p-2 shadow-sm transition-colors focus-within:border-ring">
           <Textarea
             ref={textareaRef}
             value={input}
