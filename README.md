@@ -1,7 +1,7 @@
 # RDF Workbench
 
-RDF Workbench is a Next.js application for exploring and managing RDF
-triplestores. It currently supports:
+RDF Workbench is a Next.js app for exploring and managing RDF triplestores. It
+supports:
 
 - [QLever](https://github.com/ad-freiburg/qlever)
 - [Virtuoso](https://github.com/openlink/virtuoso-opensource)
@@ -10,65 +10,65 @@ triplestores. It currently supports:
 
 ## Feature matrix
 
-There are some differences between the providers:
-
 | Capability                    | QLever | Virtuoso                                     | Oxigraph                   | Generic                      |
 | ----------------------------- | ------ | -------------------------------------------- | -------------------------- | ---------------------------- |
 | Public SELECT                 | Yes    | Yes                                          | Yes                        | Yes                          |
 | CONSTRUCT/DESCRIBE downloads  | Turtle | Turtle, N-Triples, N-Quads, JSON-LD, RDF/XML | Turtle, N-Triples, RDF/XML | Turtle, N-Triples, RDF/XML   |
 | SPARQL Update                 | No     | Yes (via ISQL)                               | Yes                        | Yes                          |
-| Import/export, graph deletion | No     | Yes                                          | Yes                        | Import via `LOAD`, no export |
-| Full-text search              | Yes    | Yes                                          | No ¹                       | No                           |
+| Import/export, graph deletion | No     | Yes                                          | Yes                        | Import via `LOAD`; no export |
+| Full-text search              | Yes    | Yes                                          | No¹                        | No                           |
 
-¹ Oxigraph does not support full-text search (see
-[Oxigraph issue #48](https://github.com/oxigraph/oxigraph/issues/48))
+¹ Oxigraph does not support full-text search. See
+[Oxigraph issue #48](https://github.com/oxigraph/oxigraph/issues/48).
 
-## Quick start: QLever
+## Quick start
 
-Copy `.env.example` to `.env`, set your QLever SPARQL endpoint and resource base
-URI, and replace the bootstrap password:
+### QLever
+
+Copy `.env.example` to `.env`, set `SPARQL_ENDPOINT` and `RESOURCE_BASE_URI`,
+and replace the bootstrap password.
 
 ```bash
 cp .env.example .env
 docker compose -f docker-compose.yml -f docker-compose.qlever.yml up --build -d
 ```
 
-## Quick start: Virtuoso
+### Virtuoso
 
-Set `SPARQL_ENDPOINT`, the Virtuoso connection variables, and fresh secrets in
-`.env`, then run:
+Set `SPARQL_ENDPOINT`, the Virtuoso connection variables, and new secrets in
+`.env`. Then run:
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.virtuoso.yml up --build -d
 ```
 
-## Quick start: Oxigraph
+### Oxigraph
 
 Set `SPARQL_ENDPOINT` to the Oxigraph `/sparql` union endpoint and replace the
-bootstrap password in `.env`, then run:
+bootstrap password in `.env`. Then run:
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.oxigraph.yml up --build -d
 ```
 
-## Quick start: any SPARQL 1.1 endpoint (generic)
+### Generic SPARQL 1.1 endpoint
 
-Set `TRIPLESTORE_PROVIDER` to `generic` and point `SPARQL_ENDPOINT` at any
-endpoint speaking the SPARQL 1.1 protocol:
+Set `TRIPLESTORE_PROVIDER` to `generic` and configure `SPARQL_ENDPOINT` with
+your SPARQL 1.1 endpoint:
 
 ```bash
 TRIPLESTORE_PROVIDER=generic
 SPARQL_ENDPOINT=https://data.example.org/sparql
 ```
 
-## Quick start: published image
+## Use the published image
 
-Instead of building, use the image published to GitHub Container Registry. Add
-this to your own `compose.yml`:
+To use the image from GitHub Container Registry instead of building it, add the
+relevant service configuration to your `compose.yml`. Replace placeholder
+credentials and secrets with real values. Other variables are documented in
+`.env.example`.
 
 ### QLever
-
-Set the secrets to real values; the remaining variables follow `.env.example`.
 
 ```yaml
 services:
@@ -92,8 +92,6 @@ volumes:
 ```
 
 ### Virtuoso
-
-Set the secrets to real values; the remaining variables follow `.env.example`.
 
 ```yaml
 services:
@@ -131,8 +129,6 @@ volumes:
 ```
 
 ### Oxigraph
-
-Set the secrets to real values; the remaining variables follow `.env.example`.
 
 ```yaml
 services:
@@ -177,8 +173,6 @@ volumes:
 
 ### Generic
 
-Point `SPARQL_ENDPOINT` at your endpoint and set the secrets to real values.
-
 ```yaml
 services:
   workbench:
@@ -202,91 +196,93 @@ volumes:
 
 ## Configuration
 
-Common runtime variables:
+### Common variables
 
 - `TRIPLESTORE_PROVIDER`: `qlever`, `virtuoso`, `oxigraph`, or `generic`.
-- `SPARQL_ENDPOINT`: selected provider's HTTP SPARQL endpoint. For Oxigraph,
-  point this at the `/sparql` union endpoint (queries and updates).
+- `SPARQL_ENDPOINT`: HTTP SPARQL endpoint for the selected provider. For
+  Oxigraph, use the `/sparql` union endpoint for queries and updates.
 - `SPARQL_TIMEOUT_MS`: request timeout in milliseconds.
-- `WORKBENCH_NAME`: runtime display name; defaults to `RDF Workbench`.
-- `WORKBENCH_URL`: externally visible origin used for redirects and mutation
-  origin checks.
-- `WORKBENCH_PORT`: host port for the workbench container in docker compose; the
-  container itself listens on `3000`.
-- `RESOURCE_BASE_URI`: base IRI of dereferenceable resources. A path configured
-  for dereferencing maps `/path/<id>` to `<RESOURCE_BASE_URI>/path/<id>`.
-- `DEREFERENCE_PATHS`: optional list of dereferenceable path segments, separated
-  by commas or whitespace. At startup the workbench inserts each listed path
-  that does not exist yet. Seeding never deletes rows, so paths managed in the
-  admin UI survive restarts. The workbench skips entries the admin UI would
-  reject and logs a warning. Unset or empty disables seeding.
-- `WORKBENCH_DB_PATH`: sqlite database holding workbench-owned data (saved
-  queries, dereference paths, prefixes).
-- `ALLOW_ANONYMOUS_READ`: set to `1` or `true` to let logged-out visitors open
-  read-oriented pages (dashboard, graphs overview, visual graph, SPARQL console).
-  With the flag off, read-oriented pages require a session. Administration pages,
-  the monitor, and on Virtuoso also import, ISQL, namespaces, and configuration,
-  still require a session. All writes authenticate at their own route or action
-  layer regardless. Disabled by default.
-- `ALLOW_ANONYMOUS_SPARQL`: set to `1` or `true` to let logged-out clients run
-  SPARQL queries through the protocol endpoint (`/sparql` and the
-  `/api/sparql*` routes). The SPARQL console page follows
-  `ALLOW_ANONYMOUS_READ`, not this flag. Disabled by default.
-- `ALLOW_ANONYMOUS_ASK`: set to `1` or `true` to let logged-out visitors chat
-  with the ask assistant. Applies only when the assistant is configured.
-  Disabled by default.
+- `WORKBENCH_NAME`: display name. Defaults to `RDF Workbench`.
+- `WORKBENCH_URL`: public origin used for redirects and mutation origin checks.
+- `WORKBENCH_PORT`: host port mapped to the workbench container. The container
+  listens on port `3000`.
+- `RESOURCE_BASE_URI`: base IRI for dereferenceable resources. A configured path
+  maps `/path/<id>` to `<RESOURCE_BASE_URI>/path/<id>`.
+- `DEREFERENCE_PATHS`: optional comma- or whitespace-separated path segments to
+  seed at startup. Only missing paths are added; existing rows, including paths
+  managed in the admin UI, are preserved. Invalid entries are skipped with a
+  warning. An empty value disables seeding.
+- `WORKBENCH_DB_PATH`: SQLite database for workbench data, including accounts,
+  sessions, saved queries, dereference paths, and prefixes.
+- `ALLOW_ANONYMOUS_READ`: set to `1` or `true` to allow logged-out visitors to
+  open read-only pages, including the dashboard, graphs overview, visual graph,
+  and SPARQL console. Otherwise, these pages require a session. Administration
+  pages and the monitor always require a session; for Virtuoso, import, ISQL,
+  namespaces, and configuration do too. Writes are authenticated separately at
+  the route or action level. Disabled by default.
+- `ALLOW_ANONYMOUS_SPARQL`: set to `1` or `true` to allow logged-out clients to
+  query the protocol endpoints `/sparql` and `/api/sparql*`. The SPARQL console
+  page is controlled by `ALLOW_ANONYMOUS_READ`, not this flag. Disabled by
+  default.
+- `ALLOW_ANONYMOUS_ASK`: set to `1` or `true` to allow logged-out visitors to
+  use the ask assistant. Applies only when the assistant is configured. Disabled
+  by default.
 
-All three flags can also be managed in the admin UI under Setup > Access. A
-value saved there overrides the environment until it is reset, and every change
-is recorded in the settings history.
+The three anonymous-access flags can also be managed under **Setup > Access** in
+the admin UI. A saved UI value takes precedence over the environment until
+reset. Changes are recorded in the settings history.
 
-Ask assistant variables:
+### Ask assistant variables
 
-- `AI_BASE_URL`: base URL of an OpenAI-compatible API. The ask assistant is
-  enabled only when `AI_BASE_URL`, `AI_API_KEY`, and `AI_MODEL` are all set.
+The assistant is enabled only when `AI_BASE_URL`, `AI_API_KEY`, and `AI_MODEL`
+are all set.
+
+- `AI_BASE_URL`: base URL of an OpenAI-compatible API.
 - `AI_API_KEY`: API key for that API.
-- `AI_MODEL`: model name the assistant uses.
-- `AI_MAX_STEPS`: maximum tool steps per question; defaults to `20`.
-- `AI_QUERY_TIMEOUT_MS`: timeout in milliseconds for assistant queries; defaults
-  to `30000`.
-- `AI_RESULT_LIMIT`: maximum rows the assistant reads per query; defaults to
-  `1000`.
-- `AI_JOB_TIMEOUT_MS`: timeout in milliseconds for background AI jobs (the
-  knowledge graph summary and the dataset profile build); defaults to `900000`
-  (15 minutes), capped at `3600000`.
-- `AI_PROFILE_MAX_CLASSES`: maximum classes in a dataset profile; defaults to
+- `AI_MODEL`: model name.
+- `AI_MAX_STEPS`: maximum tool steps per question. Defaults to `20`.
+- `AI_QUERY_TIMEOUT_MS`: query timeout in milliseconds. Defaults to `30000`.
+- `AI_RESULT_LIMIT`: maximum rows read per query. Defaults to `1000`.
+- `AI_JOB_TIMEOUT_MS`: timeout for background AI jobs, including the knowledge
+  graph summary and dataset profile build. Defaults to `900000` (15 minutes),
+  with a maximum of `3600000`.
+- `AI_PROFILE_MAX_CLASSES`: maximum classes in a dataset profile. Defaults to
   `60`.
 - `AI_PROFILE_MAX_PROPERTIES`: maximum properties per class in a dataset
-  profile; defaults to `30`.
-- `AI_PROFILE_MAX_SAMPLES`: maximum sample values per property; defaults to `3`.
+  profile. Defaults to `30`.
+- `AI_PROFILE_MAX_SAMPLES`: maximum sample values per property. Defaults to `3`.
 
-All seven tuning variables can also be set in the admin UI under Setup > AI
-settings; a saved value overrides the environment until reset. An invalid
-environment value affects only that setting, which falls back to its default.
+All seven tuning variables can also be set under **Setup > AI settings**. Saved
+UI values take precedence until reset. An invalid environment value affects only
+its setting, which falls back to the default.
 
-Local-account providers:
+### Local accounts
 
 - `BOOTSTRAP_ADMIN_USERNAME`
 - `BOOTSTRAP_ADMIN_PASSWORD`
 
-Oxigraph variables:
+These set the initial admin account when the users table is empty.
 
-- `OXIGRAPH_PORT`: host port for the Oxigraph server; defaults to `7878`.
+### Oxigraph
 
-Virtuoso frontend variables:
+- `OXIGRAPH_PORT`: host port for the Oxigraph server. Defaults to `7878`.
+
+### Virtuoso
+
+The workbench uses these frontend variables:
 
 - `VIRTUOSO_ADAPTER_URL`
-- `VIRTUOSO_ADAPTER_TOKEN` (at least 32 characters)
-- optional graph export path, limit, and polling variables shown in
-  `.env.example`
+- `VIRTUOSO_ADAPTER_TOKEN`: shared token, at least 32 characters.
+- Graph export path, size limit, and polling settings, as listed in
+  `.env.example`.
 
-Virtuoso adapter variables include the host, ISQL port, the service-account
-credentials, adapter token, import path, and upload limit. See `.env.example`
-for the complete clean-break schema.
+The adapter also requires the Virtuoso host, ISQL port, account credentials,
+adapter token, import path, and upload limit. See `.env.example` for the full
+list and defaults.
 
 ## Local development
 
-Frontend:
+### Frontend
 
 ```bash
 cd frontend
@@ -295,7 +291,9 @@ cp ../.env.example .env.local
 pnpm dev
 ```
 
-Virtuoso adapter, when working on the Virtuoso provider:
+### Virtuoso adapter
+
+Run this when developing the Virtuoso provider:
 
 ```bash
 cd virtuoso-adapter
@@ -303,10 +301,12 @@ npm install
 npm run dev
 ```
 
-Oxigraph, when working on the Oxigraph provider:
+### Oxigraph
+
+Run Oxigraph locally for Oxigraph provider development:
 
 ```bash
 docker run --rm -p 7878:7878 -v oxigraph-dev-data:/data oxigraph/oxigraph:0.5.9 serve --location /data --bind 0.0.0.0:7878 --union-default-graph
 ```
 
-Point `SPARQL_ENDPOINT` at `http://localhost:7878/sparql`.
+Set `SPARQL_ENDPOINT` to `http://localhost:7878/sparql`.
