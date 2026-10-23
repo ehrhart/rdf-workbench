@@ -61,7 +61,7 @@ export async function requireAnyFeature(
  * pages: anonymous users are redirected to `/logout` (with an optional
  * `redirect` target, as `/admin/users` hardcodes today) and non-admins
  * opening an `admin` page get a 404. `public` and flag-backed
- * `anonymousRead`/`anonymousAsk` pass through.
+ * `anonymousRead`/`anonymousAsk`/`anonymousSparql` pass through.
  */
 export async function requirePageAccess(
   access: AccessLevel,
@@ -70,11 +70,18 @@ export async function requirePageAccess(
   let requiresPrincipal = access === 'session' || access === 'admin'
   if (
     !requiresPrincipal &&
-    (access === 'anonymousRead' || access === 'anonymousAsk')
+    (access === 'anonymousRead' ||
+      access === 'anonymousAsk' ||
+      access === 'anonymousSparql')
   ) {
-    const { allowAnonymousRead, allowAnonymousAsk } = await getAccessFlags()
+    const { allowAnonymousRead, allowAnonymousAsk, allowAnonymousSparql } =
+      await getAccessFlags()
     requiresPrincipal =
-      access === 'anonymousRead' ? !allowAnonymousRead : !allowAnonymousAsk
+      access === 'anonymousRead'
+        ? !allowAnonymousRead
+        : access === 'anonymousAsk'
+          ? !allowAnonymousAsk
+          : !allowAnonymousSparql
   }
   if (!requiresPrincipal) return
 

@@ -45,6 +45,16 @@ export const allowAnonymousAskEntry: SettingEntry<boolean> = {
   defaultValue: false
 }
 
+export const allowAnonymousSparqlEntry: SettingEntry<boolean> = {
+  key: 'access.allowAnonymousSparql',
+  group: 'access',
+  label: 'Query without an account',
+  description: 'Anonymous protocol queries spend triplestore capacity.',
+  schema: booleanSetting,
+  envVar: 'ALLOW_ANONYMOUS_SPARQL',
+  defaultValue: false
+}
+
 /**
  * Numbers are stored as JSON numbers. Environment values are coerced from
  * strings, so '10' and 10 behave identically in both positions.
@@ -139,6 +149,7 @@ export const AI_TUNING_ENTRIES: readonly SettingEntry<number>[] = [
 export const SETTING_ENTRIES: readonly SettingEntry[] = [
   allowAnonymousReadEntry,
   allowAnonymousAskEntry,
+  allowAnonymousSparqlEntry,
   ...AI_TUNING_ENTRIES
 ]
 

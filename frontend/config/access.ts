@@ -13,6 +13,8 @@ import type { FeatureId } from '@/lib/runtime/contracts'
  *   requires a session otherwise.
  * - `anonymousAsk`: same for the allow-anonymous-ask flag; requires a
  *   session otherwise.
+ * - `anonymousSparql`: same for the allow-anonymous-sparql flag; requires
+ *   a session otherwise.
  * - `session`: requires an authenticated principal (any role).
  * - `admin`: requires an authenticated principal with the admin role.
  */
@@ -20,6 +22,7 @@ export type AccessLevel =
   | 'public'
   | 'anonymousRead'
   | 'anonymousAsk'
+  | 'anonymousSparql'
   | 'session'
   | 'admin'
 
@@ -93,7 +96,7 @@ export const ACCESS_RULES: AccessRule[] = [
   { pattern: '/api/appearance/logo', access: 'public' },
   { pattern: '/change-password', access: 'session' },
 
-  { pattern: '/api/sparql', access: 'anonymousRead' },
+  { pattern: '/api/sparql', access: 'anonymousSparql' },
 
   { pattern: '/api/ask', access: 'anonymousAsk' },
   { pattern: '/ask', access: 'anonymousAsk' },
@@ -188,6 +191,7 @@ export interface AccessOptions {
   features: ReadonlySet<FeatureId>
   anonymousReadEnabled: boolean
   anonymousAskEnabled: boolean
+  anonymousSparqlEnabled: boolean
 }
 
 export interface AccessDecision {
@@ -200,7 +204,8 @@ export interface AccessDecision {
  * Resolves the access decision for a pathname against the manifest.
  * Returns the first matching rule's level; `anonymousRead` becomes
  * `session` when the anonymous-read flag is off, and `anonymousAsk`
- * becomes `session` the same way when the anonymous-ask flag is off;
+ * becomes `session` the same way when the anonymous-ask flag is off, as
+ * does `anonymousSparql` when the anonymous-sparql flag is off;
  * unlisted paths return `session` (fail closed). Callers enforce the
  * decision: `public` passes, `session`/`admin` require a principal
  * (plus the admin role for `admin`), and `featureMissing` means the
@@ -218,7 +223,8 @@ export function resolveAccess(
 
   const access: AccessLevel =
     (rule.access === 'anonymousRead' && !options.anonymousReadEnabled) ||
-    (rule.access === 'anonymousAsk' && !options.anonymousAskEnabled)
+    (rule.access === 'anonymousAsk' && !options.anonymousAskEnabled) ||
+    (rule.access === 'anonymousSparql' && !options.anonymousSparqlEnabled)
       ? 'session'
       : rule.access
   const featureMissing = rule.feature

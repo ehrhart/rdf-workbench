@@ -46,23 +46,32 @@ export async function proxy(request: NextRequest) {
   }
 
   const { getAccessFlags } = await import('./lib/access/access-flags')
-  const { allowAnonymousRead, allowAnonymousAsk } = await getAccessFlags()
+  const { allowAnonymousRead, allowAnonymousAsk, allowAnonymousSparql } =
+    await getAccessFlags()
 
-  const decision = resolveAccess(pathname, {
+  const options = {
     features: provider
       ? computeFeatures(provider, process.env)
       : new Set<FeatureId>(),
     anonymousReadEnabled: allowAnonymousRead,
-    anonymousAskEnabled: allowAnonymousAsk
-  })
+    anonymousAskEnabled: allowAnonymousAsk,
+    anonymousSparqlEnabled: allowAnonymousSparql
+  }
+
+  const decision = resolveAccess(pathname, options)
 
   const allowed =
     decision.access === 'public' ||
     decision.access === 'anonymousRead' ||
-    decision.access === 'anonymousAsk'
+    decision.access === 'anonymousAsk' ||
+    decision.access === 'anonymousSparql'
 
   if (routing === 'query') {
-    if (!allowed && !principal) {
+    const sparqlDecision = resolveAccess('/api/sparql', options)
+    const sparqlAllowed =
+      sparqlDecision.access === 'anonymousSparql' ||
+      sparqlDecision.access === 'public'
+    if (!sparqlAllowed && !principal) {
       const { unauthenticatedResponse } = await import('./lib/api-auth')
       return unauthenticatedResponse()
     }

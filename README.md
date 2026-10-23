@@ -223,16 +223,22 @@ Common runtime variables:
 - `WORKBENCH_DB_PATH`: sqlite database holding workbench-owned data (saved
   queries, dereference paths, prefixes).
 - `ALLOW_ANONYMOUS_READ`: set to `1` or `true` to let logged-out visitors open
-  read-oriented pages (dashboard, graphs overview, visual graph, SPARQL console)
-  and run SPARQL queries through the protocol endpoint. With the flag off, every
-  data endpoint requires a session, including `/sparql`. Disabled by default.
+  read-oriented pages (dashboard, graphs overview, visual graph, SPARQL console).
+  With the flag off, read-oriented pages require a session. Administration pages,
+  the monitor, and on Virtuoso also import, ISQL, namespaces, and configuration,
+  still require a session. All writes authenticate at their own route or action
+  layer regardless. Disabled by default.
+- `ALLOW_ANONYMOUS_SPARQL`: set to `1` or `true` to let logged-out clients run
+  SPARQL queries through the protocol endpoint (`/sparql` and the
+  `/api/sparql*` routes). The SPARQL console page follows
+  `ALLOW_ANONYMOUS_READ`, not this flag. Disabled by default.
 - `ALLOW_ANONYMOUS_ASK`: set to `1` or `true` to let logged-out visitors chat
   with the ask assistant. Applies only when the assistant is configured.
   Disabled by default.
 
-Both flags can also be managed in the admin UI under Setup > Access. A value
-saved there overrides the environment until it is reset, and every change is
-recorded in the settings history.
+All three flags can also be managed in the admin UI under Setup > Access. A
+value saved there overrides the environment until it is reset, and every change
+is recorded in the settings history.
 
 Ask assistant variables:
 

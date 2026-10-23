@@ -3,6 +3,7 @@ import 'server-only'
 import {
   allowAnonymousAskEntry,
   allowAnonymousReadEntry,
+  allowAnonymousSparqlEntry,
   type SettingEntry
 } from '@/lib/settings/registry'
 import type { EnvResolution, SettingSource } from '@/lib/settings/resolve'
@@ -11,22 +12,29 @@ import { getStoredResolution } from '@/lib/settings/store'
 export interface AccessFlags {
   allowAnonymousRead: boolean
   allowAnonymousAsk: boolean
+  allowAnonymousSparql: boolean
 }
 
-const accessEntries = [allowAnonymousReadEntry, allowAnonymousAskEntry]
+const accessEntries = [
+  allowAnonymousReadEntry,
+  allowAnonymousAskEntry,
+  allowAnonymousSparqlEntry
+]
 
 /**
- * The two access flags, resolved through the settings store. No caching:
+ * The access flags, resolved through the settings store. No caching:
  * a saved or reset override must take effect on the next request.
  */
 export async function getAccessFlags(): Promise<AccessFlags> {
-  const [read, ask] = await Promise.all([
+  const [read, ask, sparql] = await Promise.all([
     getStoredResolution(allowAnonymousReadEntry),
-    getStoredResolution(allowAnonymousAskEntry)
+    getStoredResolution(allowAnonymousAskEntry),
+    getStoredResolution(allowAnonymousSparqlEntry)
   ])
   return {
     allowAnonymousRead: read.resolution.value,
-    allowAnonymousAsk: ask.resolution.value
+    allowAnonymousAsk: ask.resolution.value,
+    allowAnonymousSparql: sparql.resolution.value
   }
 }
 
