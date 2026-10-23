@@ -93,9 +93,7 @@ export const ACCESS_RULES: AccessRule[] = [
   { pattern: '/api/appearance/logo', access: 'public' },
   { pattern: '/change-password', access: 'session' },
 
-  // Access is intentionally public here; authorization for mutations is
-  // enforced at the endpoint layer, not by this route-level access rule.
-  { pattern: '/api/sparql', access: 'public' },
+  { pattern: '/api/sparql', access: 'anonymousRead' },
 
   { pattern: '/api/ask', access: 'anonymousAsk' },
   { pattern: '/ask', access: 'anonymousAsk' },

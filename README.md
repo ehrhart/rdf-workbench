@@ -12,13 +12,13 @@ triplestores. It currently supports:
 
 There are some differences between the providers:
 
-| Capability                            | QLever              | Virtuoso                                     | Oxigraph                   | Generic                       |
-| ------------------------------------- | ------------------- | -------------------------------------------- | -------------------------- | ----------------------------- |
-| Public SELECT                         | Yes                 | Yes                                          | Yes                        | Yes                           |
-| CONSTRUCT/DESCRIBE downloads          | Turtle              | Turtle, N-Triples, N-Quads, JSON-LD, RDF/XML | Turtle, N-Triples, RDF/XML | Turtle, N-Triples, RDF/XML    |
-| SPARQL Update                         | No                  | Yes (via ISQL)                               | Yes                        | Yes                           |
-| Import/export, graph deletion         | No                  | Yes                                          | Yes                        | Import via `LOAD`, no export  |
-| Full-text search                      | Yes                 | Yes                                          | No ¹                       | No                            |
+| Capability                    | QLever | Virtuoso                                     | Oxigraph                   | Generic                      |
+| ----------------------------- | ------ | -------------------------------------------- | -------------------------- | ---------------------------- |
+| Public SELECT                 | Yes    | Yes                                          | Yes                        | Yes                          |
+| CONSTRUCT/DESCRIBE downloads  | Turtle | Turtle, N-Triples, N-Quads, JSON-LD, RDF/XML | Turtle, N-Triples, RDF/XML | Turtle, N-Triples, RDF/XML   |
+| SPARQL Update                 | No     | Yes (via ISQL)                               | Yes                        | Yes                          |
+| Import/export, graph deletion | No     | Yes                                          | Yes                        | Import via `LOAD`, no export |
+| Full-text search              | Yes    | Yes                                          | No ¹                       | No                           |
 
 ¹ Oxigraph does not support full-text search (see
 [Oxigraph issue #48](https://github.com/oxigraph/oxigraph/issues/48))
@@ -211,23 +211,21 @@ Common runtime variables:
 - `WORKBENCH_NAME`: runtime display name; defaults to `RDF Workbench`.
 - `WORKBENCH_URL`: externally visible origin used for redirects and mutation
   origin checks.
-- `WORKBENCH_PORT`: host port for the workbench container in docker compose;
-  the container itself listens on `3000`.
+- `WORKBENCH_PORT`: host port for the workbench container in docker compose; the
+  container itself listens on `3000`.
 - `RESOURCE_BASE_URI`: base IRI of dereferenceable resources. A path configured
   for dereferencing maps `/path/<id>` to `<RESOURCE_BASE_URI>/path/<id>`.
-- `DEREFERENCE_PATHS`: optional list of dereferenceable path segments,
-  separated by commas or whitespace. At startup the workbench inserts each
-  listed path that does not exist yet. Seeding never deletes rows, so paths
-  managed in the admin UI survive restarts. The workbench skips entries the
-  admin UI would reject and logs a warning. Unset or empty disables seeding.
+- `DEREFERENCE_PATHS`: optional list of dereferenceable path segments, separated
+  by commas or whitespace. At startup the workbench inserts each listed path
+  that does not exist yet. Seeding never deletes rows, so paths managed in the
+  admin UI survive restarts. The workbench skips entries the admin UI would
+  reject and logs a warning. Unset or empty disables seeding.
 - `WORKBENCH_DB_PATH`: sqlite database holding workbench-owned data (saved
   queries, dereference paths, prefixes).
 - `ALLOW_ANONYMOUS_READ`: set to `1` or `true` to let logged-out visitors open
-  read-oriented pages (dashboard, graphs overview, visual graph, SPARQL
-  console). Administration pages, the monitor, and on Virtuoso also import,
-  ISQL, namespaces, and configuration, still require a session. All writes
-  authenticate at their own route or action layer regardless. Disabled by
-  default.
+  read-oriented pages (dashboard, graphs overview, visual graph, SPARQL console)
+  and run SPARQL queries through the protocol endpoint. With the flag off, every
+  data endpoint requires a session, including `/sparql`. Disabled by default.
 - `ALLOW_ANONYMOUS_ASK`: set to `1` or `true` to let logged-out visitors chat
   with the ask assistant. Applies only when the assistant is configured.
   Disabled by default.
@@ -243,24 +241,22 @@ Ask assistant variables:
 - `AI_API_KEY`: API key for that API.
 - `AI_MODEL`: model name the assistant uses.
 - `AI_MAX_STEPS`: maximum tool steps per question; defaults to `20`.
-- `AI_QUERY_TIMEOUT_MS`: timeout in milliseconds for assistant queries;
-  defaults to `30000`.
+- `AI_QUERY_TIMEOUT_MS`: timeout in milliseconds for assistant queries; defaults
+  to `30000`.
 - `AI_RESULT_LIMIT`: maximum rows the assistant reads per query; defaults to
   `1000`.
 - `AI_JOB_TIMEOUT_MS`: timeout in milliseconds for background AI jobs (the
-  knowledge graph summary and the dataset profile build); defaults to
-  `900000` (15 minutes), capped at `3600000`.
+  knowledge graph summary and the dataset profile build); defaults to `900000`
+  (15 minutes), capped at `3600000`.
 - `AI_PROFILE_MAX_CLASSES`: maximum classes in a dataset profile; defaults to
   `60`.
 - `AI_PROFILE_MAX_PROPERTIES`: maximum properties per class in a dataset
   profile; defaults to `30`.
-- `AI_PROFILE_MAX_SAMPLES`: maximum sample values per property; defaults to
-  `3`.
+- `AI_PROFILE_MAX_SAMPLES`: maximum sample values per property; defaults to `3`.
 
-All seven tuning variables can also be set in the admin UI under Setup >
-AI settings; a saved value overrides the environment until reset. An
-invalid environment value affects only that setting, which falls back to
-its default.
+All seven tuning variables can also be set in the admin UI under Setup > AI
+settings; a saved value overrides the environment until reset. An invalid
+environment value affects only that setting, which falls back to its default.
 
 Local-account providers:
 

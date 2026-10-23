@@ -45,10 +45,6 @@ export async function proxy(request: NextRequest) {
     return passwordChangeRequiredResponse(request, pathname)
   }
 
-  if (routing === 'query') {
-    return NextResponse.rewrite(new URL('/api/sparql/query', request.url))
-  }
-
   const { getAccessFlags } = await import('./lib/access/access-flags')
   const { allowAnonymousRead, allowAnonymousAsk } = await getAccessFlags()
 
@@ -60,15 +56,24 @@ export async function proxy(request: NextRequest) {
     anonymousAskEnabled: allowAnonymousAsk
   })
 
+  const allowed =
+    decision.access === 'public' ||
+    decision.access === 'anonymousRead' ||
+    decision.access === 'anonymousAsk'
+
+  if (routing === 'query') {
+    if (!allowed && !principal) {
+      const { unauthenticatedResponse } = await import('./lib/api-auth')
+      return unauthenticatedResponse()
+    }
+    return NextResponse.rewrite(new URL('/api/sparql/query', request.url))
+  }
+
   if (decision.featureMissing) {
     return new NextResponse('Not Found', { status: 404 })
   }
 
-  if (
-    decision.access === 'public' ||
-    decision.access === 'anonymousRead' ||
-    decision.access === 'anonymousAsk'
-  ) {
+  if (allowed) {
     return NextResponse.next()
   }
 
