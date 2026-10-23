@@ -25,6 +25,13 @@ import {
 } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import {
   Table,
@@ -48,6 +55,7 @@ export function UserManager({ users, currentUserId }: UserManagerProps) {
   const pathname = usePathname()
   const [pending, setPending] = useState<string | null>(null)
   const [temporaryPassword, setTemporaryPassword] = useState(false)
+  const [createRole, setCreateRole] = useState<'user' | 'admin'>('user')
   const [reveal, setReveal] = useState<PasswordReveal | null>(null)
 
   async function createUser(event: FormEvent<HTMLFormElement>) {
@@ -55,7 +63,7 @@ export function UserManager({ users, currentUserId }: UserManagerProps) {
     const form = event.currentTarget
     const data = new FormData(form)
     const username = String(data.get('username') ?? '')
-    const role = data.get('role') === 'admin' ? 'admin' : 'user'
+    const role = createRole
     const input: CreateUserInput = temporaryPassword
       ? { mode: 'temporary', username, role }
       : {
@@ -74,6 +82,7 @@ export function UserManager({ users, currentUserId }: UserManagerProps) {
       toast.success(result.message)
     }
     form.reset()
+    setCreateRole('user')
     setTemporaryPassword(false)
     router.refresh()
   }
@@ -134,15 +143,20 @@ export function UserManager({ users, currentUserId }: UserManagerProps) {
                   required
                 />
               )}
-              <select
-                name="role"
-                defaultValue="user"
-                className="h-9 rounded-md border bg-transparent px-3 text-sm"
-                aria-label="Role"
+              <Select
+                value={createRole}
+                onValueChange={(value) =>
+                  setCreateRole(value === 'admin' ? 'admin' : 'user')
+                }
               >
-                <option value="user">User</option>
-                <option value="admin">Administrator</option>
-              </select>
+                <SelectTrigger className="w-full" aria-label="Role">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="user">User</SelectItem>
+                  <SelectItem value="admin">Administrator</SelectItem>
+                </SelectContent>
+              </Select>
               <Button type="submit" disabled={pending !== null}>
                 {pending === 'create' ? (
                   <Loader2Icon className="animate-spin" />
@@ -197,21 +211,24 @@ export function UserManager({ users, currentUserId }: UserManagerProps) {
                       {user.id === currentUserId ? ' (you)' : ''}
                     </TableCell>
                     <TableCell className="capitalize">
-                      <select
+                      <Select
                         value={user.role}
-                        className="h-9 rounded-md border bg-transparent px-3 text-sm"
-                        aria-label={`Role for ${user.username}`}
-                        disabled={pending !== null}
-                        onChange={(event) =>
-                          changeRole(
-                            user,
-                            event.target.value === 'admin' ? 'admin' : 'user'
-                          )
+                        onValueChange={(value) =>
+                          changeRole(user, value === 'admin' ? 'admin' : 'user')
                         }
+                        disabled={pending !== null}
                       >
-                        <option value="user">User</option>
-                        <option value="admin">Administrator</option>
-                      </select>
+                        <SelectTrigger
+                          className="w-[135px]"
+                          aria-label={`Role for ${user.username}`}
+                        >
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="user">User</SelectItem>
+                          <SelectItem value="admin">Administrator</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1.5">
