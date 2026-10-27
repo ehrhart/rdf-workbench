@@ -14,6 +14,7 @@ import { computeFeatures } from '@/lib/runtime/features'
 import {
   acceptsHtml,
   GRAPH_FORMATS,
+  getRequestedFormat,
   isHtmlFormat,
   isSparqlQueryBody,
   isSparqlResultAccept,
@@ -183,7 +184,7 @@ function classifySparqlRequest(request: NextRequest): SparqlRouting {
 
   if (isNextJsInternalRequest(request)) return 'page'
 
-  const format = request.nextUrl.searchParams.get('format')
+  const format = getRequestedFormat(request.nextUrl.searchParams)
   if (format) {
     if (isHtmlFormat(format)) return 'page'
     return isSparqlResultFormat(format) ? 'query' : 'not-acceptable'
@@ -206,8 +207,7 @@ async function shouldServeRdfDescription(
 ): Promise<boolean> {
   if (request.method !== 'GET' && request.method !== 'HEAD') return false
 
-  const requestedFormat =
-    request.nextUrl.searchParams.get('format')?.trim() || null
+  const requestedFormat = getRequestedFormat(request.nextUrl.searchParams)
   if (isHtmlFormat(requestedFormat)) return false
   if (requestedFormat) return true
 

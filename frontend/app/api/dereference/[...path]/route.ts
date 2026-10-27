@@ -2,6 +2,7 @@ import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 import { getWorkbenchRuntime } from '@/lib/runtime'
 import { getRuntimeConfig } from '@/lib/runtime/config'
+import { getRequestedFormat } from '@/lib/sparql/negotiation'
 
 export async function GET(
   request: NextRequest,
@@ -24,7 +25,7 @@ export async function GET(
     }
 
     const accept =
-      request.nextUrl.searchParams.get('format')?.trim() ||
+      getRequestedFormat(request.nextUrl.searchParams) ||
       request.headers.get('accept') ||
       'text/turtle'
     const upstream = await runtime.sparql.download(

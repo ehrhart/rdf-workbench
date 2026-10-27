@@ -2,13 +2,14 @@ import { type NextRequest, NextResponse } from 'next/server'
 import { PUBLIC_QUERY_OWNER } from '@/lib/query-registry'
 import { getWorkbenchRuntime } from '@/lib/runtime'
 import type { WorkbenchRuntime } from '@/lib/runtime/contracts'
+import { getRequestedFormat } from '@/lib/sparql/negotiation'
 
 export async function GET(request: NextRequest) {
   const query = request.nextUrl.searchParams.get('query')
   if (!query) {
     return jsonError('Query is required.', 400)
   }
-  const format = request.nextUrl.searchParams.get('format')
+  const format = getRequestedFormat(request.nextUrl.searchParams)
   const accept = format ?? request.headers.get('accept')
   return runPublicQuery(request, query, accept)
 }

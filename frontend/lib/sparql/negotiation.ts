@@ -43,6 +43,11 @@ function normalizeMediaType(value: string | null): string {
   return mime?.trim().toLowerCase() ?? ''
 }
 
+export function getRequestedFormat(params: URLSearchParams): string | null {
+  const value = params.get('format') ?? params.get('output')
+  return value?.trim() || null
+}
+
 export function isSparqlResultFormat(format: string | null): boolean {
   return SPARQL_RESULT_MEDIA_TYPES.includes(normalizeMediaType(format))
 }
