@@ -4,6 +4,7 @@ import {
   PASSWORD_CHANGE_PATH,
   resolveAccess
 } from '@/config/access'
+import { applyCorsHeaders, corsAllowOrigin, getCorsConfig } from '@/lib/cors'
 import type {
   FeatureId,
   Principal,
@@ -23,12 +24,38 @@ import {
 
 type SparqlRouting = 'page' | 'query' | 'not-acceptable'
 
+const PUBLIC_SPARQL_QUERY_PATHS: ReadonlySet<string> = new Set([
+  '/sparql',
+  '/api/sparql/query'
+])
+
+export async function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl
+  if (!PUBLIC_SPARQL_QUERY_PATHS.has(pathname)) return routeProxy(request)
+
+  const cors = getCorsConfig()
+  const allowOrigin = cors.enabled
+    ? corsAllowOrigin(request.headers.get('origin'), cors)
+    : null
+  if (!allowOrigin) return routeProxy(request)
+
+  if (request.method === 'OPTIONS') {
+    const preflight = new NextResponse(null, { status: 204 })
+    applyCorsHeaders(preflight, allowOrigin, cors)
+    return preflight
+  }
+
+  const response = await routeProxy(request)
+  applyCorsHeaders(response, allowOrigin, cors)
+  return response
+}
+
 function providerFromEnv(): TriplestoreProvider | null {
   const value = process.env.TRIPLESTORE_PROVIDER
   return isTriplestoreProvider(value) ? value : null
 }
 
-export async function proxy(request: NextRequest) {
+async function routeProxy(request: NextRequest): Promise<NextResponse> {
   const { pathname } = request.nextUrl
   const provider = providerFromEnv()
 

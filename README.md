@@ -242,6 +242,27 @@ The three anonymous-access flags can also be managed under **Setup > Access** in
 the admin UI. A saved UI value takes precedence over the environment until
 reset. Changes are recorded in the settings history.
 
+### CORS variables
+
+The public SPARQL query endpoints (`/sparql` and `/api/sparql/query`) serve
+cross-origin browser requests by default, matching the permissive CORS of the
+triplestore engines behind them (QLever answers `Access-Control-Allow-Origin:
+*`) and of the Virtuoso endpoints these workbenches replace. Preflights are
+answered with `204` and allow methods `GET`, `HEAD`, `POST`, `OPTIONS` and
+request headers `Accept`, `Authorization`, `Content-Type`. Cookie-gated
+surfaces are unaffected: the wildcard origin cannot carry credentials.
+
+- `CORS_ENABLED`: set to `0` or `false` to serve same-origin browser clients
+  only. On by default.
+- `CORS_ALLOWED_ORIGINS`: `*` (the default) allows every origin. A
+  comma-separated list restricts responses to exactly those origins, e.g.
+  `https://app.example.org,https://map.example.org`; requests from other
+  origins get no `Access-Control-*` headers, and answers then carry
+  `Vary: Origin`.
+- `CORS_EXPOSE_HEADERS`: comma-separated response headers exposed to browser
+  clients beyond the CORS-safelisted ones, e.g. `Content-Disposition` for
+  clients that want the download filename. Empty by default.
+
 ### Ask assistant variables
 
 The assistant is enabled only when `AI_BASE_URL`, `AI_API_KEY`, and `AI_MODEL`
