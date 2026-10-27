@@ -13,6 +13,7 @@ import { isTriplestoreProvider } from '@/lib/runtime/contracts'
 import { computeFeatures } from '@/lib/runtime/features'
 import {
   acceptsHtml,
+  GRAPH_FORMATS,
   isHtmlFormat,
   isSparqlQueryBody,
   isSparqlResultAccept,
@@ -80,6 +81,17 @@ export async function proxy(request: NextRequest) {
 
   if (decision.featureMissing) {
     return new NextResponse('Not Found', { status: 404 })
+  }
+
+  if (allowed || principal) {
+    if (await shouldServeRdfDescription(request)) {
+      return NextResponse.rewrite(
+        new URL(
+          `/api/dereference${request.nextUrl.pathname.replace(/\/+$/, '')}`,
+          request.url
+        )
+      )
+    }
   }
 
   if (allowed) {
@@ -187,6 +199,31 @@ function isNextJsInternalRequest(request: NextRequest): boolean {
     request.headers.has('next-router-state-tree') ||
     accept.includes('text/x-component')
   )
+}
+
+async function shouldServeRdfDescription(
+  request: NextRequest
+): Promise<boolean> {
+  if (request.method !== 'GET' && request.method !== 'HEAD') return false
+
+  const requestedFormat =
+    request.nextUrl.searchParams.get('format')?.trim() || null
+  if (isHtmlFormat(requestedFormat)) return false
+  if (requestedFormat) return true
+
+  const accept = request.headers.get('accept')?.toLowerCase()
+  if (!accept || accept.includes('text/html')) return false
+  if (!GRAPH_FORMATS.some((format) => accept.includes(format.mime))) {
+    return false
+  }
+
+  // Only paths configured as dereferenceable negotiate. Every other page
+  // keeps serving HTML regardless of Accept.
+  const entity = request.nextUrl.pathname.split('/').filter(Boolean)[0]
+  if (!entity) return false
+  const { dereferenceRepository } = await import('@/lib/dereference/repository')
+  const configured = await dereferenceRepository.list().catch(() => [])
+  return configured.some((entry) => entry.path === entity)
 }
 
 export default proxy

@@ -10,10 +10,11 @@ supports:
 
 ## Feature matrix
 
-| Capability                    | QLever | Virtuoso                                     | Oxigraph                   | Generic                      |
-| ----------------------------- | ------ | -------------------------------------------- | -------------------------- | ---------------------------- |
-| Public SELECT                 | Yes    | Yes                                          | Yes                        | Yes                          |
-| CONSTRUCT/DESCRIBE downloads  | Turtle | Turtle, N-Triples, N-Quads, JSON-LD, RDF/XML | Turtle, N-Triples, RDF/XML | Turtle, N-Triples, RDF/XML   |
+| Capability                         | QLever             | Virtuoso                                     | Oxigraph                   | Generic                      |
+| ---------------------------------- | ------------------ | -------------------------------------------- | -------------------------- | ---------------------------- |
+| Public SELECT                      | Yes                | Yes                                          | Yes                        | Yes                          |
+| CONSTRUCT/DESCRIBE downloads       | Turtle             | Turtle, N-Triples, N-Quads, JSON-LD, RDF/XML | Turtle, N-Triples, RDF/XML | Turtle, N-Triples, RDF/XML   |
+| Resource URL content negotiation   | Turtle, N-Triples  | Turtle, N-Triples, JSON-LD, RDF/XML          | Turtle, N-Triples, RDF/XML | Turtle, N-Triples, RDF/XML   |
 | SPARQL Update                 | No     | Yes (via ISQL)                               | Yes                        | Yes                          |
 | Import/export, graph deletion | No     | Yes                                          | Yes                        | Import via `LOAD`; no export |
 | Full-text search              | Yes    | Yes                                          | No¹                        | No                           |
@@ -212,6 +213,15 @@ volumes:
   seed at startup. Only missing paths are added; existing rows, including paths
   managed in the admin UI, are preserved. Invalid entries are skipped with a
   warning. An empty value disables seeding.
+
+  Dereferenceable resource URLs content-negotiate: when the request prefers an
+  RDF media type in `Accept`, or `?format=` names one, the workbench sends a
+  `DESCRIBE` for the resource to the engine and streams the response back
+  as-is. The engine decides both the description and its serialization, and
+  answers unsupported media types with its own error response. Browsers and
+  unknown clients keep the HTML page. `?format=` takes a media type, such as
+  `text/turtle`. Responses carry `Vary: Accept`.
+
 - `WORKBENCH_DB_PATH`: SQLite database for workbench data, including accounts,
   sessions, saved queries, dereference paths, and prefixes.
 - `ALLOW_ANONYMOUS_READ`: set to `1` or `true` to allow logged-out visitors to

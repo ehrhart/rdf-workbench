@@ -12,7 +12,8 @@ import { normalizeSparqlJsonResult } from '@/lib/sparql/results'
 import type { SparqlQueryResult } from '@/types'
 
 const GRAPH_FORMATS: readonly DownloadFormat[] = [
-  { label: 'Turtle', mime: 'text/turtle', extension: 'ttl' }
+  { label: 'Turtle', mime: 'text/turtle', extension: 'ttl' },
+  { label: 'N-Triples', mime: 'application/n-triples', extension: 'nt' }
 ]
 
 function config() {
