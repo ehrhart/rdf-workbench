@@ -57,20 +57,8 @@ const STATE_BADGES: Record<
   }
 }
 
-const STATE_ORDER: Record<MonitoredQuery['state'], number> = {
-  RUNNING: 0,
-  FAILED: 1,
-  TIMEOUT: 2,
-  CANCELLED: 3,
-  COMPLETED: 4
-}
-
 function sortQueries(queries: MonitoredQuery[]): MonitoredQuery[] {
-  return [...queries].sort((a, b) => {
-    const byState = STATE_ORDER[a.state] - STATE_ORDER[b.state]
-    if (byState !== 0) return byState
-    return b.startedAt - a.startedAt
-  })
+  return [...queries].sort((a, b) => b.startedAt - a.startedAt)
 }
 
 const queryClock = (() => {
