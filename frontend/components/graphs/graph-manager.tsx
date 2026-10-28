@@ -483,7 +483,7 @@ export function GraphManager({
     })
 
     try {
-      const response = await fetch('/api/sparql/download', {
+      const response = await fetch('/api/console/download', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query, format: format.mime, filename }),

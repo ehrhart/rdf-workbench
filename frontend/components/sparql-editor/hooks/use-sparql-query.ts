@@ -2,6 +2,8 @@
 
 import { useRef, useState } from 'react'
 import { useAbortQuery } from '@/components/query/use-abort-query'
+import { detectQueryKind } from '@/lib/sparql/kind'
+import { normalizeSparqlJsonResult } from '@/lib/sparql/results'
 import type { SparqlQueryResult } from '@/types'
 
 interface DownloadRequest {
@@ -11,12 +13,32 @@ interface DownloadRequest {
   results?: SparqlQueryResult | null
 }
 
+async function parseUpdateResponse(
+  response: Response
+): Promise<SparqlQueryResult> {
+  if (response.status === 204) return { kind: 'boolean', value: true }
+  return normalizeSparqlJsonResult(await response.json())
+}
+
+async function parseQueryResponse(
+  response: Response
+): Promise<SparqlQueryResult> {
+  const contentType = (response.headers.get('content-type') ?? '').toLowerCase()
+  if (contentType.includes('text/turtle')) {
+    return {
+      kind: 'graph',
+      value: await response.text(),
+      format: 'text/turtle'
+    }
+  }
+  return normalizeSparqlJsonResult(await response.json())
+}
+
 export function useSparqlQuery(endpoint: string) {
   const [results, setResults] = useState<SparqlQueryResult | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<Error | null>(null)
   const abortControllerRef = useRef<AbortController | null>(null)
-  const activeQueryIdRef = useRef<string | null>(null)
   const { abortQuery: abortRunningQuery } = useAbortQuery()
 
   const executeQuery = async (
@@ -25,17 +47,16 @@ export function useSparqlQuery(endpoint: string) {
     setIsLoading(true)
     setError(null)
     abortControllerRef.current = new AbortController()
-    activeQueryIdRef.current =
-      crypto.randomUUID?.() ??
-      `wq-${Date.now()}-${Math.random().toString(36).slice(2)}`
 
     try {
+      const isUpdate = detectQueryKind(query) === 'update'
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/sparql-query',
-          Accept: 'application/sparql-results+json',
-          'X-Query-Id': activeQueryIdRef.current
+          'Content-Type': isUpdate
+            ? 'application/sparql-update'
+            : 'application/sparql-query',
+          Accept: 'application/sparql-results+json'
         },
         body: query,
         signal: abortControllerRef.current.signal
@@ -54,7 +75,9 @@ export function useSparqlQuery(endpoint: string) {
         throw new Error(errorMessage)
       }
 
-      const data = (await response.json()) as SparqlQueryResult
+      const data = isUpdate
+        ? await parseUpdateResponse(response)
+        : await parseQueryResponse(response)
 
       setResults(data)
       return { data, error: null }
@@ -72,16 +95,14 @@ export function useSparqlQuery(endpoint: string) {
     } finally {
       setIsLoading(false)
       abortControllerRef.current = null
-      activeQueryIdRef.current = null
     }
   }
 
   const abortQuery = async (): Promise<void> => {
-    const queryId = activeQueryIdRef.current
     abortControllerRef.current?.abort()
 
     try {
-      await abortRunningQuery(queryId ?? undefined)
+      await abortRunningQuery()
     } catch (err) {
       const normalizedError =
         err instanceof Error ? err : new Error(String(err))
@@ -89,7 +110,6 @@ export function useSparqlQuery(endpoint: string) {
     } finally {
       setIsLoading(false)
       abortControllerRef.current = null
-      activeQueryIdRef.current = null
     }
   }
 
@@ -99,7 +119,7 @@ export function useSparqlQuery(endpoint: string) {
 
     const filename = request.filename?.trim() || 'sparql-results'
 
-    const response = await fetch('/api/sparql/download', {
+    const response = await fetch('/api/console/download', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

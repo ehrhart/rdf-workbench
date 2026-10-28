@@ -96,7 +96,7 @@ export const ACCESS_RULES: AccessRule[] = [
   { pattern: '/api/appearance/logo', access: 'public' },
   { pattern: '/change-password', access: 'session' },
 
-  { pattern: '/api/sparql', access: 'anonymousSparql' },
+  { pattern: '/api/console/download', access: 'anonymousSparql' },
 
   { pattern: '/api/ask', access: 'anonymousAsk' },
   { pattern: '/ask', access: 'anonymousAsk' },

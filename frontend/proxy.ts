@@ -5,6 +5,7 @@ import {
   resolveAccess
 } from '@/config/access'
 import { applyCorsHeaders, corsAllowOrigin, getCorsConfig } from '@/lib/cors'
+import { CORS_PATHS, classify } from '@/lib/edge/policy'
 import type {
   FeatureId,
   Principal,
@@ -13,40 +14,30 @@ import type {
 import { isTriplestoreProvider } from '@/lib/runtime/contracts'
 import { computeFeatures } from '@/lib/runtime/features'
 import {
-  acceptsHtml,
   GRAPH_FORMATS,
   getRequestedFormat,
-  isHtmlFormat,
-  isSparqlQueryBody,
-  isSparqlResultAccept,
-  isSparqlResultFormat
+  isHtmlFormat
 } from '@/lib/sparql/negotiation'
-
-type SparqlRouting = 'page' | 'query' | 'not-acceptable'
-
-const PUBLIC_SPARQL_QUERY_PATHS: ReadonlySet<string> = new Set([
-  '/sparql',
-  '/api/sparql/query'
-])
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
-  if (!PUBLIC_SPARQL_QUERY_PATHS.has(pathname)) return routeProxy(request)
-
   const cors = getCorsConfig()
-  const allowOrigin = cors.enabled
-    ? corsAllowOrigin(request.headers.get('origin'), cors)
-    : null
-  if (!allowOrigin) return routeProxy(request)
+  const corsOrigin =
+    CORS_PATHS.has(pathname) && cors.enabled
+      ? corsAllowOrigin(request.headers.get('origin'), cors)
+      : null
 
-  if (request.method === 'OPTIONS') {
+  if (request.method === 'OPTIONS' && corsOrigin) {
+    // Preflights carry no credentials and must bypass the session gates:
+    // a flagged session would otherwise answer them with a password-change
+    // redirect.
     const preflight = new NextResponse(null, { status: 204 })
-    applyCorsHeaders(preflight, allowOrigin, cors)
+    applyCorsHeaders(preflight, corsOrigin, cors)
     return preflight
   }
 
   const response = await routeProxy(request)
-  applyCorsHeaders(response, allowOrigin, cors)
+  if (corsOrigin) applyCorsHeaders(response, corsOrigin, cors)
   return response
 }
 
@@ -59,9 +50,12 @@ async function routeProxy(request: NextRequest): Promise<NextResponse> {
   const { pathname } = request.nextUrl
   const provider = providerFromEnv()
 
-  const routing = classifySparqlRequest(request)
-  if (routing === 'not-acceptable') {
+  const routing = classify(request)
+  if (routing === 'notAcceptable') {
     return new NextResponse('Not Acceptable', { status: 406 })
+  }
+  if (routing === 'blocked') {
+    return new NextResponse('Not Found', { status: 404 })
   }
 
   // The session is resolved on EVERY cookie-bearing request — public
@@ -95,16 +89,12 @@ async function routeProxy(request: NextRequest): Promise<NextResponse> {
     decision.access === 'anonymousAsk' ||
     decision.access === 'anonymousSparql'
 
-  if (routing === 'query') {
-    const sparqlDecision = resolveAccess('/api/sparql', options)
-    const sparqlAllowed =
-      sparqlDecision.access === 'anonymousSparql' ||
-      sparqlDecision.access === 'public'
-    if (!sparqlAllowed && !principal) {
+  if (routing === 'sparqlData') {
+    if (!allowAnonymousSparql && !principal) {
       const { unauthenticatedResponse } = await import('./lib/api-auth')
       return unauthenticatedResponse()
     }
-    return NextResponse.rewrite(new URL('/api/sparql/query', request.url))
+    return NextResponse.rewrite(new URL('/internal/sparql', request.url))
   }
 
   if (decision.featureMissing) {
@@ -180,7 +170,7 @@ async function passwordChangeRequiredResponse(
   }
 
   // The session cookie is kept — unlike unauthenticatedResponse — because
-  // the session is valid; deleting it would lock the user out of the
+  // the session is valid. Deleting it would lock the user out of the
   // change surface itself.
   const changeUrl = new URL(PASSWORD_CHANGE_PATH, request.url)
   changeUrl.searchParams.set('redirect', pathname)
@@ -196,37 +186,6 @@ function adminDeniedResponse(pathname: string): NextResponse {
   }
   // Same behavior as requirePageAccess: non-admins on admin pages get a 404.
   return new NextResponse('Not Found', { status: 404 })
-}
-
-function classifySparqlRequest(request: NextRequest): SparqlRouting {
-  if (request.nextUrl.pathname !== '/sparql') return 'page'
-
-  if (isSparqlResultAccept(request.headers.get('accept'))) return 'query'
-
-  if (request.method === 'POST') {
-    return isSparqlQueryBody(request.headers.get('content-type'))
-      ? 'query'
-      : 'page'
-  }
-
-  if (isNextJsInternalRequest(request)) return 'page'
-
-  const format = getRequestedFormat(request.nextUrl.searchParams)
-  if (format) {
-    if (isHtmlFormat(format)) return 'page'
-    return isSparqlResultFormat(format) ? 'query' : 'not-acceptable'
-  }
-
-  return acceptsHtml(request.headers.get('accept')) ? 'page' : 'not-acceptable'
-}
-
-function isNextJsInternalRequest(request: NextRequest): boolean {
-  const accept = request.headers.get('accept') ?? ''
-  return (
-    request.headers.get('rsc') === '1' ||
-    request.headers.has('next-router-state-tree') ||
-    accept.includes('text/x-component')
-  )
 }
 
 async function shouldServeRdfDescription(

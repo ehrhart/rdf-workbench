@@ -46,7 +46,7 @@ export function QueryConsole({
         <TabsContent value="editor" className="h-full">
           <div className="">
             <SparqlEditor
-              endpoint="/api/sparql"
+              endpoint="/sparql"
               prefixes={prefixes}
               defaultQuery={defaultQuery}
               currentUser={user ?? null}

@@ -72,12 +72,13 @@ export function isHtmlFormat(format: string | null): boolean {
   return normalizeMediaType(format) === 'text/html'
 }
 
-export function isSparqlQueryBody(contentType: string | null): boolean {
+export function isSparqlBody(contentType: string | null): boolean {
   if (!contentType) return false
   const normalized = contentType.toLowerCase()
   return (
     normalized.includes('application/x-www-form-urlencoded') ||
     normalized.includes('application/sparql-query') ||
+    normalized.includes('application/sparql-update') ||
     normalized.includes('application/json')
   )
 }
