@@ -43,9 +43,25 @@ function normalizeMediaType(value: string | null): string {
   return mime?.trim().toLowerCase() ?? ''
 }
 
+const FORMAT_ALIASES: Readonly<Record<string, string>> = {
+  html: 'text/html',
+  json: 'application/sparql-results+json',
+  xml: 'application/sparql-results+xml',
+  csv: 'text/csv',
+  tsv: 'text/tab-separated-values',
+  ttl: 'text/turtle',
+  nt: 'application/n-triples',
+  nq: 'application/n-quads',
+  jsonld: 'application/ld+json',
+  rdf: 'application/rdf+xml',
+  rdfxml: 'application/rdf+xml'
+}
+
 export function getRequestedFormat(params: URLSearchParams): string | null {
   const value = params.get('format') ?? params.get('output')
-  return value?.trim() || null
+  const requested = value?.trim()
+  if (!requested) return null
+  return FORMAT_ALIASES[requested.toLowerCase()] ?? requested
 }
 
 export function isSparqlResultFormat(format: string | null): boolean {
