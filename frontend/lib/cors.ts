@@ -6,7 +6,7 @@ import type { NextResponse } from 'next/server'
  * CORS policy for the public SPARQL query endpoints, resolved from the
  * environment on each request:
  *
- * - `CORS_ENABLED`: `0` or `false` turns cross-origin browser access off;
+ * - `CORS_ENABLED`: `0` or `false` turns cross-origin browser access off.
  *   any other value, including unset, leaves it on.
  * - `CORS_ALLOWED_ORIGINS`: `*` (the default) allows every origin. A
  *   comma-separated list allows exactly those origins, matched exactly and
@@ -35,7 +35,7 @@ export function getCorsConfig(): CorsConfig {
 
 /**
  * The origins a request may cross from, or null when access is not granted.
- * `'*'` allows every origin; a configured list echoes the exact match.
+ * `'*'` allows every origin. A configured list echoes the exact match.
  */
 export function corsAllowOrigin(
   requestOrigin: string | null,
