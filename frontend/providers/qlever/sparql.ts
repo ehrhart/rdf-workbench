@@ -50,6 +50,9 @@ async function fetchQlever(
 
   try {
     const body = new URLSearchParams({ query })
+    for (const [name, value] of options.forwardParams ?? []) {
+      body.append(name, value)
+    }
     return await fetch(runtime.SPARQL_ENDPOINT, {
       method: 'POST',
       headers: {

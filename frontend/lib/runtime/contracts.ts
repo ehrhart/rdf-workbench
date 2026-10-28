@@ -65,6 +65,8 @@ export interface SparqlRequestOptions {
   ownerId?: string | null
   /** Surface label recorded by the query monitor. Defaults to the provider origin. */
   origin?: string
+  /** Protocol parameters passed on to the upstream endpoint, such as the SPARQL dataset selection. */
+  forwardParams?: URLSearchParams
 }
 
 export interface DownloadFormat {

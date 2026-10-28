@@ -53,8 +53,12 @@ export function createSpecSparqlTransport(
           ? signals[0]
           : AbortSignal.any(signals)
 
+    const url = new URL(endpoint)
+    for (const [name, value] of req.forwardParams ?? []) {
+      url.searchParams.append(name, value)
+    }
     try {
-      return await fetch(endpoint, {
+      return await fetch(url, {
         method: 'POST',
         headers: {
           Accept: accept,

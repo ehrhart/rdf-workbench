@@ -2,15 +2,10 @@ import { type NextRequest, NextResponse } from 'next/server'
 import { unauthenticatedResponse } from '@/lib/api-auth'
 import { PUBLIC_QUERY_OWNER } from '@/lib/query-registry'
 import { getWorkbenchRuntime } from '@/lib/runtime'
-import type {
-  Principal,
-  SparqlQueryKind,
-  WorkbenchRuntime
-} from '@/lib/runtime/contracts'
+import type { Principal, WorkbenchRuntime } from '@/lib/runtime/contracts'
 import { isSameOriginMutation, sameOriginError } from '@/lib/same-origin'
 import { SparqlTimeoutError } from '@/lib/sparql/errors'
-import { detectQueryKind } from '@/lib/sparql/kind'
-import { GRAPH_FORMATS, getRequestedFormat } from '@/lib/sparql/negotiation'
+import { getRequestedFormat } from '@/lib/sparql/negotiation'
 
 /**
  * The SPARQL protocol handler behind `/sparql`. The proxy rewrites
@@ -18,9 +13,28 @@ import { GRAPH_FORMATS, getRequestedFormat } from '@/lib/sparql/negotiation'
  * 404 by the edge, so this file has no public URL.
  */
 
-const GRAPH_MEDIA_TYPES: readonly string[] = GRAPH_FORMATS.map(
-  (format) => format.mime
-)
+const DATASET_PARAM_NAMES = [
+  'default-graph-uri',
+  'named-graph-uri',
+  'using-graph-uri',
+  'using-named-graph-uri'
+]
+
+function collectForwardParams(
+  request: NextRequest,
+  form?: URLSearchParams
+): URLSearchParams | undefined {
+  const forwarded = new URLSearchParams()
+  for (const source of [request.nextUrl.searchParams, form]) {
+    if (!source) continue
+    for (const name of DATASET_PARAM_NAMES) {
+      for (const value of source.getAll(name)) {
+        if (value.trim() !== '') forwarded.append(name, value)
+      }
+    }
+  }
+  return forwarded.size > 0 ? forwarded : undefined
+}
 
 export async function GET(request: NextRequest) {
   const query = request.nextUrl.searchParams.get('query')
@@ -37,10 +51,10 @@ export async function POST(request: NextRequest) {
   if (contentType.includes('application/x-www-form-urlencoded')) {
     const form = new URLSearchParams(await request.text())
     const update = form.get('update')
-    if (update) return runUpdate(request, update)
+    if (update) return runUpdate(request, update, form)
     const query = form.get('query')
     if (!query) return jsonError('Query is required.', 400)
-    return runQuery(request, query, request.headers.get('accept'))
+    return runQuery(request, query, request.headers.get('accept'), form)
   }
 
   if (contentType.includes('application/sparql-update')) {
@@ -57,36 +71,26 @@ export async function POST(request: NextRequest) {
 async function runQuery(
   request: NextRequest,
   query: string,
-  accept: string | null
+  accept: string | null,
+  form?: URLSearchParams
 ) {
   const runtime = await getWorkbenchRuntime()
   const principal = await safePrincipal(runtime)
-  const requested = accept?.trim() || 'application/sparql-results+json'
   return streamDownload(
     runtime,
     request.signal,
     query,
-    negotiateAccept(detectQueryKind(query), requested),
-    principal?.id ?? PUBLIC_QUERY_OWNER
+    accept?.trim() || '*/*',
+    principal?.id ?? PUBLIC_QUERY_OWNER,
+    collectForwardParams(request, form)
   )
 }
 
-/**
- * CONSTRUCT and DESCRIBE cannot be serialized as SPARQL result JSON, so a
- * kind-blind Accept would make strict engines reject what the console
- * legitimately sends. Negotiate to Turtle unless the client asked for a
- * graph format itself.
- */
-function negotiateAccept(kind: SparqlQueryKind, requested: string): string {
-  const isGraphKind = kind === 'construct' || kind === 'describe'
-  if (!isGraphKind) return requested
-  const isGraphAccept = GRAPH_MEDIA_TYPES.some((mime) =>
-    requested.toLowerCase().includes(mime)
-  )
-  return isGraphAccept ? requested : 'text/turtle'
-}
-
-async function runUpdate(request: NextRequest, update: string) {
+async function runUpdate(
+  request: NextRequest,
+  update: string,
+  form?: URLSearchParams
+) {
   if (!isSameOriginMutation(request)) return sameOriginError()
 
   const runtime = await getWorkbenchRuntime()
@@ -100,7 +104,8 @@ async function runUpdate(request: NextRequest, update: string) {
       kind: 'update',
       ownerId: principal.id,
       origin: 'sparql',
-      signal: request.signal
+      signal: request.signal,
+      forwardParams: collectForwardParams(request, form)
     })
     return new NextResponse(null, { status: 204 })
   } catch (error) {
@@ -113,13 +118,15 @@ async function streamDownload(
   clientSignal: AbortSignal,
   query: string,
   accept: string,
-  ownerId: string
+  ownerId: string,
+  forwardParams?: URLSearchParams
 ) {
   try {
     const upstream = await runtime.sparql.download(query, accept, {
       ownerId,
       origin: 'sparql',
-      signal: clientSignal
+      signal: clientSignal,
+      forwardParams
     })
     const contentType = upstream.headers.get('content-type') ?? accept
 

@@ -24,12 +24,9 @@ async function parseQueryResponse(
   response: Response
 ): Promise<SparqlQueryResult> {
   const contentType = (response.headers.get('content-type') ?? '').toLowerCase()
-  if (contentType.includes('text/turtle')) {
-    return {
-      kind: 'graph',
-      value: await response.text(),
-      format: 'text/turtle'
-    }
+  const mime = contentType.split(';')[0].trim()
+  if (mime && !mime.includes('json')) {
+    return { kind: 'graph', value: await response.text(), format: mime }
   }
   return normalizeSparqlJsonResult(await response.json())
 }
@@ -56,7 +53,8 @@ export function useSparqlQuery(endpoint: string) {
           'Content-Type': isUpdate
             ? 'application/sparql-update'
             : 'application/sparql-query',
-          Accept: 'application/sparql-results+json'
+          Accept:
+            'application/sparql-results+json, text/turtle, application/n-triples, application/rdf+xml'
         },
         body: query,
         signal: abortControllerRef.current.signal

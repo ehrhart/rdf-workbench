@@ -43,7 +43,11 @@ async function fetchVirtuoso(
         : AbortSignal.any(signals)
 
   try {
-    return await fetch(runtime.SPARQL_ENDPOINT, {
+    const url = new URL(runtime.SPARQL_ENDPOINT)
+    for (const [name, value] of options.forwardParams ?? []) {
+      url.searchParams.append(name, value)
+    }
+    return await fetch(url, {
       method: 'POST',
       headers: {
         Accept: accept,
