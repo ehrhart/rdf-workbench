@@ -42,8 +42,8 @@ export async function getResourceSuggestions(
 ): Promise<ResourceSuggestion[]> {
   if (!searchTerm || searchTerm.length < 2) return []
 
-  const words = await suggestWords(searchTerm)
-  if (words.length === 0) return []
+  const words = await suggestWords(searchTerm).catch(() => [] as string[])
+  if (words.length === 0) return searchByLabel(searchTerm)
 
   const valueClause = words.map((word) => `"${escapeTerm(word)}"`).join(' ')
 
@@ -57,7 +57,7 @@ export async function getResourceSuggestions(
     ORDER BY DESC(?score)
     LIMIT 10
   `)
-  if (result.kind !== 'bindings') return []
+  if (result.kind !== 'bindings') return searchByLabel(searchTerm)
 
   const suggestions: ResourceSuggestion[] = []
   const seen = new Set<string>()
@@ -77,5 +77,68 @@ export async function getResourceSuggestions(
     })
   }
 
+  return suggestions
+}
+
+const LABEL_SCAN_POOL = 100
+
+/**
+ * Fallback for endpoints whose QLever index has no text records: the
+ * SERVICE text search silently returns nothing (or forwards to a hosted
+ * service that refuses), and the ql:contains-* builtins crash the engine.
+ * A bounded rdfs:label scan still answers it, so the ranking that the
+ * missing index would have provided happens client-side.
+ */
+async function searchByLabel(
+  searchTerm: string
+): Promise<ResourceSuggestion[]> {
+  const result = await qleverSparqlTransport
+    .execute(`
+    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+    SELECT DISTINCT ?subject ?label WHERE {
+      ?subject rdfs:label ?label .
+      FILTER(CONTAINS(LCASE(?label), "${escapeTerm(searchTerm.toLowerCase())}"))
+    }
+    LIMIT ${LABEL_SCAN_POOL}
+  `)
+    .catch(() => null)
+  if (result?.kind !== 'bindings') return []
+
+  const lowered = searchTerm.toLowerCase()
+  const ranked = [...result.bindings]
+    .map((binding) => {
+      const label = binding.label?.value ?? ''
+      const loweredLabel = label.toLowerCase()
+      return {
+        subject: binding.subject?.value ?? '',
+        label,
+        quality:
+          loweredLabel === lowered
+            ? 0
+            : loweredLabel.startsWith(lowered)
+              ? 1
+              : loweredLabel.includes(lowered)
+                ? 2
+                : 3
+      }
+    })
+    .filter((row) => row.subject && row.quality < 3)
+    .sort((a, b) => a.quality - b.quality || a.label.length - b.label.length)
+
+  const suggestions: ResourceSuggestion[] = []
+  const seen = new Set<string>()
+  for (const row of ranked) {
+    if (seen.has(row.subject)) continue
+    seen.add(row.subject)
+    suggestions.push({
+      id: String(suggestions.length),
+      resource: row.subject,
+      excerpt: buildExcerpt(row.label, searchTerm),
+      score: ranked.length - suggestions.length,
+      rank: suggestions.length,
+      graph: ''
+    })
+    if (suggestions.length >= 8) break
+  }
   return suggestions
 }
