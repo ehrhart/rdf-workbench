@@ -260,7 +260,7 @@ export function AiSettingsForm({
                 Generating the summary in the background (
                 {formatElapsed(elapsedSeconds)}
                 {job && job.stepsDone > 0 ? `, step ${job.stepsDone}` : ''}).
-                You can leave this page. The notes save automatically.
+                You can leave this page.
               </p>
             ) : (
               <p className="mt-2 text-muted-foreground text-sm">

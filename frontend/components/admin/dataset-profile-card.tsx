@@ -1,6 +1,7 @@
 'use client'
 
 import { format } from 'date-fns'
+import { Loader2Icon } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -90,13 +91,23 @@ export function DatasetProfileCard({
           </p>
         )}
         <div className="flex justify-start">
-          {running ? (
-            <Button type="button" variant="outline" onClick={() => cancel()}>
-              Cancel build
-            </Button>
-          ) : (
-            <Button type="button" variant="outline" onClick={rebuild}>
-              {summary ? 'Rebuild profile' : 'Build profile'}
+          <Button
+            type="button"
+            variant="outline"
+            onClick={rebuild}
+            disabled={running}
+          >
+            {running && <Loader2Icon className="animate-spin" />}
+            {summary ? 'Rebuild profile' : 'Build profile'}
+          </Button>
+          {running && (
+            <Button
+              type="button"
+              variant="outline"
+              className="ml-2"
+              onClick={cancel}
+            >
+              Cancel
             </Button>
           )}
         </div>
