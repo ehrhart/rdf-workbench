@@ -286,7 +286,7 @@ export function ChatHistoryMenu() {
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Search chat history"
             aria-label="Search chat history"
-            className="h-10 shrink-0 rounded-none border-0 border-b text-sm"
+            className="h-10 shrink-0 rounded-none border-0 border-b text-sm focus-visible:ring-0"
           />
           <button
             type="button"
