@@ -121,7 +121,7 @@ const navMain: NavItem[] = [
   },
   {
     title: 'Setup',
-    url: '/namespaces',
+    url: '/admin/namespaces',
     icon: 'settings',
     items: [
       {
@@ -221,7 +221,7 @@ function isVisible(
   user: NavUser | null,
   allowAnonymousAsk: boolean
 ): boolean {
-  if (item.url) {
+  if (item.url && !item.url.startsWith('http')) {
     const baseAccess = resolveBaseAccess(item.url)
     if ((baseAccess === 'session' || baseAccess === 'admin') && !user) {
       return false
@@ -253,4 +253,5 @@ export async function getVisibleNavItems(
         isVisible(child, user, allowAnonymousAsk)
       )
     }))
+    .filter((item) => !item.items || item.items.length > 0)
 }

@@ -47,4 +47,11 @@ describe('getVisibleNavItems', () => {
     const setup = nav.navMain.find((item) => item.title === 'Setup')
     expect(setup?.items?.some((child) => child.url === setup.url)).toBe(true)
   })
+
+  it('keeps groups with external doc links for anonymous visitors', async () => {
+    const nav = buildNavigation('virtuoso', FEATURES)
+    const visible = await getVisibleNavItems(nav.navSecondary, null)
+    const help = visible.find((item) => item.title === 'Help')
+    expect(help?.items?.length).toBe(2)
+  })
 })
