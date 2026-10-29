@@ -27,12 +27,12 @@ const STATE_TEXT: Record<string, { on: string; off: string }> = {
     off: 'Visitors need an account to browse.'
   },
   'access.allowAnonymousAsk': {
-    on: 'Visitors can chat without an account.',
-    off: 'Visitors need an account to chat.'
+    on: 'Visitors can use AI features without an account.',
+    off: 'Visitors need an account to use AI features.'
   },
   'access.allowAnonymousSparql': {
-    on: 'Visitors can query without an account.',
-    off: 'Visitors need an account to query.'
+    on: 'Visitors can run SPARQL queries without an account.',
+    off: 'Visitors need an account to run SPARQL queries.'
   }
 }
 

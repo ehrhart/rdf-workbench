@@ -11,8 +11,7 @@ import {
 } from '@/lib/runtime'
 
 export const metadata: Metadata = {
-  title: 'Users',
-  description: 'Create accounts and reset passwords.'
+  title: 'Users'
 }
 
 export default async function UsersPage() {
@@ -28,10 +27,7 @@ export default async function UsersPage() {
 
   return (
     <DashboardShell>
-      <DashboardHeader
-        heading="Users"
-        text="Create accounts and reset passwords."
-      />
+      <DashboardHeader heading="Users" />
       <UserManager users={users} currentUserId={principal.id} />
     </DashboardShell>
   )

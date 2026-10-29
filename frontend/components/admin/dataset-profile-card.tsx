@@ -71,7 +71,8 @@ export function DatasetProfileCard({
       <CardHeader>
         <CardTitle>Dataset profile</CardTitle>
         <CardDescription>
-          The classes, properties, and prefixes Ask uses when answering.
+          Classes, properties, and prefixes the Ask assistant uses when
+          answering.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">

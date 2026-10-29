@@ -18,10 +18,7 @@ export default async function SavedQueriesAdminPage() {
 
   return (
     <DashboardShell>
-      <DashboardHeader
-        heading="Saved queries"
-        text="The queries everyone can reuse."
-      />
+      <DashboardHeader heading="Saved queries" />
       <SavedQueryManager />
     </DashboardShell>
   )

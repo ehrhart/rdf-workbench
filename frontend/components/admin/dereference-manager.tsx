@@ -213,8 +213,7 @@ export function DereferenceManager({
                     colSpan={2}
                     className="py-12 text-center text-muted-foreground"
                   >
-                    No paths yet. Add one above, such as person, to open
-                    /person/&lt;id&gt; in the workbench.
+                    No paths yet. Add one above.
                   </TableCell>
                 </TableRow>
               ) : (

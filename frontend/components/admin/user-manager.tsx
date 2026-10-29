@@ -16,13 +16,7 @@ import {
 } from '@/components/admin/temporary-password-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle
-} from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -176,8 +170,8 @@ export function UserManager({ users, currentUserId }: UserManagerProps) {
               <div className="space-y-1">
                 <Label htmlFor="temporary-password">Temporary password</Label>
                 <p className="text-muted-foreground text-xs">
-                  The user signs in with it once, then sets their own password.
-                  They can&apos;t use the workbench until then.
+                  Generates a temporary password which must be changed by the
+                  user.
                 </p>
               </div>
             </div>
@@ -188,9 +182,6 @@ export function UserManager({ users, currentUserId }: UserManagerProps) {
       <Card>
         <CardHeader>
           <CardTitle>Users</CardTitle>
-          <CardDescription>
-            Disabling an account or resetting its password signs the user out.
-          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="rounded-md border">

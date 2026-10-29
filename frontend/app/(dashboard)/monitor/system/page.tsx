@@ -1,10 +1,11 @@
 import type { Metadata } from 'next'
 import { DashboardHeader } from '@/components/dashboard/header'
 import { DashboardShell } from '@/components/dashboard/shell'
+import { Badge } from '@/components/ui/badge'
 import {
   Card,
+  CardAction,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle
 } from '@/components/ui/card'
@@ -67,9 +68,11 @@ async function EndpointOverviewMonitor() {
         <Card>
           <CardHeader>
             <CardTitle>{overview.name}</CardTitle>
-            <CardDescription>
-              Endpoint status: {overview.healthy ? 'healthy' : 'unavailable'}
-            </CardDescription>
+            <CardAction>
+              <Badge variant={overview.healthy ? 'default' : 'destructive'}>
+                {overview.healthy ? 'healthy' : 'unavailable'}
+              </Badge>
+            </CardAction>
           </CardHeader>
           <CardContent>
             <KeyValueTable values={overview.stats} />
@@ -78,9 +81,6 @@ async function EndpointOverviewMonitor() {
         <Card>
           <CardHeader>
             <CardTitle>Runtime settings</CardTitle>
-            <CardDescription>
-              Settings the {runtime.label} server reports
-            </CardDescription>
           </CardHeader>
           <CardContent>
             <KeyValueTable values={overview.settings ?? {}} />

@@ -37,9 +37,7 @@ export const allowAnonymousReadEntry: SettingEntry<boolean> = {
 export const allowAnonymousAskEntry: SettingEntry<boolean> = {
   key: 'access.allowAnonymousAsk',
   group: 'access',
-  label: 'Chat without an account',
-  description:
-    'Anonymous conversations spend the LLM budget of the deployment.',
+  label: 'Use AI without an account',
   schema: booleanSetting,
   envVar: 'ALLOW_ANONYMOUS_ASK',
   defaultValue: false
@@ -49,7 +47,6 @@ export const allowAnonymousSparqlEntry: SettingEntry<boolean> = {
   key: 'access.allowAnonymousSparql',
   group: 'access',
   label: 'Query without an account',
-  description: 'Anonymous protocol queries spend triplestore capacity.',
   schema: booleanSetting,
   envVar: 'ALLOW_ANONYMOUS_SPARQL',
   defaultValue: false
@@ -68,7 +65,7 @@ export const aiMaxStepsEntry: SettingEntry<number> = {
   group: 'ai',
   label: 'Tool steps per answer',
   description:
-    'How many tool calls the assistant may make while answering one question. Background graph exploration adds its own margin.',
+    'How many tool calls the assistant may make while answering one question.',
   schema: numberSetting(2, 20),
   envVar: 'AI_MAX_STEPS',
   defaultValue: 20

@@ -91,8 +91,8 @@ export function AiTuningList({ details }: { details: AiTuningDetail[] }) {
       <CardHeader>
         <CardTitle>Tuning</CardTitle>
         <CardDescription>
-          Bounds on the assistant&apos;s tool use, queries, and background jobs.
-          Changes apply without a restart.
+          Limits on the assistant&apos;s tool calls, queries, and background
+          jobs. Changes apply without a restart.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
