@@ -21,11 +21,19 @@ export interface PromptContext {
   customInstruction?: string | null
   /** AI-generated dataset notes from the admin exploration, if any. */
   graphKnowledge?: string | null
+  /** Harness-side turn limit, surfaced so the model can pace itself. */
+  stepBudget?: number
 }
 
 export function buildSystemPrompt(context: PromptContext): string {
-  const { profile, profileText, provider, customInstruction, graphKnowledge } =
-    context
+  const {
+    profile,
+    profileText,
+    provider,
+    customInstruction,
+    graphKnowledge,
+    stepBudget
+  } = context
   const prefixBlock = buildPrefixBlock(profile?.prefixes ?? {})
 
   const parts: string[] = []
@@ -63,6 +71,11 @@ export function buildSystemPrompt(context: PromptContext): string {
   parts.push(
     '- Add a sensible LIMIT (100 or less) to exploratory queries. The tool enforces a hard cap anyway.'
   )
+  if (stepBudget) {
+    parts.push(
+      `- You have at most ${stepBudget} turns for this answer (one turn may run several tool calls). Leave enough turns to end with the final answer and the SPARQL block.`
+    )
+  }
   parts.push(
     '- Match literal filters to the sample value formats shown in the profile (dates, language tags, datatypes).'
   )

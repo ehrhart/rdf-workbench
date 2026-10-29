@@ -75,7 +75,8 @@ export async function POST(request: NextRequest) {
     profileText,
     provider: runtime.provider,
     customInstruction: settings.customInstruction,
-    graphKnowledge: settings.graphKnowledge
+    graphKnowledge: settings.graphKnowledge,
+    stepBudget: aiConfig.AI_MAX_STEPS
   })
 
   const provider = createOpenAICompatible({

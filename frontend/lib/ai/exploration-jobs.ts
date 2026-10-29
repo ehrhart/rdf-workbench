@@ -247,7 +247,13 @@ async function runExplore(
   // must stop the job rather than explore without a profile.
   if (signal.aborted) throw new Error('Exploration cancelled')
 
+  const maxSteps = Math.max(aiConfig.AI_MAX_STEPS + 8, 24)
+
   const parts: string[] = [EXPLORER_ROLE]
+  parts.push('')
+  parts.push(
+    `You have at most ${maxSteps} turns for this exploration (one turn may run several tool calls). Past roughly ${Math.floor(maxSteps * 0.7)} turns, stop exploring and write the final notes; a cut-off exploration loses everything after it.`
+  )
 
   if (profile) {
     parts.push('')
@@ -291,7 +297,7 @@ async function runExplore(
     system: parts.join('\n'),
     prompt: 'Explore the dataset now and write the notes.',
     tools: createAskTools(runtime, profile, signal),
-    stopWhen: stepCountIs(Math.max(aiConfig.AI_MAX_STEPS + 8, 24)),
+    stopWhen: stepCountIs(maxSteps),
     abortSignal: signal,
     onStepFinish: onStep
   })
