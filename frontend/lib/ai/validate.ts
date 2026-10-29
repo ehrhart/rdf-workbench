@@ -207,7 +207,6 @@ export function validateSparqlQuery(
         knownPredicates.add(property.iri)
         for (const target of property.objectTypes) {
           if (target.kind === 'class') knownClasses.add(target.iri)
-          if (target.kind === 'datatype') knownPredicates.add(target.iri)
         }
       }
     }
