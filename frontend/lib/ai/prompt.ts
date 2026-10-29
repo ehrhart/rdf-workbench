@@ -45,7 +45,10 @@ export function buildSystemPrompt(context: PromptContext): string {
   parts.push('')
   parts.push('Hard rules:')
   parts.push(
-    '- NEVER invent an IRI, class, or predicate. Every class and predicate you use must come from the dataset profile below, or from entities returned by the search_entities tool.'
+    '- NEVER invent an IRI, class, or predicate. Every class and predicate you use must come from the dataset profile below, from entities returned by the search_entities tool, or from results returned by the search_vocabulary tool.'
+  )
+  parts.push(
+    '- Discover classes and predicates with search_vocabulary when the dataset profile does not list what you need, before writing a query with an unverified IRI.'
   )
   parts.push(
     '- Resolve any named entity from the question (people, places, concepts) to a concrete IRI with search_entities BEFORE writing a query that references it.'

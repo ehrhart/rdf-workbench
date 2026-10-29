@@ -4,22 +4,26 @@ import { tool } from 'ai'
 import { z } from 'zod'
 import type {
   RunQueryOutput,
-  SearchEntitiesOutput
+  SearchEntitiesOutput,
+  SearchVocabularyOutput
 } from '@/lib/ai/ask-contract'
 import { getAiConfig } from '@/lib/ai/config'
 import type { DatasetProfile } from '@/lib/ai/dataset-profile'
 import { validateSparqlQuery } from '@/lib/ai/validate'
+import { searchVocabulary } from '@/lib/ai/vocabulary'
 import type { WorkbenchRuntime } from '@/lib/runtime/contracts'
 import { prefixedIri } from '@/lib/utils'
 import type { SparqlBindingValue } from '@/types'
 
 export interface AskToolOutputs {
   search_entities: SearchEntitiesOutput
+  search_vocabulary: SearchVocabularyOutput
   run_readonly_query: RunQueryOutput
 }
 
 export type AskTools = {
   search_entities: ReturnType<typeof createSearchEntitiesTool>
+  search_vocabulary: ReturnType<typeof createSearchVocabularyTool>
   run_readonly_query: ReturnType<typeof createRunQueryTool>
 }
 
@@ -85,6 +89,50 @@ function createSearchEntitiesTool(runtime: WorkbenchRuntime) {
             error instanceof Error ? error.message : 'unknown error'
           }. Query label properties directly instead.`
         }
+      }
+    }
+  })
+}
+
+function createSearchVocabularyTool(
+  runtime: WorkbenchRuntime,
+  profile: DatasetProfile | null,
+  signal?: AbortSignal
+) {
+  return tool({
+    description:
+      "Search the dataset's classes and predicates by text term. Use it when the dataset profile does not list a class or predicate you need, before writing a query with an unverified IRI. Returns vocabulary IRIs with their kind.",
+    inputSchema: z.object({
+      term: z
+        .string()
+        .min(2)
+        .describe('Text to search for in class and predicate names'),
+      kind: z
+        .enum(['class', 'predicate', 'any'])
+        .default('any')
+        .describe('Restrict results to classes or predicates')
+    }),
+    execute: async ({
+      term,
+      kind
+    }: {
+      term: string
+      kind?: 'class' | 'predicate' | 'any'
+    }) => {
+      const result = await searchVocabulary(runtime, profile, term, {
+        kind,
+        signal
+      })
+      const prefixes = profile?.prefixes ?? {}
+      return {
+        results: result.hits.map((hit) => ({
+          resource: hit.iri,
+          label: hit.label
+            ? `${prefixedIri(hit.iri, prefixes)} (${hit.label})`
+            : prefixedIri(hit.iri, prefixes),
+          kind: hit.kind
+        })),
+        note: result.note
       }
     }
   })
@@ -192,6 +240,7 @@ export function createAskTools(
 ): AskTools {
   return {
     search_entities: createSearchEntitiesTool(runtime),
+    search_vocabulary: createSearchVocabularyTool(runtime, profile, signal),
     run_readonly_query: createRunQueryTool(runtime, profile, signal)
   }
 }

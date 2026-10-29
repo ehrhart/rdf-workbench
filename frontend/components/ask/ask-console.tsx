@@ -684,7 +684,10 @@ function buildAssistantItems(message: UIMessage): AssistantItem[] {
       continue
     }
     const toolPart = asToolPart(part)
-    if (toolPart?.type === 'tool-search_entities') {
+    if (
+      toolPart?.type === 'tool-search_entities' ||
+      toolPart?.type === 'tool-search_vocabulary'
+    ) {
       items.push({
         kind: 'tool-search',
         key: toolPart.toolCallId,

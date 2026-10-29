@@ -9,6 +9,15 @@ export interface SearchEntitiesOutput {
   note?: string
 }
 
+export interface SearchVocabularyOutput {
+  results: Array<{
+    resource: string
+    label: string
+    kind?: 'class' | 'predicate'
+  }>
+  note?: string
+}
+
 export interface QuerySuccessOutput {
   ok: true
   kind: 'bindings' | 'boolean'
