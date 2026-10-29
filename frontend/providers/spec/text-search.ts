@@ -5,6 +5,7 @@ import type {
   TextSearchAdapter
 } from '@/lib/runtime/contracts'
 import { buildExcerpt } from '@/lib/sparql/excerpt'
+import { dedupeSuggestions } from '@/lib/sparql/suggestions'
 import type { ResourceSuggestion } from '@/types'
 
 function escapeTerm(term: string): string {
@@ -26,20 +27,24 @@ export function createSpecTextSearch(
             FILTER(CONTAINS(LCASE(STR(?text)), LCASE("${escaped}")))
           }
         }
-        LIMIT 10
+        LIMIT 25
       `)
       if (result.kind !== 'bindings') return []
 
-      return result.bindings
-        .map((binding, index) => ({
-          id: String(index),
+      return dedupeSuggestions(
+        result.bindings.map((binding) => ({
+          id: '',
           resource: binding.resource?.value ?? '',
           excerpt: buildExcerpt(binding.text?.value ?? '', searchTerm),
           score: 0,
-          rank: index,
+          rank: 0,
           graph: ''
         }))
-        .filter((suggestion) => suggestion.resource.length > 0)
+      ).map((suggestion, index) => ({
+        ...suggestion,
+        id: String(index),
+        rank: index
+      }))
     }
   }
 }

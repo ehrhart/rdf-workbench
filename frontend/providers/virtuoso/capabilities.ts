@@ -3,6 +3,7 @@
 import { ConnectionError } from '@/lib/errors'
 import { tryCatch } from '@/lib/result'
 import { getRuntimeConfig } from '@/lib/runtime/config'
+import { dedupeSuggestions } from '@/lib/sparql/suggestions'
 import type {
   EndpointStats,
   NamedGraph,
@@ -37,7 +38,7 @@ export async function getResourceSuggestions(
 
     const query = `
       DEFINE input:same-as "SAME_AS_OFF"
-      SELECT ?resource, 
+      SELECT ?resource,
          (bif:search_excerpt (bif:vector ('${escapedTerm}'), ?o)) AS ?excerpt,
          ?sc,
          ?graph
@@ -48,7 +49,7 @@ export async function getResourceSuggestions(
         }
       }
       ORDER BY DESC(?sc)
-      LIMIT 10
+      LIMIT 30
     `
 
     return virtuosoSparqlTransport.execute(query)
@@ -63,13 +64,21 @@ export async function getResourceSuggestions(
     return []
   }
 
-  return result.data.bindings.map((binding, index: number) => ({
-    id: index.toString(),
-    resource: binding.resource?.value || '',
-    excerpt: binding.excerpt?.value || '',
-    score: parseFloat(binding.score?.value || '0'),
-    rank: parseFloat(binding.rank?.value || '0'),
-    graph: binding.graph?.value || ''
+  // One resource can match through several indexed literals; the UI keys
+  // suggestion rows by resource, so later duplicates would collide.
+  return dedupeSuggestions(
+    result.data.bindings.map((binding) => ({
+      id: '',
+      resource: binding.resource?.value || '',
+      excerpt: binding.excerpt?.value || '',
+      score: parseFloat(binding.sc?.value || '0'),
+      rank: 0,
+      graph: binding.graph?.value || ''
+    }))
+  ).map((suggestion, index) => ({
+    ...suggestion,
+    id: String(index),
+    rank: index
   }))
 }
 
