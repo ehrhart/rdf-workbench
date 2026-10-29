@@ -47,17 +47,39 @@ export function reservedPathsFor(provider: TriplestoreProvider): string[] {
   ]
 }
 
-export function validateDereferencePathFormat(rawPath: string): string {
+/**
+ * Returns the first problem with the path format, or null when the path
+ * is usable.
+ */
+export function dereferencePathFormatIssue(rawPath: string): string | null {
   const path = rawPath.trim()
-  if (!path) throw new QueryError('A path is required')
+  if (!path) return 'A path is required'
   if (path.length > MAX_PATH_LENGTH) {
-    throw new QueryError(`Path must be at most ${MAX_PATH_LENGTH} characters`)
+    return `Path must be at most ${MAX_PATH_LENGTH} characters`
   }
   if (!isServeablePathSegment(path)) {
-    throw new QueryError(
-      'Path must be a lowercase URL path segment without separators, dot prefixes, or characters that require percent-encoding'
-    )
+    return 'Path must be a lowercase URL path segment without separators, dot prefixes, or characters that require percent-encoding'
   }
+  return null
+}
+
+export function dereferencePathIssue(
+  rawPath: string,
+  reservedPaths: readonly string[]
+): string | null {
+  const formatIssue = dereferencePathFormatIssue(rawPath)
+  if (formatIssue) return formatIssue
+  const path = rawPath.trim()
+  if (reservedPaths.includes(path)) {
+    return `Path "/${path}" is reserved`
+  }
+  return null
+}
+
+export function validateDereferencePathFormat(rawPath: string): string {
+  const path = rawPath.trim()
+  const issue = dereferencePathFormatIssue(path)
+  if (issue) throw new QueryError(issue)
   return path
 }
 
@@ -65,11 +87,9 @@ export function validateDereferencePath(
   rawPath: string,
   provider: TriplestoreProvider
 ): string {
-  const path = validateDereferencePathFormat(rawPath)
-  if (reservedPathsFor(provider).includes(path)) {
-    throw new QueryError(`Path "/${path}" is reserved`)
-  }
-  return path
+  const issue = dereferencePathIssue(rawPath, reservedPathsFor(provider))
+  if (issue) throw new QueryError(issue)
+  return rawPath.trim()
 }
 
 export interface ParsedDereferencePaths {

@@ -39,6 +39,7 @@ import {
   TooltipContent,
   TooltipTrigger
 } from '@/components/ui/tooltip'
+import { dereferencePathIssue } from '@/lib/dereference/rules'
 import type { DereferencePath } from '@/lib/runtime/contracts'
 
 interface DereferenceManagerProps {
@@ -57,6 +58,13 @@ export function DereferenceManager({
   const [renameTarget, setRenameTarget] = useState<DereferencePath | null>(null)
   const [renameValue, setRenameValue] = useState('')
   const [isRenaming, setIsRenaming] = useState(false)
+
+  const addWarning = newPath.trim()
+    ? dereferencePathIssue(newPath, reservedPaths)
+    : null
+  const renameWarning = renameTarget
+    ? dereferencePathIssue(renameValue, reservedPaths)
+    : null
 
   const handleCreate = async (event: FormEvent) => {
     event.preventDefault()
@@ -161,7 +169,10 @@ export function DereferenceManager({
               className="max-w-xs font-mono"
               aria-label="New path"
             />
-            <Button type="submit" disabled={isCreating || !newPath.trim()}>
+            <Button
+              type="submit"
+              disabled={isCreating || !newPath.trim() || addWarning !== null}
+            >
               {isCreating ? (
                 <Loader2 className="size-4 animate-spin" />
               ) : (
@@ -170,6 +181,9 @@ export function DereferenceManager({
               Add path
             </Button>
           </form>
+          {addWarning ? (
+            <p className="mt-2 text-sm text-destructive">{addWarning}</p>
+          ) : null}
         </CardContent>
       </Card>
 
@@ -295,6 +309,9 @@ export function DereferenceManager({
               className="font-mono"
               placeholder="person"
             />
+            {renameWarning ? (
+              <p className="text-sm text-destructive">{renameWarning}</p>
+            ) : null}
           </div>
           <DialogFooter className="gap-2">
             <Button
@@ -308,7 +325,9 @@ export function DereferenceManager({
             <Button
               type="button"
               onClick={() => void saveRename()}
-              disabled={isRenaming || !renameValue.trim()}
+              disabled={
+                isRenaming || !renameValue.trim() || renameWarning !== null
+              }
             >
               {isRenaming ? (
                 <Loader2 className="mr-2 size-4 animate-spin" />
