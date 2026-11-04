@@ -1,10 +1,7 @@
-# Start from the specified base image
 FROM node:22-bookworm
 
-# Set working directory
 WORKDIR /app
 
-# Install required ODBC libraries
 RUN apt-get update && apt-get install -y \
     libiodbc2 \
     libvirtodbc0 \
@@ -13,7 +10,6 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Normalize Virtuoso ODBC driver path
 RUN set -e; \
     DRIVER_X86="/usr/lib/x86_64-linux-gnu/odbc/virtodbc.so"; \
     DRIVER_ARM="/usr/lib/aarch64-linux-gnu/odbc/virtodbc.so"; \
@@ -34,28 +30,21 @@ RUN set -e; \
 # Copy package files first to leverage Docker cache
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
-# Install dependencies
 RUN corepack enable && corepack prepare pnpm@11.21.0 --activate && \
     pnpm install --frozen-lockfile
 
-# Copy the rest of the project files
 COPY . .
 
-# Build TypeScript code
 RUN pnpm build
 
-# Run as a dedicated non-root user
 RUN groupadd --system --gid 1001 nodejs && \
     useradd --system --uid 1001 --gid nodejs workbench && \
     chown -R workbench:nodejs /app
 
 USER workbench
 
-# Expose the specified port
 EXPOSE 50118
 
-# Set environment variable to production
 ENV NODE_ENV=production
 
-# Start the application
 CMD ["node", "dist/server.js"]

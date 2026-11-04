@@ -1,10 +1,5 @@
 import type { FeatureId, TriplestoreProvider } from './contracts'
 
-/**
- * Environment record read for feature derivation. Only the AI variables
- * affect the result, but the index signature lets callers pass
- * `process.env` directly (proxy.ts included).
- */
 export type FeatureEnv = Record<string, string | undefined>
 
 const baseFeatures: readonly FeatureId[] = [
@@ -44,13 +39,6 @@ const providerFeatures: Record<TriplestoreProvider, readonly FeatureId[]> = {
   ]
 }
 
-/**
- * The authoritative definition of each provider's feature set.
- *
- * - `ai-ask` only when AI_BASE_URL, AI_API_KEY and AI_MODEL are all set
- *   (same condition as `isAiAskEnabled` in lib/ai/config.ts, reimplemented
- *   on raw env because that module is server-only).
- */
 export function computeFeatures(
   provider: TriplestoreProvider,
   env: FeatureEnv
@@ -64,10 +52,6 @@ export function computeFeatures(
   return features
 }
 
-/**
- * Whether the AI settings are configured. Shared with lib/ai/config.ts so
- * the feature set and the ask routes stay consistent.
- */
 export function isAiConfigured(env: FeatureEnv): boolean {
   return (
     hasNonBlank(env.AI_BASE_URL) &&

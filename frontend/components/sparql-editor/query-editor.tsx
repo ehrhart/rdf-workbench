@@ -229,11 +229,9 @@ const QueryEditor = ({
   }, [])
 
   useEffect(() => {
-    // Only initialize the editor once
     if (initializedRef.current || !editorRef.current) return
     initializedRef.current = true
 
-    // Configure Yasqe defaults
     Yasqe.defaults = {
       ...Yasqe.defaults,
       extraKeys: {
@@ -251,30 +249,25 @@ const QueryEditor = ({
       persistenceId: null
     }
 
-    // Initialize the editor
     const yasqe = new Yasqe(editorRef.current, {
       createShareableLink: false
     })
 
-    // Set the initial value
     yasqe.setValue(initialValueRef.current)
     yasqe.focus()
 
-    // Store the editor instance
     yasqeRef.current = yasqe
 
-    // Setup change handler
     yasqe.on('change', () => {
       onChangeRef.current?.(yasqe)
     })
 
-    // Cleanup on unmount
     return () => {
       yasqe.destroy()
       yasqeRef.current = null
       initializedRef.current = false
     }
-  }, []) // Only run once on mount
+  }, [])
 
   // Update editor value when prop changes and differs from current value,
   // preserving the cursor position per tab so switching tabs does not

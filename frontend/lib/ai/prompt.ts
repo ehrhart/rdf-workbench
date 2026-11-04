@@ -14,12 +14,9 @@ export function buildPrefixBlock(prefixes: Record<string, string>): string {
 
 export interface PromptContext {
   profile: DatasetProfile | null
-  /** Rendered profile text ready for the model, or null when unavailable. */
   profileText: string | null
   provider: TriplestoreProvider
-  /** Operator-written instructions placed near the end of the prompt. */
   customInstruction?: string | null
-  /** AI-generated dataset notes from the admin exploration, if any. */
   graphKnowledge?: string | null
   /** Harness-side turn limit, surfaced so the model can pace itself. */
   stepBudget?: number

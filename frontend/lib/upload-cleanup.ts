@@ -28,8 +28,6 @@ export async function cleanStaleUploads(): Promise<void> {
       if (now - info.mtimeMs > STALE_MS) {
         await rm(target, { recursive: true, force: true })
       }
-    } catch {
-      // Skip unreadable entries
-    }
+    } catch {}
   }
 }

@@ -4,12 +4,8 @@ import { logger } from '../logger'
 import type { ErrorResponse } from '../types'
 
 /**
- * Deletes a graph asynchronously without waiting for completion.
  * The CLEAR GRAPH command is executed in the background, allowing
  * the client to poll triple counts for progress tracking.
- *
- * @param graphUri The URI of the graph to delete (from URL parameter)
- * @returns Immediate 202 Accepted response
  */
 export async function deleteGraphAsync(
   req: Request,
@@ -40,7 +36,6 @@ export async function deleteGraphAsync(
       return
     }
 
-    // Start the deletion in the background without waiting
     // Using setImmediate to ensure the response is sent immediately
     setImmediate(async () => {
       let connection: Awaited<ReturnType<typeof getConnection>> | undefined
@@ -70,7 +65,6 @@ export async function deleteGraphAsync(
       }
     })
 
-    // Return immediately with 202 Accepted
     res.status(202).json({
       message: 'Graph deletion initiated',
       graphUri: decodedGraphUri

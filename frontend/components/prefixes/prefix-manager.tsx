@@ -136,7 +136,6 @@ export function PrefixManager({
   canManage = true,
   scopeLabel = 'Virtuoso'
 }: PrefixManagerProps) {
-  // Convert object to array for table
   const [prefixes, setPrefixes] =
     useState<Record<string, string>>(initialPrefixes)
   const prefixArray: PrefixEntry[] = useMemo(
@@ -498,7 +497,6 @@ export function PrefixManager({
     }
   }
 
-  // Define columns for the table
   const columns: ColumnDef<PrefixEntry>[] = [
     ...(canManage
       ? [
@@ -832,13 +830,11 @@ export function PrefixManager({
         </CardContent>
       </Card>
 
-      {/* Floating Bulk Actions Bar */}
       {canManage && table.getFilteredSelectedRowModel().rows.length > 0 && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-5 duration-300">
           <Card className="shadow-2xl border border-primary/20 bg-background/95">
             <CardContent className="p-4">
               <div className="flex items-center gap-4">
-                {/* Selection Info */}
                 <div className="flex items-center gap-3 pr-4 border-r">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
                     <Checkbox
@@ -864,7 +860,6 @@ export function PrefixManager({
                   </div>
                 </div>
 
-                {/* Actions */}
                 <div className="flex items-center gap-2">
                   <Button
                     variant="outline"
@@ -915,7 +910,6 @@ export function PrefixManager({
         </div>
       )}
 
-      {/* Edit Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -974,7 +968,6 @@ export function PrefixManager({
         </DialogContent>
       </Dialog>
 
-      {/* Overwrite Confirmation Dialog */}
       <Dialog
         open={Boolean(overwriteState)}
         onOpenChange={(open) => {

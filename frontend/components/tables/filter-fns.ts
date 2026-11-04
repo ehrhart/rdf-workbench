@@ -2,9 +2,6 @@ import type { Row, RowData } from '@tanstack/react-table'
 import type { ColumnFilterValue } from './filter-types'
 import { compareValues, getComparableValue } from './value-utils'
 
-/**
- * Custom column filter compatible with the shared column filter dropdown.
- */
 export const customFilterFn = <TData extends RowData>(
   row: Row<TData>,
   columnId: string,
@@ -40,9 +37,6 @@ export const customFilterFn = <TData extends RowData>(
   }
 }
 
-/**
- * Global filter that searches across all cell values exposed by the table.
- */
 export const customGlobalFilterFn = <TData extends RowData>(
   row: Row<TData>,
   _columnId: string,
@@ -58,9 +52,6 @@ export const customGlobalFilterFn = <TData extends RowData>(
     )
 }
 
-/**
- * Custom column sort that compares on the comparable string representation.
- */
 export const customSortingFn = <TData extends RowData>(
   rowA: Row<TData>,
   rowB: Row<TData>,

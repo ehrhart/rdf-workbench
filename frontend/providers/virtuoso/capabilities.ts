@@ -82,7 +82,6 @@ export async function getResourceSuggestions(
   }))
 }
 
-// Prefix management
 export async function getPrefixes(): Promise<Record<string, string>> {
   const result = await executeIsqlCommand<
     {
@@ -156,7 +155,6 @@ export async function updatePrefix(
   })
 
   if (!result.success) {
-    // Rollback: restore the old prefix
     await tryCatch(async () =>
       executeIsqlCommand(
         `DB.DBA.XML_SET_NS_DECL('${sanitizedOldPrefix}', '${sanitizedCurrentNamespace}', 2)`
@@ -193,8 +191,6 @@ export async function deletePrefix(prefix: string): Promise<void> {
 }
 
 export async function getNamedGraphs(): Promise<NamedGraph[]> {
-  // It seems faster to query the RDF_QUAD table directly than using SPARQL for this
-  // Equivalent SPARQL query: `SELECT ?graph (COUNT(*) AS ?triples) WHERE { GRAPH ?graph { ?s ?p ?o } } GROUP BY ?graph`
   const result = await tryCatch(async () =>
     executeIsqlCommand<
       {

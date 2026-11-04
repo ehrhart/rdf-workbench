@@ -1,9 +1,5 @@
 import type { SettingEntry } from './registry'
 
-/**
- * Where a resolved setting's value came from: the environment variable, a
- * stored UI override, or the registry default.
- */
 export type SettingSource = 'environment' | 'overridden' | 'default'
 
 export interface SettingResolution<T = unknown> {

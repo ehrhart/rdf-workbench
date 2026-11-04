@@ -193,15 +193,12 @@ export interface MonitoredQueryInfo {
   /** Age for running queries, total duration for finished ones. Milliseconds. */
   lifetime: number
   state: MonitoredQueryState
-  /** Total duration for finished queries. Milliseconds. */
   durationMs?: number
   error?: string
-  /** Whether this query can be cancelled through the workbench. */
   cancellable: boolean
 }
 
 export interface QueryMonitorAdapter {
-  /** Running queries plus the recent finished history. */
   list(caller: Principal | null): Promise<MonitoredQueryInfo[]>
   cancel(id: string, caller: Principal | null): Promise<void>
 }

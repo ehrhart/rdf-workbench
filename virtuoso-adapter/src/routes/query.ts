@@ -3,11 +3,6 @@ import { executeSqlQuery } from '../database'
 import { logger } from '../logger'
 import type { ErrorResponse, QueryRequest } from '../types'
 
-/**
- * Executes a SQL query against the Virtuoso database.
- * @param query SQL query string in request body
- * @returns Query results or error response
- */
 export async function sqlQuery(req: Request, res: Response): Promise<void> {
   const { query } = req.body as QueryRequest
 

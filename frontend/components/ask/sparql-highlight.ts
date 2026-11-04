@@ -21,7 +21,6 @@ export interface HighlightedQuery {
   html: string
   /** Theme background, applied to the host `<pre>` so tokens stay readable. */
   background: string
-  /** Theme default text color. */
   foreground: string
 }
 

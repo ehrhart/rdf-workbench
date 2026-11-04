@@ -217,7 +217,6 @@ export async function withLivePrefixes(
   return { ...profile, prefixes }
 }
 
-/** Latest stored profile, or a freshly built one. */
 export async function loadOrBuildProfile(
   signal?: AbortSignal
 ): Promise<DatasetProfile | null> {

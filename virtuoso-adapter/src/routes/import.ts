@@ -1,7 +1,7 @@
-import type { Request, Response } from 'express'
-import multer from 'multer'
 import crypto from 'node:crypto'
 import path from 'node:path'
+import type { Request, Response } from 'express'
+import multer from 'multer'
 import {
   cancelBulkLoadJob,
   getAllBulkLoadJobs,
@@ -75,12 +75,6 @@ export async function ensureDirectory(
   }
 }
 
-/**
- * Uploads an RDF file to the local imports directory for bulk loading.
- * Uses diskStorage to stream large files (>2GB) directly to disk.
- * @param file Multipart file upload
- * @returns File metadata or error response
- */
 export const uploadFile = [
   upload.single('file'),
   async (req: Request, res: Response): Promise<void> => {
@@ -104,7 +98,6 @@ export const uploadFile = [
         (uploadDuration / 1000)
       ).toFixed(2)
 
-      // File is already saved by multer's diskStorage
       logger.info('File uploaded to imports folder', {
         filename: req.file.filename,
         originalname: req.file.originalname,
@@ -200,13 +193,6 @@ export async function uploadSnippet(
   }
 }
 
-/**
- * Initiates bulk RDF loading for an uploaded file into a specified graph.
- * Registers the file in Virtuoso's LOAD_LIST and starts the loader process.
- * @param filename Name of the uploaded file in imports directory
- * @param graphIri Target graph IRI for the RDF data
- * @returns Job ID and status or error response
- */
 export async function bulkLoad(req: Request, res: Response): Promise<void> {
   const { filename, graphIri } = req.body as BulkLoadRequest
 
@@ -257,11 +243,6 @@ export async function bulkLoad(req: Request, res: Response): Promise<void> {
   }
 }
 
-/**
- * Retrieves the status of a specific bulk load job.
- * @param jobId Job identifier in format "filename|graphIri"
- * @returns Job status details or error response
- */
 export async function getJobStatus(req: Request, res: Response): Promise<void> {
   const jobId = String(req.params.jobId)
 
@@ -280,10 +261,6 @@ export async function getJobStatus(req: Request, res: Response): Promise<void> {
   }
 }
 
-/**
- * Retrieves all bulk load jobs from the LOAD_LIST table.
- * @returns Array of all job statuses
- */
 export async function getAllJobs(req: Request, res: Response): Promise<void> {
   try {
     const jobs = await getAllBulkLoadJobs()
@@ -300,12 +277,6 @@ export async function getAllJobs(req: Request, res: Response): Promise<void> {
   }
 }
 
-/**
- * Cancels a running or queued bulk load job.
- * Stops the loader and removes the job from LOAD_LIST.
- * @param jobId Job identifier in format "filename|graphIri"
- * @returns Success confirmation or error response
- */
 export async function cancelJob(req: Request, res: Response): Promise<void> {
   const jobId = String(req.params.jobId)
 
@@ -324,12 +295,6 @@ export async function cancelJob(req: Request, res: Response): Promise<void> {
   }
 }
 
-/**
- * Deletes an uploaded file from the imports directory.
- * Also removes any associated bulk load jobs from LOAD_LIST.
- * @param filename Name of the file to delete
- * @returns Success confirmation or error response
- */
 export async function deleteFileHandler(
   req: Request,
   res: Response
@@ -339,7 +304,6 @@ export async function deleteFileHandler(
   try {
     await deleteFile(filename)
 
-    // Delete any related jobs from LOAD_LIST if needed
     await removeBulkLoadJobsForFile(filename)
 
     res.json({ success: true, message: 'File deleted successfully' })

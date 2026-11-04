@@ -38,7 +38,6 @@ function parseExampleQuestions(json: string): string[] {
   }
 }
 
-/** Reads the single settings row; a missing row or malformed JSON returns defaults instead of throwing. */
 export async function getAiSettings(): Promise<AiSettings> {
   try {
     const db = await getWorkbenchDatabase()

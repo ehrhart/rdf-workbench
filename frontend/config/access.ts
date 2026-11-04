@@ -138,8 +138,6 @@ function ruleMatches(rule: AccessRule, pathname: string): boolean {
   if (rule.exact) return pathname === rule.pattern
   if (!rule.pattern.includes('[')) return pathname.startsWith(rule.pattern)
 
-  // Dynamic segment: each `[param]` matches exactly one path segment, and a
-  // trailing `[...param]` catch-all matches one or more remaining segments.
   const patternSegments = rule.pattern.split('/')
   const pathSegments = pathname.split('/')
   const lastPattern = patternSegments[patternSegments.length - 1]
@@ -196,7 +194,6 @@ export interface AccessOptions {
 
 export interface AccessDecision {
   access: AccessLevel
-  /** True when the matched rule's feature is missing for this provider. */
   featureMissing: boolean
 }
 

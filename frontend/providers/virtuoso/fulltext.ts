@@ -6,9 +6,6 @@ import { executeIsqlCommand } from './odbc-connection'
 
 const escapeSqlLiteral = (value: string): string => value.replace(/'/g, "''")
 
-/**
- * Get all full-text indexing rules from DB.DBA.RDF_OBJ_FT_RULES
- */
 export async function getFTRules(): Promise<FTRule[]> {
   const result = await tryCatch(async () =>
     executeIsqlCommand<FTRule[]>(
@@ -86,9 +83,6 @@ export async function deleteFTRule(
   return { success: true, deleted }
 }
 
-/**
- * Trigger a rebuild of the full-text index
- */
 export async function rebuildFTIndex(): Promise<{ success: boolean }> {
   const result = await tryCatch(async () =>
     executeIsqlCommand('DB.DBA.VT_INC_INDEX_DB_DBA_RDF_OBJ()')
@@ -113,24 +107,19 @@ export async function setFTBatchMode(
 ): Promise<{ success: boolean }> {
   try {
     if (mode === 'auto') {
-      // Automatic mode: ON with interval
       const intervalValue =
         Number.isInteger(interval) && (interval ?? 0) > 0 ? interval : 10
       await executeIsqlCommand(
         `DB.DBA.VT_BATCH_UPDATE('DB.DBA.RDF_OBJ', 'ON', ${intervalValue})`
       )
     } else if (mode === 'off') {
-      // Real-time mode: OFF
       await executeIsqlCommand(
         `DB.DBA.VT_BATCH_UPDATE('DB.DBA.RDF_OBJ', 'OFF', NULL)`
       )
     } else {
-      // Manual mode: Set registry to ON, then delete scheduled event
-      // First, ensure registry is ON
       await executeIsqlCommand(
         `registry_set('DELAY_UPDATE_DB_DBA_RDF_OBJ', 'ON')`
       )
-      // Then delete the scheduled event to make it manual
       await executeIsqlCommand(
         `DELETE FROM DB.DBA.SYS_SCHEDULED_EVENT WHERE SE_NAME = 'VT_INC_INDEX_DB_DBA_RDF_OBJ()'`
       )
@@ -143,20 +132,14 @@ export async function setFTBatchMode(
   }
 }
 
-/**
- * Get the current batch update status
- */
 export async function getFTIndexStatus(): Promise<FTIndexStatus> {
   try {
-    // Query registry for the batch mode setting
-    // The registry key is DELAY_UPDATE_DB_DBA_RDF_OBJ
     const registryResults = await executeIsqlCommand<Array<{ mode: string }>>(
       "SELECT registry_get('DELAY_UPDATE_DB_DBA_RDF_OBJ') as mode"
     )
 
     const mode = registryResults[0]?.mode
 
-    // Check if there's a scheduled event for automatic updates
     const scheduledResults = await executeIsqlCommand<
       Array<{ SE_INTERVAL: number }>
     >(
@@ -169,20 +152,17 @@ export async function getFTIndexStatus(): Promise<FTIndexStatus> {
         batchMode: 'off'
       }
     } else if (mode === 'ON' && scheduledResults.length > 0) {
-      // ON with a scheduled event means automatic batch mode
       return {
         batchMode: 'auto',
         interval: scheduledResults[0].SE_INTERVAL
       }
     } else {
-      // ON without scheduled event, or NULL means manual batch mode
       return {
         batchMode: 'manual'
       }
     }
   } catch (error) {
     console.error('Error fetching FT index status:', error)
-    // Default to manual if we can't determine
     return {
       batchMode: 'manual'
     }

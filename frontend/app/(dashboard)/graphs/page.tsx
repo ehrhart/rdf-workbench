@@ -12,7 +12,6 @@ export const metadata: Metadata = {
   description: 'Browse the graphs in this dataset'
 }
 
-// Async component for graph data
 async function GraphsContent() {
   const runtime = await getWorkbenchRuntime()
   const [graphs, session] = await Promise.all([

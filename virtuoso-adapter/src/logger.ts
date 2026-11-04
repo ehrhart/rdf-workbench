@@ -1,9 +1,5 @@
 import winston from 'winston'
 
-/**
- * Shared Winston logger instance for the application.
- * Configured with console and file transports for consistent logging across all modules.
- */
 export const logger = winston.createLogger({
   level: 'info',
   format: winston.format.combine(

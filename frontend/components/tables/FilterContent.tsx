@@ -38,11 +38,11 @@ export function FilterContent<TData extends RowData>({
 
   const handleApplyFilter = useCallback(() => {
     if (type === 'blank' || type === 'notBlank') {
-      column.setFilterValue({ type, filterValue: '' }) // Value not needed for blank/notBlank
+      column.setFilterValue({ type, filterValue: '' })
     } else if (value) {
       column.setFilterValue({ type, filterValue: value })
     } else {
-      column.setFilterValue(undefined) // Clear if value is empty
+      column.setFilterValue(undefined)
     }
     onClose?.()
   }, [column, type, value, onClose])

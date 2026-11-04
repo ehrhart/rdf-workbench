@@ -75,7 +75,6 @@ export function FullTextIndexManager({
       const result = await addFTRule(graph, predicate, values.reason)
 
       if (result.added) {
-        // Add the new rule to the local state
         setRules([
           ...rules,
           {

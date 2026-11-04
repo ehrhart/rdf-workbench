@@ -7,7 +7,7 @@ import type { ChunkUploadHandler } from 'nextjs-chunk-upload-action'
 import { getWorkbenchRuntime } from '@/lib/runtime'
 import { ensureUserUploadsDir, stagedUploadPath } from '@/lib/upload-paths'
 
-const MAX_CHUNK_SIZE = 10 * 1024 * 1024 // 10MB max per chunk
+const MAX_CHUNK_SIZE = 10 * 1024 * 1024
 const MAX_STAGED_SIZE = 100 * 1024 * 1024 * 1024
 
 interface ChunkMetadata {
@@ -36,7 +36,6 @@ export const chunkUploadAction: ChunkUploadHandler<ChunkMetadata> = async (
     throw new Error("Part of the upload didn't transfer. Try again.")
   }
 
-  // Validate chunk size
   if (blob.size > MAX_CHUNK_SIZE) {
     throw new Error(
       `A chunk was larger than the ${MAX_CHUNK_SIZE / (1024 * 1024)} MB limit.`
@@ -67,11 +66,9 @@ export const chunkUploadAction: ChunkUploadHandler<ChunkMetadata> = async (
 
   let fileHandle: FileHandle | undefined
   try {
-    // Open for writing (create if doesn't exist) or for read/write (if exists)
     fileHandle = await open(filePath, offset === 0 ? 'w' : 'r+')
     await fileHandle.write(buffer, 0, buffer.length, offset)
   } catch (error) {
-    // Clean up partial file on error
     try {
       await unlink(filePath)
     } catch {

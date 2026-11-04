@@ -274,19 +274,7 @@ export function QueryHistory({
                       : 'border-border/70 hover:border-primary/20 hover:bg-accent/20'
                   )}
                 >
-                  <div
-                    // role="button"
-                    // onClick={() => handleToggleItem(item.id)}
-                    // onKeyDown={(e) => {
-                    //   if (e.key === 'Enter' || e.key === ' ') {
-                    //     e.preventDefault()
-                    //     handleToggleItem(item.id)
-                    //   }
-                    // }}
-                    // tabIndex={0}
-                    // aria-expanded={isExpanded}
-                    className="flex w-full items-start gap-3 text-left"
-                  >
+                  <div className="flex w-full items-start gap-3 text-left">
                     <div className="flex-1 space-y-2">
                       <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                         <span>{distance}</span>

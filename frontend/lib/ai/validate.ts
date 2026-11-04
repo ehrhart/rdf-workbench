@@ -27,14 +27,11 @@ export interface ValidationResult {
   /** Query with the LIMIT cap applied, ready to execute. */
   query?: string
   issues: string[]
-  /** True when validation capped the SELECT's LIMIT. */
   limitEnforced?: boolean
 }
 
 export interface ValidateOptions {
-  /** Maximum LIMIT forced onto SELECT queries. */
   resultLimit: number
-  /** When true, predicates and classes are checked against the profile. */
   checkVocabulary: boolean
 }
 

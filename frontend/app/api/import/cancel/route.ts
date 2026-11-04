@@ -14,7 +14,6 @@ export async function POST(
 
   const params = await props.params
   try {
-    // Get jobId from URL path or body
     let jobId: string | undefined = params.jobId
 
     if (!jobId) {
@@ -29,7 +28,6 @@ export async function POST(
       )
     }
 
-    // Forward the request to the Virtuoso adapter
     const response = await fetch(
       `${getVirtuosoConfig().VIRTUOSO_ADAPTER_URL}/api/import/cancel/${encodeURIComponent(jobId)}`,
       {

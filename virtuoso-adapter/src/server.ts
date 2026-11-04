@@ -36,7 +36,6 @@ const app = express()
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 
-// Middleware to log all incoming requests
 app.use((req: Request, _res: Response, next: NextFunction) => {
   logger.info('Request received', {
     method: req.method,
@@ -46,10 +45,6 @@ app.use((req: Request, _res: Response, next: NextFunction) => {
   next()
 })
 
-/**
- * Global error handler for Express middleware.
- * Logs errors and returns standardized error response.
- */
 const errorHandler = (
   err: Error,
   _req: Request,
@@ -73,7 +68,6 @@ const errorHandler = (
   } as ErrorResponse)
 }
 
-// API Routes
 app.get('/health', healthCheck)
 app.post('/api/query/sql', authenticateRequest, sqlQuery)
 app.post('/api/import/ensure-directory', authenticateRequest, ensureDirectory)
@@ -92,9 +86,6 @@ app.delete('/api/graphs/:graphUri', authenticateRequest, deleteGraphAsync)
 
 app.use(errorHandler)
 
-/**
- * Starts the Express server after preparing shared directories.
- */
 async function startServer(): Promise<void> {
   if (!config.adapterToken || config.adapterToken.length < 32) {
     logger.error('VIRTUOSO_ADAPTER_TOKEN must contain at least 32 characters')
@@ -129,7 +120,6 @@ async function startServer(): Promise<void> {
   })
 }
 
-// Handle graceful shutdown
 process.on('SIGINT', async () => {
   logger.info('Shutting down server...')
   await closePool()

@@ -3,11 +3,6 @@ import { requirePrincipal } from '@/lib/api-auth'
 import { isSameOriginMutation, sameOriginError } from '@/lib/same-origin'
 import { getVirtuosoConfig } from '@/providers/virtuoso/config'
 
-/**
- * NOTE: File uploads now use chunked upload via /api/import/complete
- * This route only handles GET (list jobs) and DELETE (delete file)
- */
-
 export async function GET(req: NextRequest) {
   const auth = await requirePrincipal()
   if (auth.response) return auth.response

@@ -156,7 +156,6 @@ export default memo(function ResultsRaw({ results }: ResultsRawProps) {
     const elements: React.ReactElement[] = []
     let lastIndex = 0
     lineMatches.forEach((match) => {
-      // Add text before match
       if (match.start > lastIndex) {
         elements.push(
           <span key={`${lineIndex}-text-${lastIndex}`}>
@@ -164,7 +163,6 @@ export default memo(function ResultsRaw({ results }: ResultsRawProps) {
           </span>
         )
       }
-      // Add the match
       const isCurrent =
         currentMatch &&
         currentMatch.start === match.start &&
@@ -182,7 +180,6 @@ export default memo(function ResultsRaw({ results }: ResultsRawProps) {
       )
       lastIndex = match.end
     })
-    // Add remaining text
     if (lastIndex < text.length) {
       elements.push(
         <span key={`${lineIndex}-text-end`}>{text.slice(lastIndex)}</span>

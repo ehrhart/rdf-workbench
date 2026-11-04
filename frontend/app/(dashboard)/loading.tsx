@@ -8,7 +8,6 @@ export default function DashboardLoading() {
     <DashboardShell>
       <DashboardHeaderSkeleton />
       <div className="grid gap-4 md:gap-8">
-        {/* Search skeleton */}
         <Card>
           <CardHeader>
             <Skeleton className="h-4 w-32" />
@@ -18,7 +17,6 @@ export default function DashboardLoading() {
           </CardContent>
         </Card>
 
-        {/* Stats cards skeleton */}
         <div className="grid gap-4 md:grid-cols-3">
           {[1, 2, 3].map((i) => (
             <Card key={i}>
@@ -32,7 +30,6 @@ export default function DashboardLoading() {
           ))}
         </div>
 
-        {/* Recent queries skeleton */}
         <Card>
           <CardHeader>
             <Skeleton className="h-6 w-32" />

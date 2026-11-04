@@ -18,13 +18,11 @@ export async function login(
   _state: LoginFormState,
   formData: FormData
 ): Promise<LoginFormState> {
-  // 1. Validate form fields
   const validatedFields = LoginFormSchema.safeParse({
     username: formData.get('username'),
     password: formData.get('password')
   })
 
-  // If any form fields are invalid, return early
   if (!validatedFields.success) {
     return {
       errors: validatedFields.error.flatten().fieldErrors

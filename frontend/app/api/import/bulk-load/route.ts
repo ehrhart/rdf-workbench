@@ -20,7 +20,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       )
     }
 
-    // Forward the request to the Virtuoso adapter
     const response = await fetch(
       `${getVirtuosoConfig().VIRTUOSO_ADAPTER_URL}/api/import/bulk-load`,
       {

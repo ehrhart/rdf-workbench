@@ -94,10 +94,8 @@ export function QueryConsoleSkeleton() {
     <div className="space-y-4">
       <Card>
         <CardContent className="pt-6 space-y-4">
-          {/* Editor skeleton */}
           <Skeleton className="h-64 w-full" />
 
-          {/* Action buttons skeleton */}
           <div className="flex justify-between items-center">
             <Skeleton className="h-10 w-32" />
             <div className="flex gap-2">
@@ -108,7 +106,6 @@ export function QueryConsoleSkeleton() {
         </CardContent>
       </Card>
 
-      {/* Results skeleton */}
       <Card>
         <CardContent className="pt-6">
           <Skeleton className="h-96 w-full" />

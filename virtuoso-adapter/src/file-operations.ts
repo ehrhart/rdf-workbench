@@ -7,7 +7,6 @@ import { promisify } from 'node:util'
 import { IMPORTS_PATH, MAX_UPLOAD_BYTES } from './config'
 import { logger } from './logger'
 
-// Promisified file system operations for async/await usage
 const writeFileAsync = promisify(fs.writeFile)
 const renameAsync = promisify(fs.rename)
 const unlinkAsync = promisify(fs.unlink)
@@ -21,10 +20,6 @@ const SHARED_ROOT = path.resolve(IMPORTS_PATH)
 
 export { SHARED_ROOT }
 
-/**
- * Resolves a relative path inside the shared imports root, rejecting
- * anything that resolves outside of it.
- */
 export function resolveSharedPath(relativePath: string): string {
   const normalized = path.normalize(relativePath.trim())
   const target = path.resolve(SHARED_ROOT, normalized)
@@ -67,16 +62,11 @@ async function streamRemoteBody(
   return total
 }
 
-/**
- * Ensures the imports directory exists, creating it if necessary.
- * @returns Success confirmation with directory path
- */
 export async function ensureImportsDirectory(): Promise<{
   success: boolean
   path: string
 }> {
   try {
-    // Check if directory exists, create if it doesn't
     try {
       await accessAsync(IMPORTS_PATH, fs.constants.F_OK)
     } catch {
@@ -92,12 +82,6 @@ export async function ensureImportsDirectory(): Promise<{
   }
 }
 
-/**
- * Saves an uploaded file to the imports directory.
- * @param filename Original filename
- * @param buffer File buffer
- * @returns File metadata
- */
 function sanitizeBasename(name: string): string {
   const cleaned = name
     .trim()
@@ -122,8 +106,6 @@ async function ensureUniqueFilename(filename: string): Promise<string> {
   const parsed = path.parse(filename)
   let counter = 1
 
-  // Append incremental suffix until an unused filename is found
-  // Example: dataset.ttl -> dataset-1.ttl
   while (await fileExists(`${parsed.name}-${counter}${parsed.ext}`)) {
     counter += 1
   }
@@ -199,7 +181,10 @@ export async function saveRemoteFile(
     }
 
     const controller = new AbortController()
-    const timeout = setTimeout(() => controller.abort(), REMOTE_FETCH_TIMEOUT_MS)
+    const timeout = setTimeout(
+      () => controller.abort(),
+      REMOTE_FETCH_TIMEOUT_MS
+    )
     let response: Response
     try {
       response = await fetch(url, {
@@ -296,11 +281,6 @@ export async function saveTextSnippet(
   return writeBufferToImports(buffer, filename)
 }
 
-/**
- * Checks if a file exists in the imports directory.
- * @param filename Name of the file to check
- * @returns True if file exists
- */
 export async function fileExists(filename: string): Promise<boolean> {
   try {
     await statAsync(resolveSharedPath(filename))
@@ -310,10 +290,6 @@ export async function fileExists(filename: string): Promise<boolean> {
   }
 }
 
-/**
- * Deletes a file from the imports directory.
- * @param filename Name of the file to delete
- */
 export async function deleteFile(filename: string): Promise<void> {
   const filePath = resolveSharedPath(filename)
 
@@ -324,7 +300,7 @@ export async function deleteFile(filename: string): Promise<void> {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
       logger.warn('File not found for deletion', { filename })
     } else {
-      throw error // Rethrow other errors
+      throw error
     }
   }
 }

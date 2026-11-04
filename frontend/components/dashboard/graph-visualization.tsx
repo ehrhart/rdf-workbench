@@ -80,20 +80,16 @@ type QueryBinding = {
   rdfType?: SparqlBindingValue
 }
 
-// Custom hook for colors
 function useTypeColors() {
   const [typeColorMap, setTypeColorMap] = useState<Record<string, string>>({})
 
-  // Generate a random color
   const generateRandomColor = useCallback((): string => {
     const hue = Math.floor(Math.random() * 360)
     return `hsl(${hue}, 70%, 60%)`
   }, [])
 
-  // Get or create a color for a type
   const getNodeColor = useCallback(
     (rdfType?: string | null): string => {
-      // If we have an rdf:type, use that for coloring
       if (rdfType) {
         if (!typeColorMap[rdfType]) {
           setTypeColorMap((prev) => ({
@@ -111,12 +107,10 @@ function useTypeColors() {
   return { typeColorMap, getNodeColor }
 }
 
-// Helper functions
 const formatPredicate = (predicate: string) => {
   return shortenUri(predicate)
 }
 
-// Fetch RDF data for a URI
 const fetchRdfData = async (
   uri: string,
   limit: number = Infinity
@@ -138,13 +132,11 @@ const fetchRdfData = async (
       return { nodes: [], edges: [] }
     }
 
-    // Process and transform query results efficiently
     const nodes: RdfNode[] = []
     const edges: RdfEdge[] = []
     const addedNodes = new Set<string>([uri])
     const processedObjects = new Map<string, { rdfType: string | null }>()
 
-    // Find main node type
     let nodeType: string | null = null
     for (const binding of result.bindings as QueryBinding[]) {
       if (binding.subjRdfType?.value) {
@@ -153,7 +145,6 @@ const fetchRdfData = async (
       }
     }
 
-    // Add source node
     nodes.push({
       id: uri,
       position: { x: 0, y: 0 },
@@ -164,7 +155,6 @@ const fetchRdfData = async (
       }
     })
 
-    // First pass to collect type information
     ;(result.bindings as QueryBinding[]).forEach((binding: QueryBinding) => {
       const object = binding.o.value
 
@@ -186,7 +176,6 @@ const fetchRdfData = async (
       }
     })
 
-    // Second pass to create nodes and edges
     const totalBindings = result.bindings.length
     ;(result.bindings as QueryBinding[]).forEach(
       (binding: QueryBinding, index: number) => {
@@ -230,7 +219,6 @@ const fetchRdfData = async (
   }
 }
 
-// Convert RDF data to graph format
 const convertRdfToGraphData = (rdfData: {
   nodes: RdfNode[]
   edges: RdfEdge[]
@@ -262,14 +250,12 @@ export default function GraphVisualization({
   initialUri: string
   autoSelectNode?: boolean
 }) {
-  // Refs
   const svgRef = useRef<SVGSVGElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const simulationRef = useRef<d3.Simulation<Node, Link> | null>(null)
   const zoomRef = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null)
   const clickTimerRef = useRef<NodeJS.Timeout | null>(null)
 
-  // State
   const [data, setData] = useState<GraphData>({ nodes: [], links: [] })
   const [selectedNode, setSelectedNode] = useState<Node | null>(null)
   const [showInfoPanel, setShowInfoPanel] = useState(false)
@@ -282,17 +268,14 @@ export default function GraphVisualization({
   const [error, setError] = useState<string | null>(null)
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set())
 
-  // Custom hooks
   const { getNodeColor } = useTypeColors()
   const graphFittedRef = useRef(false)
 
-  // Center and zoom the graph to fit all nodes
   const fitGraphToView = useCallback(() => {
     if (!svgRef.current || !zoomRef.current || data.nodes.length === 0) return
 
     const svg = d3.select(svgRef.current)
 
-    // Calculate the bounds efficiently
     const bounds = data.nodes.reduce(
       (acc, node) => {
         const x = node.x || 0
@@ -309,14 +292,12 @@ export default function GraphVisualization({
       { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity }
     )
 
-    // Add padding
     const padding = 50
     bounds.minX -= padding
     bounds.minY -= padding
     bounds.maxX += padding
     bounds.maxY += padding
 
-    // Calculate dimensions and scale
     const graphWidth = bounds.maxX - bounds.minX
     const graphHeight = bounds.maxY - bounds.minY
 
@@ -324,11 +305,9 @@ export default function GraphVisualization({
     const scaleY = height / graphHeight
     const scale = Math.min(scaleX, scaleY, 1.5) // Limit max zoom
 
-    // Calculate center points
     const centerX = (bounds.minX + bounds.maxX) / 2
     const centerY = (bounds.minY + bounds.maxY) / 2
 
-    // Apply transform with transition
     const transform = d3.zoomIdentity
       .translate(width / 2, height / 2)
       .scale(scale)
@@ -337,7 +316,6 @@ export default function GraphVisualization({
     svg.transition().duration(200).call(zoomRef.current.transform, transform)
   }, [data.nodes, width, height])
 
-  // Load initial data
   const loadInitialData = useCallback(
     async (uri: string) => {
       if (!uri) return
@@ -353,7 +331,6 @@ export default function GraphVisualization({
         setData(graphData)
         setExpandedNodes(new Set())
 
-        // If we have a node and autoSelectNode is true, select it
         if (graphData.nodes.length > 0 && autoSelectNode) {
           const mainNode = graphData.nodes.find((node) => node.id === uri)
           if (mainNode) {
@@ -371,24 +348,19 @@ export default function GraphVisualization({
     [linksLimit, autoSelectNode]
   )
 
-  // Handle node click events with debounce
   const handleNodeClick = useCallback((node: Node) => {
     setSelectedNode(node)
     setShowInfoPanel(true)
   }, [])
 
-  // Handle node expansion on double-click
   const expandNode = useCallback(
     async (node: Node) => {
       setError(null)
 
-      // Check if node is already expanded
       if (expandedNodes.has(node.id)) {
-        // Node is already expanded, do nothing
         return
       }
 
-      // Update the node to mark it as loading
       setData((prev) => ({
         ...prev,
         nodes: prev.nodes.map((n) =>
@@ -399,11 +371,9 @@ export default function GraphVisualization({
       try {
         const rdfData = await fetchRdfData(node.id, linksLimit)
 
-        // Create efficient sets for lookups
         const existingNodeIds = new Set(data.nodes.map((n) => n.id))
         const existingLinkIds = new Set(data.links.map((l) => l.id))
 
-        // Filter out nodes we already have
         const newNodes = rdfData.nodes
           .filter((n) => !existingNodeIds.has(n.id))
           .map((node) => ({
@@ -416,7 +386,6 @@ export default function GraphVisualization({
             y: (node.position?.y || 0) + (Math.random() * 100 - 50)
           }))
 
-        // Process new edges
         const newLinks = rdfData.edges
           .filter((edge) => !existingLinkIds.has(edge.id))
           .map((edge) => ({
@@ -426,10 +395,8 @@ export default function GraphVisualization({
             predicates: [edge.data.predicate]
           }))
 
-        // Mark node as expanded
         setExpandedNodes((prev) => new Set(prev).add(node.id))
 
-        // Only update state if there are new nodes or links
         if (newNodes.length > 0 || newLinks.length > 0) {
           setData((prev) => ({
             nodes: prev.nodes
@@ -438,7 +405,6 @@ export default function GraphVisualization({
             links: [...prev.links, ...newLinks]
           }))
         } else {
-          // No new data, just remove loading state without triggering re-render
           setData((prev) => ({
             ...prev,
             nodes: prev.nodes.map((n) =>
@@ -450,7 +416,6 @@ export default function GraphVisualization({
         console.error('Error expanding node:', err)
         setError("Couldn't load this node's connections.")
 
-        // Reset loading state if there's an error
         setData((prev) => ({
           ...prev,
           nodes: prev.nodes.map((n) =>
@@ -462,7 +427,6 @@ export default function GraphVisualization({
     [data.nodes, data.links, linksLimit, expandedNodes]
   )
 
-  // Handle node double-click
   const handleNodeDblClick = useCallback(
     (node: Node) => {
       expandNode(node)
@@ -470,14 +434,11 @@ export default function GraphVisualization({
     [expandNode]
   )
 
-  // Remove node and its connections
   const removeNode = useCallback(
     (node: Node) => {
       const nodesToRemove = new Set<string>([node.id])
 
-      // Create a recursive function to find connected nodes
       const findConnectedNodes = (nodeId: string) => {
-        // Find outgoing links
         const outgoingLinks = data.links.filter((l) => {
           const sourceId = typeof l.source === 'string' ? l.source : l.source.id
           return sourceId === nodeId
@@ -488,7 +449,6 @@ export default function GraphVisualization({
             typeof link.target === 'string' ? link.target : link.target.id
 
           if (!nodesToRemove.has(targetId)) {
-            // Check if this node only has connections from nodes we're removing
             const incomingLinks = data.links.filter((l) => {
               const targetLinkId =
                 typeof l.target === 'string' ? l.target : l.target.id
@@ -509,10 +469,8 @@ export default function GraphVisualization({
         })
       }
 
-      // Start recursive node removal process
       findConnectedNodes(node.id)
 
-      // Update state in one batch operation
       setData((prev) => {
         const updatedNodes = prev.nodes.filter((n) => !nodesToRemove.has(n.id))
         const updatedLinks = prev.links.filter((l) => {
@@ -524,7 +482,6 @@ export default function GraphVisualization({
         return { nodes: updatedNodes, links: updatedLinks }
       })
 
-      // Clear selection if removed
       if (selectedNode && nodesToRemove.has(selectedNode.id)) {
         setSelectedNode(null)
         setShowInfoPanel(false)
@@ -533,7 +490,6 @@ export default function GraphVisualization({
     [data.links, selectedNode]
   )
 
-  // Toggle node fixed state
   const toggleNodeFixed = useCallback((node: Node) => {
     setData((prev) => {
       const updatedNodes = prev.nodes.map((n) => {
@@ -554,7 +510,6 @@ export default function GraphVisualization({
     })
   }, [])
 
-  // Toggle all nodes fixed state
   const toggleAllNodesFixed = useCallback(() => {
     const shouldFix = numberOfPinnedNodes === 0
 
@@ -573,11 +528,9 @@ export default function GraphVisualization({
     setNumberOfPinnedNodes(shouldFix ? data.nodes.length : 0)
   }, [numberOfPinnedNodes, data.nodes.length])
 
-  // Update graph simulation
   const updateVisualization = useCallback(() => {
     if (!simulationRef.current) return
 
-    // Map nodes by ID for efficient lookup
     const nodeById = new Map(data.nodes.map((node) => [node.id, node]))
 
     // Update links with references to actual node objects
@@ -593,7 +546,6 @@ export default function GraphVisualization({
           : link.target
     }))
 
-    // Update simulation with minimal changes
     simulationRef.current.nodes(data.nodes)
     simulationRef.current.force(
       'link',
@@ -606,7 +558,6 @@ export default function GraphVisualization({
     simulationRef.current.alpha(0.3).restart()
   }, [data.nodes, data.links])
 
-  // Rotate the graph with animation
   const rotateGraph = useCallback(
     (clockwise: boolean) => {
       const totalAngle = (clockwise ? 1 : -1) * ((45 * Math.PI) / 180)
@@ -615,17 +566,14 @@ export default function GraphVisualization({
       const centerX = width / 2
       const centerY = height / 2
 
-      // Capture initial positions
       const initialPositions = data.nodes.map((node) => ({
         id: node.id,
         x: node.x || 0,
         y: node.y || 0
       }))
 
-      // Easing function
       const easeOutCubic = (t: number): number => 1 - (1 - t) ** 3
 
-      // Animation function
       const animateRotation = () => {
         const elapsed = Date.now() - startTime
         const progress = Math.min(elapsed / duration, 1)
@@ -675,23 +623,19 @@ export default function GraphVisualization({
     [width, height, data.nodes]
   )
 
-  // Handle links limit changes
   const handleLinksLimitChange = useCallback((delta: number) => {
     setLinksLimit((prev) => Math.max(1, Math.min(1000, prev + delta)))
   }, [])
 
-  // Initialize effects
   useEffect(() => {
     if (initialUri) {
       loadInitialData(initialUri)
     }
   }, [initialUri, loadInitialData])
 
-  // Setup resize observer
   useEffect(() => {
     if (!containerRef.current) return
 
-    // Set initial dimensions
     setWidth(containerRef.current.clientWidth)
     setHeight(containerRef.current.clientHeight)
 
@@ -719,7 +663,6 @@ export default function GraphVisualization({
     return () => resizeObserver.disconnect()
   }, [])
 
-  // Keyboard event listeners
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -732,7 +675,6 @@ export default function GraphVisualization({
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [])
 
-  // D3 graph initialization
   useEffect(() => {
     if (!svgRef.current) return
 
@@ -745,13 +687,11 @@ export default function GraphVisualization({
 
     svg.selectAll('*').remove()
 
-    // Create container group
     const g = svg
       .append('g')
       .attr('class', 'nodes-container')
       .style('user-select', 'none')
 
-    // Define arrow markers
     svg
       .append('defs')
       .selectAll('marker')
@@ -769,7 +709,6 @@ export default function GraphVisualization({
       .attr('d', 'M0,-5L10,0L0,5')
       .attr('fill', '#999')
 
-    // Setup zoom behavior
     const zoom = d3
       .zoom<SVGSVGElement, unknown>()
       .scaleExtent([0.1, 10])
@@ -780,7 +719,6 @@ export default function GraphVisualization({
     zoomRef.current = zoom
     svg.call(zoom).on('dblclick.zoom', null)
 
-    // Reapply the preserved transform
     svg.call(zoom.transform, currentTransform)
 
     // Exit if no data - simulation will be created when data arrives
@@ -790,7 +728,6 @@ export default function GraphVisualization({
       }
     }
 
-    // Map nodes by ID
     const nodeById = new Map(data.nodes.map((node) => [node.id, node]))
 
     // Process links to ensure proper references
@@ -806,7 +743,6 @@ export default function GraphVisualization({
           : link.target
     }))
 
-    // Setup force simulation
     simulationRef.current = d3
       .forceSimulation<Node, Link>(data.nodes)
       .force(
@@ -827,7 +763,6 @@ export default function GraphVisualization({
       )
       .on('tick', tick)
 
-    // Create links
     const linkGroup = g
       .append('g')
       .attr('class', 'links')
@@ -860,7 +795,6 @@ export default function GraphVisualization({
           : formatPredicate(d.predicates[0])
       )
 
-    // Create nodes
     const nodeGroup = g
       .append('g')
       .attr('class', 'nodes')
@@ -884,7 +818,6 @@ export default function GraphVisualization({
           .on('end', dragended)
       )
 
-    // Loading indicator
     nodeGroup
       .filter((d) => Boolean(d.isLoading))
       .append('circle')
@@ -896,7 +829,6 @@ export default function GraphVisualization({
       .attr('stroke-dasharray', '6,3')
       .style('animation', 'dash 1.5s linear infinite')
 
-    // Node labels
     nodeGroup
       .append('text')
       .attr('class', 'node-label')
@@ -908,7 +840,6 @@ export default function GraphVisualization({
         d.label.length > 20 ? `${d.label.substring(0, 17)}…` : d.label
       )
 
-    // Node click handlers
     node.on('click', (event, d) => {
       event.stopPropagation()
 
@@ -940,7 +871,6 @@ export default function GraphVisualization({
       updateVisualization()
     })
 
-    // Background click to deselect
     svg.on('click', () => {
       if (clickTimerRef.current) {
         clearTimeout(clickTimerRef.current)
@@ -951,17 +881,14 @@ export default function GraphVisualization({
       setShowInfoPanel(false)
     })
 
-    // Tick function
     let tickCount = 0
     function tick() {
-      // Update link positions
       link
         .attr('x1', (d) => (typeof d.source === 'object' ? d.source.x || 0 : 0))
         .attr('y1', (d) => (typeof d.source === 'object' ? d.source.y || 0 : 0))
         .attr('x2', (d) => (typeof d.target === 'object' ? d.target.x || 0 : 0))
         .attr('y2', (d) => (typeof d.target === 'object' ? d.target.y || 0 : 0))
 
-      // Update link text positions
       linkText
         .attr('x', (d) => {
           const sourceX = typeof d.source === 'object' ? d.source.x || 0 : 0
@@ -992,7 +919,6 @@ export default function GraphVisualization({
           }, ${textX}, ${textY})`
         })
 
-      // Update node positions
       nodeGroup
         .selectAll<SVGCircleElement, Node>('circle')
         .attr('cx', (d) => d.x || 0)
@@ -1009,7 +935,6 @@ export default function GraphVisualization({
       }
     }
 
-    // Drag functions
     function dragstarted(
       event: d3.D3DragEvent<SVGCircleElement, Node, Node>,
       d: Node
@@ -1061,7 +986,6 @@ export default function GraphVisualization({
     fitGraphToView
   ])
 
-  // JSX rendering
   return (
     <div className="relative h-full w-full">
       {error && (
@@ -1087,7 +1011,6 @@ export default function GraphVisualization({
         </div>
       )}
 
-      {/* URI Input and Controls */}
       <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
         <Card className="flex w-72 flex-col gap-2 p-2">
           <div className="flex items-center justify-between">
@@ -1211,17 +1134,6 @@ export default function GraphVisualization({
         </Card>
       </div>
 
-      {/* Loading Indicator */}
-      {/* {isLoading && (
-        <div className="absolute inset-0 z-20 flex items-center justify-center">
-          <div className="p-4">
-            <div className="mx-auto h-8 w-8 animate-spin rounded-full border-b-2 border-blue-500"></div>
-            <p className="mt-2 text-center text-sm">Loading data...</p>
-          </div>
-        </div>
-      )} */}
-
-      {/* Node Info Panel */}
       {showInfoPanel && selectedNode && (
         <NodeInfoPanel
           node={selectedNode}
@@ -1231,7 +1143,6 @@ export default function GraphVisualization({
         />
       )}
 
-      {/* SVG Container */}
       <div className="h-full w-full" ref={containerRef}>
         {data.nodes.length > 0 && (
           <svg

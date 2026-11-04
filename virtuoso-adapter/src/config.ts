@@ -27,7 +27,6 @@ export const config: AppConfig = {
   }
 }
 
-// Local directory for storing uploaded RDF files before bulk loading.
 // Use VIRTUOSO_IMPORTS_PATH when the Virtuoso instance sees the files at a different absolute path.
 export const IMPORTS_PATH = process.env.VIRTUOSO_IMPORTS_PATH || './imports'
 export const MAX_UPLOAD_BYTES = parseNumber(

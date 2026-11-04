@@ -224,7 +224,6 @@ export const TriplesDataTable = memo(function TriplesDataTable({
 
   const columns = useMemo(() => createColumns(), [])
 
-  // Reset pagination and filters when resource changes
   useEffect(() => {
     const nextUri = resourceInfo?.uri
     const nextRole = resourceInfo?.role
@@ -336,7 +335,6 @@ export const TriplesDataTable = memo(function TriplesDataTable({
 
   return (
     <div className="space-y-4">
-      {/* Table Controls */}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <InputGroup className="relative max-w-xs grow sm:grow-0">
           <InputGroupIcon position="left">
@@ -399,7 +397,6 @@ export const TriplesDataTable = memo(function TriplesDataTable({
         </div>
       </div>
 
-      {/* Table */}
       <div className="overflow-x-auto rounded-md border">
         <table className="w-full table-fixed caption-bottom border-collapse text-sm">
           <thead className="[&_tr]:border-b">
@@ -429,7 +426,6 @@ export const TriplesDataTable = memo(function TriplesDataTable({
           </thead>
           <tbody className="[&_tr:last-child]:border-0">
             {isLoading ? (
-              // Skeleton Loader
               skeletonRowIds.map((rowId) => (
                 <tr
                   key={rowId}
@@ -500,7 +496,6 @@ export const TriplesDataTable = memo(function TriplesDataTable({
                 </tr>
               ))
             ) : (
-              // No Results
               <tr>
                 <td
                   colSpan={visibleColumns.length}
@@ -525,7 +520,6 @@ export const TriplesDataTable = memo(function TriplesDataTable({
         </table>
       </div>
 
-      {/* Pagination */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="text-muted-foreground text-sm">
           Showing {table.getPaginationRowModel().rows.length.toLocaleString()}{' '}

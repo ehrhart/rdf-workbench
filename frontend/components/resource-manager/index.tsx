@@ -26,14 +26,6 @@ import { TriplesDataTable } from './TriplesDataTable'
 import { type FileType, RESOURCE_ROLES, type ResourceRole } from './types'
 import { useResourceData } from './useResourceData'
 
-/**
- * Main Resource Manager Component
- *
- * Displays comprehensive information about an RDF resource including:
- * - Resource metadata (label, comment, types)
- * - Triples where the resource appears in different roles
- * - Filtering and export capabilities
- */
 export default function ResourceManager({
   fileTypes,
   uri: uriProp = null
@@ -62,11 +54,8 @@ export default function ResourceManager({
     return param === null ? DEFAULT_SHOW_BLANK_NODES : param !== 'false'
   }, [searchParams])
 
-  // Fetch data using custom hook (all params derived from URL)
   const { status, error, resourceInfo, triplesStatus, triplesError, triples } =
     useResourceData(uri, role, showBlankNodes)
-
-  // --- URL Update Helpers (stable references) ---
 
   const updateSearchParams = useCallback(
     (updates: Record<string, string>) => {
@@ -78,8 +67,6 @@ export default function ResourceManager({
     },
     [searchParams, router, pathname]
   )
-
-  // --- Event Handlers (stable references) ---
 
   const handleRoleChange = useCallback(
     (newRole: ResourceRole) => {
@@ -147,8 +134,6 @@ export default function ResourceManager({
     [uri, role, showBlankNodes, resourceInfo?.label, getFilenameBase]
   )
 
-  // --- Render Logic ---
-
   if (!uri && status === 'idle') {
     return (
       <div className="text-muted-foreground container mx-auto p-6">
@@ -162,7 +147,6 @@ export default function ResourceManager({
 
   return (
     <div className="space-y-4">
-      {/* Error Display */}
       {status === 'error' && error && (
         <Card className="border-destructive bg-destructive/10 mb-4">
           <CardContent className="text-destructive pt-4 text-sm">
@@ -172,7 +156,6 @@ export default function ResourceManager({
         </Card>
       )}
 
-      {/* Initial Loading Skeleton */}
       {showInitialSkeleton && (
         <div className="space-y-2">
           <Skeleton className="h-8 w-3/4" />
@@ -184,7 +167,6 @@ export default function ResourceManager({
         </div>
       )}
 
-      {/* Content Area */}
       {resourceInfo ? <ResourceHeader resourceInfo={resourceInfo} /> : null}
 
       <Separator />
@@ -245,7 +227,6 @@ export default function ResourceManager({
         </div>
       </div>
 
-      {/* Triples Data Table */}
       <TriplesDataTable
         triples={triples}
         status={triplesStatus}

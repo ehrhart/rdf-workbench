@@ -28,9 +28,7 @@ export interface QuerySuccessOutput {
   rowCount?: number
   truncated?: boolean
   boolean?: boolean
-  /** Wall time of the triplestore request in milliseconds. */
   durationMs?: number
-  /** True when validation capped the query's LIMIT to the configured maximum. */
   limitEnforced?: boolean
   /** Display string → original full URI for URI-typed cells. */
   links?: Record<string, string>
@@ -60,7 +58,6 @@ export interface ProfileResponseDto {
   systemPrompt?: string
 }
 
-/** Metadata attached to the streamed assistant message. */
 export interface AskMessageMetadata {
   durationMs?: number
   stepCount?: number

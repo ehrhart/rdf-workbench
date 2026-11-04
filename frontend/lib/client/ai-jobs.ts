@@ -12,9 +12,7 @@ const POLL_INTERVAL_MS = 3000
 
 export interface UseAiJobsResult {
   job: AiJobDto | null
-  /** True while this kind has a running job. */
   running: boolean
-  /** Seconds elapsed since the running job started; 0 when idle. */
   elapsedSeconds: number
   start: () => Promise<{ ok: boolean; error?: string }>
   cancel: () => Promise<void>

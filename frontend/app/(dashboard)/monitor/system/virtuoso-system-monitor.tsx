@@ -67,14 +67,12 @@ export default function SystemPage() {
     return () => clearInterval(intervalId)
   }, [])
 
-  // Format values based on their likely type
   const formatValue = (
     key: string,
     value: string | number | null
   ): string | number => {
     if (value === null) return 'N/A'
 
-    // Handle special cases
     if (
       key.includes('_size') ||
       key.includes('_bytes') ||
@@ -84,7 +82,6 @@ export default function SystemPage() {
       return formatBytes(Number(value))
     }
 
-    // Return as is for other cases
     return value
   }
 
@@ -158,7 +155,6 @@ export default function SystemPage() {
         </div>
       </DashboardHeader>
       <div className="space-y-4">
-        {/* System Overview Card */}
         <Card>
           <CardHeader>
             <CardTitle>System overview</CardTitle>
@@ -196,7 +192,6 @@ export default function SystemPage() {
           </CardContent>
         </Card>
 
-        {/* Memory Usage Card */}
         <Card>
           <CardHeader>
             <CardTitle>Memory usage</CardTitle>
@@ -245,7 +240,6 @@ export default function SystemPage() {
           </CardContent>
         </Card>
 
-        {/* Performance Metrics Chart */}
         <Card>
           <CardHeader>
             <CardTitle>Performance metrics</CardTitle>
@@ -269,7 +263,6 @@ export default function SystemPage() {
           </CardContent>
         </Card>
 
-        {/* Detailed Statistics Tabs */}
         <Tabs defaultValue="database">
           <TabsList className="flex-wrap h-auto">
             <TabsTrigger value="database">Database</TabsTrigger>
@@ -281,7 +274,6 @@ export default function SystemPage() {
             <TabsTrigger value="rdf">RDF</TabsTrigger>
           </TabsList>
 
-          {/* Database Tab */}
           <TabsContent value="database">
             <Card>
               <CardHeader>
@@ -310,7 +302,6 @@ export default function SystemPage() {
             </Card>
           </TabsContent>
 
-          {/* Processes Tab */}
           <TabsContent value="processes">
             <Card>
               <CardHeader>
@@ -340,7 +331,6 @@ export default function SystemPage() {
             </Card>
           </TabsContent>
 
-          {/* Connections Tab */}
           <TabsContent value="connections">
             <Card>
               <CardHeader>
@@ -370,7 +360,6 @@ export default function SystemPage() {
             </Card>
           </TabsContent>
 
-          {/* Performance Tab */}
           <TabsContent value="performance">
             <Card>
               <CardHeader>
@@ -399,7 +388,6 @@ export default function SystemPage() {
             </Card>
           </TabsContent>
 
-          {/* Locks Tab */}
           <TabsContent value="locks">
             <Card>
               <CardHeader>
@@ -429,7 +417,6 @@ export default function SystemPage() {
             </Card>
           </TabsContent>
 
-          {/* Memory Tab */}
           <TabsContent value="memory">
             <Card>
               <CardHeader>
@@ -458,7 +445,6 @@ export default function SystemPage() {
             </Card>
           </TabsContent>
 
-          {/* RDF Tab */}
           <TabsContent value="rdf">
             <Card>
               <CardHeader>

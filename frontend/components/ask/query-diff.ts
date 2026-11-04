@@ -3,9 +3,6 @@ export interface QueryDiffLine {
   text: string
 }
 
-/**
- * Line-level diff between two texts, unchanged lines omitted.
- */
 export function diffQueryLines(before: string, after: string): QueryDiffLine[] {
   const oldLines = before.split('\n')
   const newLines = after.split('\n')

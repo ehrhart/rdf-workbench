@@ -46,7 +46,6 @@ export function IndexStatusCard() {
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
 
-  // Config form state
   const [selectedMode, setSelectedMode] = useState<'manual' | 'auto' | 'off'>(
     'manual'
   )

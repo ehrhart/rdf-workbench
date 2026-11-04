@@ -70,7 +70,6 @@ function normalizeInstanceName(value: string | null): string | null {
   return trimmed === '' ? null : trimmed
 }
 
-/** Reads the single settings row; a missing row, DB failure, or invalid value falls back to defaults. */
 export async function getAppearanceSettings(): Promise<AppearanceSettings> {
   try {
     const db = await getWorkbenchDatabase()

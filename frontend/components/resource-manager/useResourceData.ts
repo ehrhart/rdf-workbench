@@ -9,25 +9,15 @@ type ResourceMetaBinding = {
   comment?: { value?: string }
 }
 
-/**
- * Custom hook to manage resource metadata and triples data fetching
- * Following React best practices:
- * - Single source of truth (URL params)
- * - Stable function references
- * - Clear separation of concerns
- * - Proper dependency management
- */
 export function useResourceData(
   uri: string | null,
   role: ResourceRole,
   showBlankNodes: boolean
 ) {
-  // Metadata state
   const [status, setStatus] = useState<AppStatus>('idle')
   const [error, setError] = useState<string | null>(null)
   const [resourceInfo, setResourceInfo] = useState<ResourceInfo | null>(null)
 
-  // Triples state
   const [triplesStatus, setTriplesStatus] = useState<AppStatus>('idle')
   const [triplesError, setTriplesError] = useState<string | null>(null)
   const [triples, setTriples] = useState<Triple[]>([])
@@ -36,10 +26,6 @@ export function useResourceData(
   const metadataAbortControllerRef = useRef<AbortController | null>(null)
   const triplesAbortControllerRef = useRef<AbortController | null>(null)
 
-  /**
-   * Fetch resource metadata (label, comment, types)
-   * Memoized with stable reference
-   */
   const fetchResourceMetadata = useCallback(
     async (resourceUri: string, resourceRole: ResourceRole) => {
       if (!resourceUri) {
@@ -49,7 +35,6 @@ export function useResourceData(
         return
       }
 
-      // Cancel previous request if still pending
       metadataAbortControllerRef.current?.abort()
       metadataAbortControllerRef.current = new AbortController()
 
@@ -105,10 +90,6 @@ export function useResourceData(
     [showBlankNodes]
   )
 
-  /**
-   * Fetch triples based on resource role and filters
-   * Memoized with stable reference
-   */
   const fetchTriples = useCallback(
     async (
       resourceUri: string,
@@ -122,7 +103,6 @@ export function useResourceData(
         return
       }
 
-      // Cancel previous request if still pending
       triplesAbortControllerRef.current?.abort()
       triplesAbortControllerRef.current = new AbortController()
 
@@ -155,9 +135,6 @@ export function useResourceData(
     []
   )
 
-  /**
-   * Fetch metadata when URI changes
-   */
   useEffect(() => {
     if (uri) {
       void fetchResourceMetadata(uri, role)
@@ -167,7 +144,6 @@ export function useResourceData(
       setError('No URI parameter specified.')
     }
 
-    // Cleanup on unmount or parameter change
     return () => {
       metadataAbortControllerRef.current?.abort()
     }
@@ -186,27 +162,21 @@ export function useResourceData(
     })
   }, [role, showBlankNodes])
 
-  /**
-   * Fetch triples when URI, role, or showBlankNodes changes
-   */
   useEffect(() => {
     if (uri && resourceInfo) {
       void fetchTriples(uri, role, showBlankNodes)
     }
 
-    // Cleanup on unmount or parameter change
     return () => {
       triplesAbortControllerRef.current?.abort()
     }
   }, [uri, role, showBlankNodes, resourceInfo, fetchTriples])
 
   return {
-    // Metadata state
     status,
     error,
     resourceInfo,
 
-    // Triples state
     triplesStatus,
     triplesError,
     triples

@@ -47,10 +47,6 @@ export function reservedPathsFor(provider: TriplestoreProvider): string[] {
   ]
 }
 
-/**
- * Returns the first problem with the path format, or null when the path
- * is usable.
- */
 export function dereferencePathFormatIssue(rawPath: string): string | null {
   const path = rawPath.trim()
   if (!path) return 'A path is required'

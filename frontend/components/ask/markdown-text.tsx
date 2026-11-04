@@ -3,7 +3,6 @@
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 
-/** Renders assistant prose as markdown; links open in a new tab. */
 export function MarkdownText({ text }: { text: string }) {
   return (
     <div className="chat-prose prose prose-sm break-words">

@@ -12,11 +12,6 @@ export interface SettingEntry<T = unknown> {
   defaultValue: T
 }
 
-/**
- * Booleans are stored as JSON booleans. Environment values accept '1' or
- * a case-insensitive 'true' as true and '0' or a case-insensitive 'false'
- * as false, matching the historical env semantics in both directions.
- */
 const booleanSetting: z.ZodType<boolean> = z.preprocess((input) => {
   if (typeof input !== 'string') return input
   const normalized = input.toLowerCase()
@@ -52,10 +47,6 @@ export const allowAnonymousSparqlEntry: SettingEntry<boolean> = {
   defaultValue: false
 }
 
-/**
- * Numbers are stored as JSON numbers. Environment values are coerced from
- * strings, so '10' and 10 behave identically in both positions.
- */
 function numberSetting(min: number, max: number): z.ZodType<number> {
   return z.coerce.number().int().min(min).max(max)
 }

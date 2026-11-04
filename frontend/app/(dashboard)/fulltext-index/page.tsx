@@ -13,7 +13,6 @@ export const metadata: Metadata = {
   description: 'Choose which RDF values are searchable in full text'
 }
 
-// Async component for full-text index data
 async function FullTextIndexContent() {
   const rules = await getFTRules()
   return <FullTextIndexManager initialRules={rules} />

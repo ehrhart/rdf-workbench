@@ -6,13 +6,6 @@ import type { SparqlBinding, SparqlBindingValue } from '@/types'
 import { TRIPLE_FETCH_LIMIT } from './constants'
 import type { ResourceRole, Triple } from './types'
 
-/**
- * Generates a SPARQL query to fetch triples for a resource based on its role
- * @param resourceUri - The URI of the resource
- * @param role - The role of the resource (subject, predicate, object, context, or all)
- * @param showBlankNodes - Whether to show blank nodes
- * @returns SPARQL query string
- */
 export const generateTriplesQuery = (
   resourceUri: string,
   role: ResourceRole,
@@ -32,11 +25,6 @@ export const generateTriplesQuery = (
   } ${limitClause}`
 }
 
-/**
- * Parses normalized SPARQL bindings into the Triple structure
- * @param bindings - Raw SPARQL query result bindings
- * @returns Array of parsed Triple objects
- */
 type SparqlTripleBinding = Partial<
   Record<'subject' | 'predicate' | 'object' | 'context', SparqlBindingValue>
 >

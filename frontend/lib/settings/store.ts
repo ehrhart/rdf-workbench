@@ -81,10 +81,6 @@ export async function getStoredResolutions<T>(
   return resolutions
 }
 
-/**
- * Saves validated overrides and one history row per key in a single
- * transaction. Unknown keys and schema violations throw.
- */
 export async function saveSettingValues(
   entries: Array<{ key: string; value: unknown }>,
   principal: string
@@ -131,10 +127,6 @@ export async function saveSettingValues(
   })()
 }
 
-/**
- * Removes the stored override for a key and records the reset in
- * history. Unknown keys throw.
- */
 export async function resetSettingValue(
   key: string,
   principal: string

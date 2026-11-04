@@ -380,7 +380,6 @@ export function GraphManager({
         throw new Error(`Export failed: ${response.statusText}`)
       }
 
-      // Create a blob from the response
       const blob = await response.blob()
       const url = window.URL.createObjectURL(blob)
 
@@ -390,7 +389,6 @@ export function GraphManager({
         downloadUrl: url
       }))
 
-      // Trigger download
       const filename =
         response.headers
           .get('Content-Disposition')
@@ -584,7 +582,6 @@ export function GraphManager({
     }
   }
 
-  // Define columns for the table
   const columns: ColumnDef<NamedGraph>[] = [
     ...(canManage
       ? [
@@ -1347,13 +1344,11 @@ export function GraphManager({
         </>
       )}
 
-      {/* Floating Bulk Actions Bar */}
       {canManage && table.getFilteredSelectedRowModel().rows.length > 0 && (
         <div className="animate-in slide-in-from-bottom-5 fixed bottom-6 left-1/2 z-50 -translate-x-1/2 duration-300">
           <Card className="border-primary/20 bg-background/95 supports-backdrop-filter:bg-background/80 border-2 shadow-2xl backdrop-blur">
             <CardContent className="p-4">
               <div className="flex items-center gap-4">
-                {/* Selection Info */}
                 <div className="flex items-center gap-3 border-r pr-4">
                   <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-full">
                     <Checkbox
@@ -1376,7 +1371,6 @@ export function GraphManager({
                   </div>
                 </div>
 
-                {/* Actions */}
                 <div className="flex items-center gap-2">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>

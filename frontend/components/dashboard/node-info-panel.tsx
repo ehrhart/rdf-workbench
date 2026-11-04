@@ -69,7 +69,6 @@ export default function NodeInfoPanel({
         }
       } catch (error) {
         console.error('Error fetching node properties:', error)
-        // Set basic properties even if the fetch fails
         setProperties([
           { key: 'rdfs:label', value: node.label },
           { key: 'rdf:type', value: node.type },
@@ -83,7 +82,6 @@ export default function NodeInfoPanel({
     fetchNodeProperties()
   }, [node.id, node.label, node.type])
 
-  // Filter properties based on search query
   const filteredProperties = properties.filter(
     (prop) =>
       prop.key.toLowerCase().includes(searchQuery.toLowerCase()) ||

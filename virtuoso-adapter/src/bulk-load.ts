@@ -16,7 +16,9 @@ function buildJobId(filename: string, graphIri: string): string {
   return `${filename}|${graphIri}`
 }
 
-function parseJobId(jobId: string): { filename: string; graphIri: string } | null {
+function parseJobId(
+  jobId: string
+): { filename: string; graphIri: string } | null {
   const [filename, ...rest] = jobId.split('|')
   const graphIri = rest.join('|')
   if (!filename || !graphIri) return null
@@ -51,12 +53,6 @@ export function mapStateToStatus(
   }
 }
 
-/**
- * Registers a file for bulk loading into Virtuoso.
- * @param filename Name of the file in the imports directory
- * @param graphIri Target graph IRI
- * @returns Job ID
- */
 export async function registerBulkLoadJob(
   filename: string,
   graphIri: string
@@ -98,11 +94,6 @@ export async function registerBulkLoadJob(
   return jobId
 }
 
-/**
- * Gets the status of a bulk load job.
- * @param jobId Job identifier in format "filename|graphIri"
- * @returns Job status details
- */
 export async function getBulkLoadJobStatus(
   jobId: string
 ): Promise<BulkLoadJobStatus> {
@@ -145,10 +136,6 @@ export async function getBulkLoadJobStatus(
   return jobStatus
 }
 
-/**
- * Gets the registered bulk load jobs.
- * @returns Array of job statuses
- */
 export async function getAllBulkLoadJobs(): Promise<BulkLoadJobStatus[]> {
   const connection = await getConnection()
 
@@ -176,10 +163,6 @@ export async function getAllBulkLoadJobs(): Promise<BulkLoadJobStatus[]> {
   return jobs
 }
 
-/**
- * Cancels a running or queued bulk load job.
- * @param jobId Job identifier in format "filename|graphIri"
- */
 export async function cancelBulkLoadJob(jobId: string): Promise<void> {
   const parsed = parseJobId(jobId)
 
@@ -214,7 +197,6 @@ export async function cancelBulkLoadJob(jobId: string): Promise<void> {
     await connection.query('rdf_load_stop()')
   }
 
-  // Delete the job from LOAD_LIST
   await connection.query(`
     DELETE FROM DB.DBA.LOAD_LIST
     WHERE ll_file LIKE '${filePattern(escapeSqlLiteral(parsed.filename))}' AND ll_graph = '${escapeSqlLiteral(parsed.graphIri)}'
@@ -225,10 +207,6 @@ export async function cancelBulkLoadJob(jobId: string): Promise<void> {
   logger.info('Bulk load job cancelled', { jobId })
 }
 
-/**
- * Removes bulk load jobs associated with a filename from LOAD_LIST.
- * @param filename Name of the file
- */
 export async function removeBulkLoadJobsForFile(
   filename: string
 ): Promise<void> {
@@ -241,17 +219,11 @@ export async function removeBulkLoadJobsForFile(
   logger.info('Related bulk load jobs removed', { filename })
 }
 
-/**
- * Starts the bulk RDF loading process using Virtuoso's parallel loader.
- * Determines optimal thread count based on CPU cores and initiates loader workers.
- * Runs checkpoint after loading to commit data.
- */
 export async function startBulkLoad(): Promise<void> {
   logger.info('Starting bulk load process')
   try {
     const connection = await getConnection()
 
-    // Get the number of CPU cores
     logger.info('Getting CPU count for bulk load')
     const cpuCountResult = (await connection.query(
       "SELECT sys_stat('st_cpu_count') AS st_cpu_count"
@@ -262,7 +234,6 @@ export async function startBulkLoad(): Promise<void> {
     // Virtuoso's loader benefits from leaving headroom; use ~40% of cores to balance throughput and keep the DB responsive.
     const loaderThreads = Math.max(1, Math.floor(cpuCount / 2.5))
 
-    // Start multiple loader threads
     logger.info('Starting bulk loader threads', { threads: loaderThreads })
     const loaderPromises = []
     for (let i = 0; i < loaderThreads; i++) {
@@ -270,7 +241,6 @@ export async function startBulkLoad(): Promise<void> {
       loaderPromises.push(connection.query('rdf_loader_run()'))
     }
 
-    // Wait for all loader threads to complete
     await Promise.all(loaderPromises)
 
     // Run checkpoint to commit the loaded data

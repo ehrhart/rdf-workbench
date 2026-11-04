@@ -64,7 +64,6 @@ const registry = globalThis as typeof globalThis & {
 if (!registry.__aiJobHandles) registry.__aiJobHandles = new Map()
 const handles: Map<string, JobHandle> = registry.__aiJobHandles
 
-/** Thrown by startJob when that kind already has a live job. */
 export class JobAlreadyRunningError extends Error {
   readonly job: AiJobDto
   constructor(job: AiJobDto) {
@@ -201,7 +200,6 @@ async function startJob(
   return toDto(row as AiJobRow)
 }
 
-/** Aborts the running job of that kind; false when none is running. */
 export async function cancelJob(kind: AiJobKind): Promise<boolean> {
   const live = liveJob(kind)
   if (!live) return false
