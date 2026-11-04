@@ -4,6 +4,7 @@ import express, {
   type Request,
   type Response
 } from 'express'
+import { MulterError } from 'multer'
 import { config, IMPORTS_PATH } from './config'
 import { closePool, initPool } from './database'
 import { logger } from './logger'
@@ -51,8 +52,7 @@ const errorHandler = (
   res: Response,
   _next: NextFunction
 ) => {
-  // Handle multer file size errors
-  if (err.message?.includes('File too large')) {
+  if (err instanceof MulterError && err.code === 'LIMIT_FILE_SIZE') {
     logger.error('File size limit exceeded', { error: err.message })
     res.status(413).json({
       error: 'File too large',
