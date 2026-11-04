@@ -69,6 +69,7 @@ import {
   deleteGraph,
   getGraphTripleCount
 } from '@/lib/graph-actions'
+import { pollUntilGraphEmpty } from '@/lib/graph-deletion'
 import type { DownloadFormat } from '@/lib/runtime/contracts'
 import { GRAPH_EXPORT_FILE_TYPES, type GraphExportFileType } from '@/lib/utils'
 import type { NamedGraph } from '@/types'
@@ -126,9 +127,6 @@ interface ExportDialogState {
   downloadUrl?: string
 }
 
-const POLL_INTERVAL_MS = 900
-const MAX_POLL_ATTEMPTS = 240
-
 const createDefaultDeleteState = (): DeleteDialogState => ({
   open: false,
   uris: [],
@@ -154,8 +152,6 @@ const createDefaultExportState = (): ExportDialogState => ({
   errorMessage: undefined,
   downloadUrl: undefined
 })
-
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 const shortGraphName = (uri: string): string => {
   const local = uri.split(/[/#:]/).filter(Boolean).pop() ?? uri
@@ -289,27 +285,15 @@ export function GraphManager({
 
     await deleteGraph(uri)
 
-    // Poll triple counts while deletion is in progress
-    let attempts = 0
-    while (attempts < MAX_POLL_ATTEMPTS) {
-      attempts += 1
-      await sleep(POLL_INTERVAL_MS)
-
-      try {
-        const remaining = await getGraphTripleCount(uri)
-        if (typeof remaining === 'number') {
-          updateGraphProgress(uri, { initial: initialEstimate, remaining })
-          if (remaining === 0) {
-            break
-          }
-        }
-      } catch (error) {
-        console.warn('Unable to poll triple count for graph', uri, error)
-      }
-    }
-
-    // Ensure we show 0 at the end
-    updateGraphProgress(uri, { initial: initialEstimate, remaining: 0 })
+    await pollUntilGraphEmpty({
+      uri,
+      getCount: getGraphTripleCount,
+      onProgress: (progress) =>
+        updateGraphProgress(uri, {
+          initial: initialEstimate,
+          remaining: progress.remaining
+        })
+    })
   }
 
   const startDeletion = async () => {
@@ -798,7 +782,7 @@ export function GraphManager({
               100
           )
         )
-      : undefined
+      : 100
 
   const clearingInProgress = clearDialogState.status === 'clearing'
   const exportingInProgress = exportDialogState.status === 'exporting'
@@ -835,12 +819,10 @@ export function GraphManager({
                 <div className="flex items-center justify-between text-sm font-semibold">
                   <span>Progress</span>
                   <span className="text-muted-foreground text-xs">
-                    {overallProgress !== undefined
-                      ? `${overallProgress}%`
-                      : 'Starting…'}
+                    {overallProgress}%
                   </span>
                 </div>
-                <Progress value={overallProgress ?? 15} />
+                <Progress value={overallProgress} />
                 <p className="text-muted-foreground text-sm">
                   {deleteDialogState.status === 'done' ? (
                     <span className="font-medium">Deletion complete</span>
