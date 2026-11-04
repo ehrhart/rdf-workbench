@@ -281,7 +281,7 @@ export function SavedQueriesMenu({
                 </div>
               ) : savedQueries.length === 0 ? (
                 <div className="px-2 py-4 text-sm text-muted-foreground">
-                  No saved queries yet. They are shared with everyone.
+                  No saved queries yet.
                 </div>
               ) : (
                 savedQueries.map((saved) => (
