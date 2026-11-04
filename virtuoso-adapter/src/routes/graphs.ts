@@ -8,7 +8,7 @@ import type { ErrorResponse } from '../types'
  * the client to poll triple counts for progress tracking.
  */
 export async function deleteGraphAsync(
-  req: Request,
+  req: Request<{ graphUri: string }>,
   res: Response
 ): Promise<void> {
   const { graphUri } = req.params
@@ -22,13 +22,10 @@ export async function deleteGraphAsync(
   }
 
   try {
-    // Decode the URI (it will be URL-encoded in the path)
-    const decodedGraphUri = decodeURIComponent(String(graphUri))
-
     // An IRIREF cannot contain these characters, so any occurrence means
     // the value is either malformed or trying to break out of the graph
-    // token.
-    if (/[\s<>"{}|^`\\]/.test(decodedGraphUri)) {
+    // token. Express already percent-decodes route params.
+    if (/[\s<>"{}|^`\\]/.test(graphUri)) {
       res.status(400).json({
         error: 'Invalid graph URI',
         message: 'The graph URI contains characters not allowed in an IRI'
@@ -41,22 +38,22 @@ export async function deleteGraphAsync(
       let connection: Awaited<ReturnType<typeof getConnection>> | undefined
       try {
         connection = await getConnection()
-        const command = `SPARQL DEFINE sql:log-enable 3\nCLEAR SILENT GRAPH <${decodedGraphUri}>`
+        const command = `SPARQL DEFINE sql:log-enable 3\nCLEAR SILENT GRAPH <${graphUri}>`
 
         logger.info('Starting async graph deletion', {
-          graphUri: decodedGraphUri
+          graphUri
         })
 
         await connection.query(command)
 
         logger.info('Graph deletion completed', {
-          graphUri: decodedGraphUri
+          graphUri
         })
       } catch (error) {
         const err = error as Error
         logger.error('Error during async graph deletion', {
           error: err.message,
-          graphUri: decodedGraphUri
+          graphUri
         })
       } finally {
         if (connection) {
@@ -67,7 +64,7 @@ export async function deleteGraphAsync(
 
     res.status(202).json({
       message: 'Graph deletion initiated',
-      graphUri: decodedGraphUri
+      graphUri
     })
     return
   } catch (error) {
