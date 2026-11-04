@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import { Button } from '@/components/ui/button'
+import { isAuthFailureCopy } from '@/lib/auth-error-copy'
 
 interface DashboardErrorProps {
   error: Error & { digest?: string }
@@ -13,15 +14,7 @@ export default function DashboardError({ error, reset }: DashboardErrorProps) {
   const router = useRouter()
 
   useEffect(() => {
-    const message = error?.message || ''
-    const isAuth =
-      error?.name === 'AuthError' ||
-      message.includes('Session expired') ||
-      message.includes('Your session has expired') ||
-      message.toLowerCase().includes('unauthorized')
-
-    if (isAuth) {
-      // Clear session and redirect to login
+    if (isAuthFailureCopy(error)) {
       router.replace('/logout')
       return
     }
@@ -29,15 +22,7 @@ export default function DashboardError({ error, reset }: DashboardErrorProps) {
     console.error('Dashboard error boundary caught error:', error)
   }, [error, router])
 
-  const message = error?.message || ''
-  const isAuth =
-    error?.name === 'AuthError' ||
-    message.includes('Session expired') ||
-    message.includes('Your session has expired') ||
-    message.toLowerCase().includes('unauthorized')
-
-  // Don't show UI for auth errors, just redirect
-  if (isAuth) {
+  if (isAuthFailureCopy(error)) {
     return null
   }
 

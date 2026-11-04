@@ -12,6 +12,7 @@ import type {
   Principal
 } from '@/lib/runtime/contracts'
 import { getWorkbenchDatabase } from '@/lib/workbench-database'
+import { generateTemporaryPassword } from './temporary-password'
 
 const SESSION_COOKIE_NAME = 'session'
 const SESSION_DURATION_MS = 7 * 24 * 60 * 60 * 1000
@@ -113,13 +114,6 @@ export async function loginLocalUser(
   return principal
 }
 
-/**
- * Validates a raw session token against the workbench database: the
- * sha256 token hash must exist, belong to an enabled user and be
- * unexpired; expired or unknown tokens are deleted. Shared by
- * `getLocalPrincipal` (cookie-based) and the proxy, which passes the
- * token from the request cookie.
- */
 export async function getLocalPrincipalByToken(
   token: string | undefined
 ): Promise<Principal | null> {
@@ -287,28 +281,6 @@ export async function createLocalUser(
   return mustChange
     ? { mode: 'temporary', oneTimePassword: password }
     : { mode: 'manual' }
-}
-
-const TEMPORARY_PASSWORD_LENGTH = 16
-// Lookalike-free: no I/L/O, no i/l/o, no 0/1 — temporary passwords are
-// dictated or transcribed by humans, unlike session tokens.
-const TEMPORARY_PASSWORD_ALPHABET =
-  'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789'
-
-function generateTemporaryPassword(): string {
-  const characters: string[] = []
-  for (let index = 0; index < TEMPORARY_PASSWORD_LENGTH; index++) {
-    characters.push(
-      TEMPORARY_PASSWORD_ALPHABET[
-        crypto.randomInt(TEMPORARY_PASSWORD_ALPHABET.length)
-      ]
-    )
-  }
-  const groups: string[] = []
-  for (let offset = 0; offset < characters.length; offset += 4) {
-    groups.push(characters.slice(offset, offset + 4).join(''))
-  }
-  return groups.join('-')
 }
 
 /**

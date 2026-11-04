@@ -13,12 +13,6 @@ export function unauthenticatedResponse(): NextResponse {
   )
 }
 
-/**
- * 403 for a valid session that still owes a password change. The copy
- * must not contain "unauthorized" or "Session expired": the dashboard
- * error boundary treats those as an auth failure and redirects to
- * /logout.
- */
 export function passwordChangeRequiredResponse(): NextResponse {
   return NextResponse.json(
     { error: 'Password change required' },
