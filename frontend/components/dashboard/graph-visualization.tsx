@@ -80,6 +80,8 @@ type QueryBinding = {
   rdfType?: SparqlBindingValue
 }
 
+const MAX_FIT_ZOOM_SCALE = 1.5
+
 function useTypeColors() {
   const [typeColorMap, setTypeColorMap] = useState<Record<string, string>>({})
 
@@ -303,7 +305,7 @@ export default function GraphVisualization({
 
     const scaleX = width / graphWidth
     const scaleY = height / graphHeight
-    const scale = Math.min(scaleX, scaleY, 1.5) // Limit max zoom
+    const scale = Math.min(scaleX, scaleY, MAX_FIT_ZOOM_SCALE)
 
     const centerX = (bounds.minX + bounds.maxX) / 2
     const centerY = (bounds.minY + bounds.maxY) / 2
