@@ -16,7 +16,7 @@ import {
   SidebarMenuItem
 } from '@/components/ui/sidebar'
 import type { NavItem, NavUser as NavUserType } from '@/config/navigation'
-import type { UpdateInfo } from '@/lib/update-check'
+import { GITHUB_RELEASES_URL, type UpdateInfo } from '@/lib/update-check'
 
 export interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   user: NavUserType | null
@@ -70,7 +70,14 @@ export function AppSidebar({
       <SidebarFooter>
         {user && <NavUser user={user} />}
         <div className="flex items-center gap-2 overflow-hidden px-2 pb-2 text-xs whitespace-nowrap text-muted-foreground group-data-[collapsible=icon]:hidden">
-          <span>v{process.env.NEXT_PUBLIC_APP_VERSION ?? 'dev'}</span>
+          <Link
+            href={GITHUB_RELEASES_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="transition-colors hover:text-sidebar-foreground"
+          >
+            v{process.env.NEXT_PUBLIC_APP_VERSION ?? 'dev'}
+          </Link>
           {updateInfo?.updateAvailable && updateInfo.releaseUrl ? (
             <Link
               href={updateInfo.releaseUrl}

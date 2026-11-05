@@ -1,5 +1,8 @@
-const GITHUB_LATEST_RELEASE_URL =
-  'https://api.github.com/repos/ehrhart/rdf-workbench/releases/latest'
+const GITHUB_REPO = 'ehrhart/rdf-workbench'
+
+const GITHUB_LATEST_RELEASE_URL = `https://api.github.com/repos/${GITHUB_REPO}/releases/latest`
+
+export const GITHUB_RELEASES_URL = `https://github.com/${GITHUB_REPO}/releases`
 
 const REVALIDATE_SECONDS = 3600
 
