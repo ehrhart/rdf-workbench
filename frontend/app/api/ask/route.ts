@@ -14,7 +14,7 @@ import { loadOrBuildProfile, withLivePrefixes } from '@/lib/ai/profile-store'
 import { buildSystemPrompt } from '@/lib/ai/prompt'
 import { renderProfileText } from '@/lib/ai/render'
 import { requireAskPrincipal } from '@/lib/api-auth'
-import { isRateLimited } from '@/lib/rate-limit'
+import { isClientRateLimited } from '@/lib/rate-limit'
 import { getWorkbenchRuntime } from '@/lib/runtime'
 import { computeFeatures } from '@/lib/runtime/features'
 import { isSameOriginMutation, sameOriginError } from '@/lib/same-origin'
@@ -33,9 +33,7 @@ export async function POST(request: NextRequest) {
   if (auth.response) return auth.response
 
   if (!auth.principal) {
-    const clientIp =
-      request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
-    if (isRateLimited(`ask|${clientIp}`, 10, 60_000)) {
+    if (isClientRateLimited(request, 'ask', 10, 60_000)) {
       return NextResponse.json(
         { error: 'Too many requests. Try again in a minute.' },
         { status: 429 }

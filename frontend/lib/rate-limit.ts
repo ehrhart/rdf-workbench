@@ -30,3 +30,14 @@ export function isRateLimited(
   window.count += 1
   return false
 }
+
+export function isClientRateLimited(
+  request: Request,
+  bucket: string,
+  max: number,
+  windowMs: number
+): boolean {
+  const clientIp =
+    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
+  return isRateLimited(`${bucket}|${clientIp}`, max, windowMs)
+}
