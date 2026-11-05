@@ -305,6 +305,15 @@ export function AppearanceForm({
               )}
             </div>
           </div>
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              onClick={() => save(draft)}
+              disabled={!isDirty || saving}
+            >
+              Save
+            </Button>
+          </div>
         </CardContent>
       </Card>
       <Card>
