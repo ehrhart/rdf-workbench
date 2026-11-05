@@ -90,6 +90,26 @@ export async function requireAskPrincipal(): Promise<MaybeAnonymousGuard> {
   return { principal }
 }
 
+export const ANONYMOUS_OWNER_ID = 'anonymous'
+
+export type ConversationOwnerGuard =
+  | { ownerId: string; response?: undefined }
+  | { ownerId?: undefined; response: NextResponse }
+
+export async function requireConversationOwner(): Promise<ConversationOwnerGuard> {
+  const resolved = await resolvePrincipal()
+  if (resolved.response) return { response: resolved.response }
+  const principal = resolved.principal?.mustChangePassword
+    ? null
+    : resolved.principal
+  if (principal) return { ownerId: principal.id }
+  const { allowAnonymousAsk } = await getAccessFlags()
+  if (!allowAnonymousAsk) {
+    return { response: unauthenticatedResponse() }
+  }
+  return { ownerId: ANONYMOUS_OWNER_ID }
+}
+
 /**
  * Resolves the viewer without requiring one: `null` when anonymous, 503
  * when the auth adapter itself fails.

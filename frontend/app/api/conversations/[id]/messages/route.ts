@@ -3,7 +3,8 @@ import {
   MAX_CONVERSATION_MESSAGES,
   replaceMessages
 } from '@/lib/ai/conversation-store'
-import { requirePrincipal } from '@/lib/api-auth'
+import { ANONYMOUS_OWNER_ID, requireConversationOwner } from '@/lib/api-auth'
+import { isClientRateLimited } from '@/lib/rate-limit'
 import { isSameOriginMutation, sameOriginError } from '@/lib/same-origin'
 import { errorResponse, notFound } from '../../shared'
 
@@ -12,9 +13,19 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   if (!isSameOriginMutation(request)) return sameOriginError()
-  const auth = await requirePrincipal()
-  if (auth.response) return auth.response
-  const principal = auth.principal
+  const owner = await requireConversationOwner()
+  if (owner.response) return owner.response
+  const ownerId = owner.ownerId
+
+  if (
+    ownerId === ANONYMOUS_OWNER_ID &&
+    isClientRateLimited(request, 'conversation-messages', 30, 60_000)
+  ) {
+    return NextResponse.json(
+      { error: 'Too many requests. Try again in a minute.' },
+      { status: 429 }
+    )
+  }
 
   try {
     const payload = (await request.json().catch(() => null)) as {
@@ -37,7 +48,7 @@ export async function PUT(
     }
 
     const { id } = await params
-    const messageCount = await replaceMessages(id, principal.id, messages)
+    const messageCount = await replaceMessages(id, ownerId, messages)
     if (messageCount === null) return notFound()
     return NextResponse.json({ ok: true, messageCount })
   } catch (error) {
